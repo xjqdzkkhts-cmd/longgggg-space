@@ -37,6 +37,7 @@ const projectViewerPresent = document.querySelector('[data-project-viewer-presen
 const projectSlideFrame = document.querySelector('.project-slide-frame');
 const projectSlideImage = document.querySelector('[data-project-slide-image]');
 const projectSlideCount = document.querySelector('[data-project-slide-count]');
+const projectSlideProgress = document.querySelector('[data-project-slide-progress]');
 const projectSlidePrev = document.querySelector('[data-project-slide-prev]');
 const projectSlideNext = document.querySelector('[data-project-slide-next]');
 const copyButtons = [...document.querySelectorAll('[data-copy-value]')];
@@ -1230,6 +1231,7 @@ if (
   projectViewerClose &&
   projectViewerPresent &&
   projectSlideImage &&
+  projectSlideProgress &&
   projectSlideCount &&
   projectSlidePrev &&
   projectSlideNext &&
@@ -1312,7 +1314,9 @@ if (
 
     projectSlideImage.src = activeProjectImages[activeSlideIndex];
     projectSlideImage.alt = `项目放映页面 ${activeSlideIndex + 1}`;
+    const progress = ((activeSlideIndex + 1) / activeProjectImages.length) * 100;
     projectSlideCount.textContent = `${activeSlideIndex + 1} / ${activeProjectImages.length}`;
+    projectSlideProgress.style.setProperty('--project-slide-progress', `${progress}%`);
     if (projectSlideFrame) {
       projectSlideFrame.scrollTo({ top: 0, left: 0 });
     }
