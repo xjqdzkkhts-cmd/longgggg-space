@@ -8,12 +8,24 @@ const heroTitle = document.querySelector('.hero-title');
 const roleStack = document.querySelector('[data-role-stack]');
 const currentRoleLayer = document.querySelector('[data-role-current]');
 const nextRoleLayer = document.querySelector('[data-role-next]');
+const aboutSection = document.querySelector('#about');
+const learningDrop = document.querySelector('.about-bento-learning-drop');
+const aiDock = document.querySelector('[data-ai-dock]');
+const interestCard = document.querySelector('[data-interest-card]');
+const interestStage = document.querySelector('[data-interest-stage]');
+const aboutAppBento = document.querySelector('[data-about-app-bento]');
+const aboutAppOpen = document.querySelector('[data-about-app-open]');
+const aboutAppModal = document.querySelector('[data-about-app-modal]');
+const aboutAppCloseButtons = [...document.querySelectorAll('[data-about-app-close]')];
+const aboutAppCardContainer = document.querySelector('[data-about-app-card-container]');
+const aboutAppCard = document.querySelector('[data-about-app-card]');
 const worksSection = document.querySelector('#works');
 const portfolioSection = document.querySelector('#works .works-showcase-inner');
 const contactWrapper = document.querySelector('#contact');
 const contactSection = document.querySelector('#contact .contact-footer');
 const siteHeader = document.querySelector('.site-header');
 const navLinks = [...document.querySelectorAll('[data-nav-section]')];
+const pageIndicator = document.querySelector('[data-page-indicator]');
 const worksTabs = [...document.querySelectorAll('[data-work-filter]')];
 const workCards = [...document.querySelectorAll('[data-work-category]')];
 const workCardMedia = [...document.querySelectorAll('.work-card-media')];
@@ -808,17 +820,26 @@ if (cursor) {
     `,
   };
 
-  const setCursorIcon = (iconName) => {
+  const setCursorIcon = (iconName, label) => {
     if (!cursorIcon) {
+      return;
+    }
+
+    if (label) {
+      cursor.classList.remove('has-icon');
+      cursor.classList.add('has-label');
+      cursorIcon.textContent = label;
       return;
     }
 
     if (!iconName || !cursorIconMap[iconName]) {
       cursor.classList.remove('has-icon');
+      cursor.classList.remove('has-label');
       cursorIcon.innerHTML = '';
       return;
     }
 
+    cursor.classList.remove('has-label');
     cursorIcon.innerHTML = cursorIconMap[iconName];
     cursor.classList.add('has-icon');
   };
@@ -832,18 +853,19 @@ if (cursor) {
   window.addEventListener('mouseleave', () => {
     cursor.classList.remove('is-visible');
     cursor.classList.remove('has-icon');
+    cursor.classList.remove('has-label');
   });
 
   const hoverTargets = [...document.querySelectorAll('a, button, [data-card], [data-cursor-icon]')];
   hoverTargets.forEach((target) => {
     target.addEventListener('mouseenter', () => {
       cursor.classList.add('is-hovering');
-      setCursorIcon(target.dataset.cursorIcon);
+      setCursorIcon(target.dataset.cursorIcon, target.dataset.cursorLabel);
     });
 
     target.addEventListener('mouseleave', () => {
       cursor.classList.remove('is-hovering');
-      setCursorIcon('');
+      setCursorIcon('', '');
     });
   });
 }
@@ -886,6 +908,320 @@ if (worksTabs.length && workCards.length) {
   });
 
   applyWorkFilter('all');
+}
+
+if (learningDrop && window.Matter) {
+  const { Engine, Runner, Bodies, Body, Composite } = window.Matter;
+  const words = [...learningDrop.querySelectorAll('span')];
+  const engine = Engine.create({ enableSleeping: true });
+  const runner = Runner.create();
+  const wordBodies = new Map();
+  const boundaries = [];
+  let dropTimers = [];
+  let animationFrameId = 0;
+  let cycleTimer = 0;
+  let resizeTimer = 0;
+
+  engine.gravity.y = 0.72;
+
+  const clearLearningPhysics = () => {
+    window.clearTimeout(cycleTimer);
+    window.cancelAnimationFrame(animationFrameId);
+    Runner.stop(runner);
+    dropTimers.forEach((timer) => window.clearTimeout(timer));
+    dropTimers = [];
+    Composite.clear(engine.world, false);
+    wordBodies.clear();
+    boundaries.length = 0;
+    words.forEach((word) => {
+      word.classList.remove('is-visible');
+      word.style.transform = '';
+    });
+  };
+
+  const addLearningBoundaries = () => {
+    const rect = learningDrop.getBoundingClientRect();
+    const wall = 72;
+    const innerInset = 4;
+    const options = {
+      isStatic: true,
+      restitution: 0,
+      friction: 1,
+      render: { visible: false },
+    };
+
+    boundaries.push(
+      Bodies.rectangle(rect.width / 2, rect.height - innerInset + wall / 2, rect.width, wall, options),
+      Bodies.rectangle(innerInset - wall / 2, rect.height / 2, wall, rect.height * 2.4, options),
+      Bodies.rectangle(rect.width - innerInset + wall / 2, rect.height / 2, wall, rect.height * 2.4, options)
+    );
+
+    Composite.add(engine.world, boundaries);
+  };
+
+  const updateLearningWords = () => {
+    wordBodies.forEach((body, word) => {
+      const visualWidth = word.offsetWidth;
+      const visualHeight = word.offsetHeight;
+      const rect = learningDrop.getBoundingClientRect();
+      const x = clamp(body.position.x - visualWidth / 2, 0, rect.width - visualWidth);
+      const y = clamp(body.position.y - visualHeight / 2, -visualHeight, rect.height - visualHeight);
+      word.style.transform = `translate(${x}px, ${y}px) rotate(${body.angle}rad)`;
+      word.classList.toggle('is-visible', y > -visualHeight * 0.2);
+    });
+
+    animationFrameId = window.requestAnimationFrame(updateLearningWords);
+  };
+
+  const addLearningWord = (word, index) => {
+    const rect = learningDrop.getBoundingClientRect();
+    const isCircle = word.classList.contains('learning-shape-circle');
+    const isTriangle = word.classList.contains('learning-shape-triangle');
+    const visualWidth = word.offsetWidth;
+    const visualHeight = word.offsetHeight;
+    const bodyWidth = Math.max(8, visualWidth - 2);
+    const bodyHeight = Math.max(8, visualHeight - 2);
+    const dropSlots = [0.24, 0.54, 0.38, 0.62, 0.3, 0.48, 0.34, 0.58, 0.42, 0.66, 0.52, 0.28, 0.6, 0.44, 0.56];
+    const safeInset = Math.max(visualWidth / 2 + 10, 34);
+    const rawX = rect.width * (dropSlots[index % dropSlots.length]);
+    const x = clamp(rawX, safeInset, rect.width - safeInset);
+    const bodyOptions = {
+      chamfer: undefined,
+      restitution: 0.08,
+      friction: 0.35,
+      frictionStatic: 1,
+      frictionAir: 0.006,
+      density: 0.004,
+      render: { visible: false },
+    };
+    const startY = -bodyHeight * 1.6 - index * 7;
+    const body = isCircle
+      ? Bodies.circle(x, startY, bodyWidth / 2, bodyOptions)
+      : isTriangle
+        ? Bodies.polygon(x, startY, 3, bodyWidth / 2, bodyOptions)
+        : Bodies.rectangle(x, startY, bodyWidth, bodyHeight, bodyOptions);
+
+    Body.setPosition(body, { x, y: startY });
+    Body.setVelocity(body, { x: 0, y: 0 });
+    Body.setAngularVelocity(body, 0);
+    Body.setAngle(body, ((index % 5) - 2) * 0.05);
+    wordBodies.set(word, body);
+    Composite.add(engine.world, body);
+  };
+
+  const runLearningCycle = () => {
+    clearLearningPhysics();
+    learningDrop.classList.remove('is-fading');
+    addLearningBoundaries();
+    Runner.run(runner, engine);
+    updateLearningWords();
+
+    dropTimers = words.map((word, index) =>
+      window.setTimeout(() => addLearningWord(word, index), index * 260)
+    );
+
+    cycleTimer = window.setTimeout(() => {
+      learningDrop.classList.add('is-fading');
+      cycleTimer = window.setTimeout(runLearningCycle, 900);
+    }, words.length * 260 + 3300);
+  };
+
+  const restartLearningCycle = () => {
+    window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(runLearningCycle, 240);
+  };
+
+  runLearningCycle();
+  window.addEventListener('resize', restartLearningCycle);
+} else if (learningDrop) {
+  learningDrop.classList.add('is-static');
+}
+
+if (aiDock) {
+  const aiIcons = [...aiDock.querySelectorAll('.about-ai-icon')];
+  const minDistance = 50;
+  const maxScale = 1.55;
+  const influence = minDistance * Math.PI;
+  let aiDockHovering = false;
+  let aiDockCycleFrame = 0;
+  let aiDockCycleStart = 0;
+
+  const updateAiDockCycle = (timestamp) => {
+    if (!aiDockCycleStart) {
+      aiDockCycleStart = timestamp;
+    }
+
+    if (!aiDockHovering && aiIcons.length) {
+      const elapsed = timestamp - aiDockCycleStart;
+      const travelLength = Math.max(aiIcons.length - 1, 1);
+      const phase = ((elapsed / 3400) % 1) * Math.PI * 2;
+      const easedPosition = (1 - Math.cos(phase)) / 2;
+      const activeIndex = easedPosition * travelLength;
+
+      aiIcons.forEach((icon, index) => {
+        const distance = Math.abs(index - activeIndex);
+        const focus = Math.max(0, 1 - distance / 1.45);
+        const bounce = 1 + Math.sin(focus * Math.PI) * 0.05;
+        const scale = 1 + focus * 0.46 * bounce;
+        const lift = focus * -6;
+
+        icon.style.setProperty('--dock-x', '0px');
+        icon.style.setProperty('--dock-y', `${lift}px`);
+        icon.style.setProperty('--dock-scale', scale.toFixed(3));
+      });
+    }
+
+    aiDockCycleFrame = window.requestAnimationFrame(updateAiDockCycle);
+  };
+
+  const resetAiDock = () => {
+    aiIcons.forEach((icon) => {
+      icon.style.setProperty('--dock-x', '0px');
+      icon.style.setProperty('--dock-y', '0px');
+      icon.style.setProperty('--dock-scale', '1');
+    });
+  };
+
+  const updateAiDock = (event) => {
+    aiDockHovering = true;
+    const rect = aiDock.getBoundingClientRect();
+    const centerRatio = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+    const rowShift = clamp(centerRatio, -1, 1) * 42;
+    const pointer = event.clientX - rect.left - rowShift;
+
+    aiIcons.forEach((icon, index) => {
+      const iconCenter = index * minDistance + minDistance / 2;
+      const distance = iconCenter - pointer;
+      let localShift = distance < 0 ? -26 : 26;
+      let scale = 1;
+
+      if (-influence < distance && distance < influence) {
+        const rad = (distance / minDistance) * 0.5;
+        scale = 1 + (maxScale - 1) * Math.cos(rad);
+        localShift = 32 * Math.sin(rad);
+      }
+
+      icon.style.setProperty('--dock-x', `${rowShift + localShift}px`);
+      icon.style.setProperty('--dock-y', '0px');
+      icon.style.setProperty('--dock-scale', scale.toFixed(3));
+    });
+  };
+
+  aiDockCycleFrame = window.requestAnimationFrame(updateAiDockCycle);
+  aiDock.addEventListener('mouseenter', () => {
+    aiDockHovering = true;
+  });
+  aiDock.addEventListener('mousemove', updateAiDock);
+  aiDock.addEventListener('mouseleave', () => {
+    aiDockHovering = false;
+  });
+}
+
+if (aboutAppOpen && aboutAppModal && aboutAppCardContainer && aboutAppCard) {
+  const depthItems = [...aboutAppCard.querySelectorAll('[data-depth]')];
+
+  depthItems.forEach((item) => {
+    item.style.setProperty('--card-depth', `${Number(item.dataset.depth || 0)}px`);
+  });
+
+  const setAboutAppOpen = (isOpen) => {
+    if (isOpen) {
+      const buttonRect = aboutAppOpen.getBoundingClientRect();
+      const originX = ((buttonRect.left + buttonRect.width / 2) / window.innerWidth) * 100;
+      const originY = ((buttonRect.top + buttonRect.height / 2) / window.innerHeight) * 100;
+      aboutAppModal.style.setProperty('--about-app-origin-x', `${originX}%`);
+      aboutAppModal.style.setProperty('--about-app-origin-y', `${originY}%`);
+    }
+
+    aboutAppModal.classList.toggle('is-open', isOpen);
+    aboutAppModal.setAttribute('aria-hidden', String(!isOpen));
+
+    if (!isOpen) {
+      aboutAppCard.style.transform = '';
+    }
+  };
+
+  aboutAppOpen.addEventListener('click', () => {
+    setAboutAppOpen(true);
+  });
+
+  aboutAppCloseButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      setAboutAppOpen(false);
+    });
+  });
+
+  aboutAppCardContainer.addEventListener('mousemove', (event) => {
+    const rect = aboutAppCardContainer.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+    aboutAppCard.style.transform = `rotateY(${x * 12}deg) rotateX(${-y * 12}deg)`;
+  });
+
+  aboutAppCardContainer.addEventListener('mouseleave', () => {
+    aboutAppCard.style.transform = '';
+  });
+
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && aboutAppModal.classList.contains('is-open')) {
+      setAboutAppOpen(false);
+    }
+  });
+}
+
+if (aboutAppBento) {
+  const edgePadding = 16;
+
+  const updateAppGlow = (event) => {
+    const rect = aboutAppBento.getBoundingClientRect();
+    const localX = clamp(event.clientX - rect.left, edgePadding, rect.width - edgePadding);
+    const localY = clamp(event.clientY - rect.top, edgePadding, rect.height - edgePadding);
+    const distanceToLeft = localX;
+    const distanceToRight = rect.width - localX;
+    const distanceToTop = localY;
+    const distanceToBottom = rect.height - localY;
+    const nearestEdge = Math.min(distanceToLeft, distanceToRight, distanceToTop, distanceToBottom);
+    let glowX = localX;
+    let glowY = localY;
+
+    if (nearestEdge === distanceToLeft) {
+      glowX = edgePadding;
+    } else if (nearestEdge === distanceToRight) {
+      glowX = rect.width - edgePadding;
+    } else if (nearestEdge === distanceToTop) {
+      glowY = edgePadding;
+    } else {
+      glowY = rect.height - edgePadding;
+    }
+
+    aboutAppBento.style.setProperty('--app-glow-x', `${(glowX / rect.width) * 100}%`);
+    aboutAppBento.style.setProperty('--app-glow-y', `${(glowY / rect.height) * 100}%`);
+  };
+
+  aboutAppBento.addEventListener('mousemove', updateAppGlow);
+  aboutAppBento.addEventListener('mouseleave', () => {
+    aboutAppBento.style.setProperty('--app-glow-x', '86%');
+    aboutAppBento.style.setProperty('--app-glow-y', '84%');
+  });
+}
+
+if (interestStage) {
+  const interestItems = ['travel', 'book', 'music'];
+  let interestIndex = 0;
+
+  const switchInterest = () => {
+    interestIndex = (interestIndex + 1) % interestItems.length;
+    interestStage.dataset.interestMode = interestItems[interestIndex];
+  };
+
+  interestStage.dataset.interestMode = interestItems[interestIndex];
+  (interestCard || interestStage).addEventListener('click', switchInterest);
+  interestStage.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      switchInterest();
+    }
+  });
 }
 
 if (
@@ -1157,15 +1493,24 @@ if (aiChatToggle && aiChatSidebar && aiChatForm && aiChatInput) {
   });
 }
 
-if (navLinks.length && hero && worksSection && portfolioSection && contactWrapper && contactSection) {
+if (navLinks.length && hero && aboutSection && worksSection && portfolioSection && contactWrapper && contactSection) {
+  const sectionLabelMap = {
+    home: '首页',
+    about: '关于',
+    works: '作品',
+    contact: '联系方式',
+  };
+
   const sectionMap = {
     home: hero,
+    about: aboutSection,
     works: worksSection,
     contact: contactWrapper,
   };
 
   const navOffsetMap = {
     home: () => 0,
+    about: () => window.scrollY + aboutSection.getBoundingClientRect().top - window.innerHeight * 0.08,
     works: () => window.scrollY + portfolioSection.getBoundingClientRect().top - window.innerHeight * 0.08,
     contact: () => window.scrollY + contactWrapper.getBoundingClientRect().top - window.innerHeight * 0.06,
   };
@@ -1192,6 +1537,10 @@ if (navLinks.length && hero && worksSection && portfolioSection && contactWrappe
     navLinks.forEach((link) => {
       link.classList.toggle('is-active', link.dataset.navSection === sectionName);
     });
+
+    if (pageIndicator) {
+      pageIndicator.textContent = sectionLabelMap[sectionName] || sectionLabelMap.home;
+    }
   };
 
   const updateActiveNavOnScroll = () => {
@@ -1202,6 +1551,8 @@ if (navLinks.length && hero && worksSection && portfolioSection && contactWrappe
       activeSection = 'contact';
     } else if (worksSection.getBoundingClientRect().top <= viewportMid) {
       activeSection = 'works';
+    } else if (aboutSection.getBoundingClientRect().top <= viewportMid) {
+      activeSection = 'about';
     }
 
     setActiveNavSection(activeSection);
