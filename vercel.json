@@ -1,7 +1,13 @@
 {
+<<<<<<< HEAD
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/chat.js": {
+=======
+  "functions": {
+    "api/chat.js": {
+      "runtime": "nodejs22.x",
+>>>>>>> 997c3c29947d1dafc44722895e9ec768938bd2c4
       "maxDuration": 15
     }
   }
