@@ -12,6 +12,12 @@
 
       gtag('config', 'G-R1YVMT2N1Z');
     </script>
+    <script>
+      window.LONG_AI_CONFIG = {
+        // 部署后填入你的 Vercel 域名，例如 https://your-ai-chat.vercel.app
+        apiBaseUrl: '',
+      };
+    </script>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -19,11 +25,12 @@
       <span class="custom-cursor-icon"></span>
     </div>
     <header class="site-header">
-      <a class="brand" href="#home">PORTFOLIO 2026</a>
+      <a class="brand" href="#home" aria-label="返回首页">
+        <img class="brand-logo" src="./assets/brand-logo.png" alt="龙湘玉个人 Logo" />
+      </a>
       <nav class="site-nav" aria-label="Primary navigation">
         <a href="#home" data-nav-section="home">首页</a>
-        <a href="#works" data-nav-section="works">关于我</a>
-        <a href="#about" data-nav-section="about">作品</a>
+        <a href="#works" data-nav-section="works">作品</a>
         <a href="#contact" data-nav-section="contact">联系方式</a>
       </nav>
     </header>
@@ -31,14 +38,18 @@
     <main>
       <section class="hero" id="home">
         <div class="hero-copy">
-          <h1 class="hero-title">Hi,</h1>
           <div class="hero-intro">
-            <p>我是龙湘玉，</p>
+            <div class="hero-heading-row">
+              <h1 class="hero-title">Hi,</h1>
+              <p class="hero-name-line">我是龙湘玉，</p>
+            </div>
             <p class="hero-role-line">
               是一名
               <span class="hero-role-wrap">
-                <span class="hero-role-typed" data-typed-role></span>
-                <span class="hero-role-caret" aria-hidden="true"></span>
+                <span class="hero-role-stack" data-role-stack>
+                  <span class="hero-role-layer hero-role-current" data-role-current></span>
+                  <span class="hero-role-layer hero-role-next" data-role-next aria-hidden="true"></span>
+                </span>
               </span>
             </p>
           </div>
@@ -51,7 +62,7 @@
             class="hanging-card"
             data-card
             data-anchor-x="57"
-            data-anchor-y="-350"
+            data-anchor-y="-318"
             data-length="400"
             data-rotation="0"
           >
@@ -61,145 +72,132 @@
             </button>
           </article>
         </div>
-
-        <div class="hero-meta hero-meta-left">27 届校招</div>
-        <button class="hero-meta hero-meta-center scroll-trigger" type="button" data-scroll-target="#works .folder-stage">
-          ▼ SCROLL
-        </button>
-        <div class="hero-meta hero-meta-right">@ 龙湘玉<br />ALL RIGHTS RESERVED</div>
       </section>
-
-      <section class="folder-section" id="works">
-        <div class="folder-stage" data-cursor-icon="click">
-          <div class="folder-tab-hitareas" aria-hidden="false">
-            <button class="folder-tab-hit folder-tab-hit-hobbies" type="button" data-folder-target="hobbies" aria-label="切换到兴趣爱好"></button>
-            <button class="folder-tab-hit folder-tab-hit-basic" type="button" data-folder-target="basic" aria-label="切换到基本信息"></button>
-            <button class="folder-tab-hit folder-tab-hit-education" type="button" data-folder-target="education" aria-label="切换到教育经历"></button>
-            <button class="folder-tab-hit folder-tab-hit-about" type="button" data-folder-target="about" aria-label="切换到关于我"></button>
-          </div>
-
-          <div class="folder-pages">
-            <article
-              class="folder-page"
-              data-folder-page="hobbies"
-            >
-              <img class="folder-page-image" src="./assets/folder-hobbies.png" alt="兴趣爱好页面设计图" />
-            </article>
-
-            <article
-              class="folder-page"
-              data-folder-page="basic"
-            >
-              <img class="folder-page-image" src="./assets/folder-basic.png" alt="基本信息页面设计图" />
-            </article>
-
-            <article
-              class="folder-page"
-              data-folder-page="education"
-            >
-              <img class="folder-page-image" src="./assets/folder-education.png" alt="教育经历页面设计图" />
-            </article>
-
-            <article
-              class="folder-page is-front"
-              data-folder-page="about"
-            >
-              <div class="folder-page-about-glass" aria-hidden="true"></div>
-              <svg class="folder-page-svg-about" viewBox="0 0 1362 717" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="关于我页面设计图" preserveAspectRatio="xMidYMax meet">
-                <foreignObject x="-40" y="-40" width="1441.91" height="796.932">
-                  <div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(20px);clip-path:url(#bgblur_0_12_269_clip_path);height:100%;width:100%"></div>
-                </foreignObject>
-                <g data-figma-bg-blur-radius="40">
-                  <mask id="path-1-inside-1_12_269" fill="white">
-                    <path d="M1234.33 71.8527C1236.12 79.5615 1242.98 85.0205 1250.89 85.0205H1344.91C1354.3 85.0205 1361.91 92.6317 1361.91 102.021V699.932C1361.91 709.32 1354.3 716.932 1344.91 716.932H17C7.61119 716.932 0 709.32 0 699.932V102.021C0 92.6317 7.61116 85.0205 17 85.0205H859.905C867.818 85.0205 874.684 79.5615 876.468 71.8527L890.046 13.1678C891.83 5.459 898.696 0 906.608 0H1204.19C1212.1 0 1218.97 5.459 1220.75 13.1678L1234.33 71.8527Z"/>
-                  </mask>
-                  <path d="M1234.33 71.8527C1236.12 79.5615 1242.98 85.0205 1250.89 85.0205H1344.91C1354.3 85.0205 1361.91 92.6317 1361.91 102.021V699.932C1361.91 709.32 1354.3 716.932 1344.91 716.932H17C7.61119 716.932 0 709.32 0 699.932V102.021C0 92.6317 7.61116 85.0205 17 85.0205H859.905C867.818 85.0205 874.684 79.5615 876.468 71.8527L890.046 13.1678C891.83 5.459 898.696 0 906.608 0H1204.19C1212.1 0 1218.97 5.459 1220.75 13.1678L1234.33 71.8527Z" fill="white" fill-opacity="0.7"/>
-                  <path d="M1344.91 85.0205V82.0205V82.0205V85.0205ZM1361.91 102.021H1364.91H1361.91ZM890.046 13.1678L887.123 12.4916L890.046 13.1678ZM876.468 71.8527L879.39 72.529L876.468 71.8527ZM1250.89 85.0205V88.0205H1344.91V85.0205V82.0205H1250.89V85.0205ZM1344.91 85.0205V88.0205C1352.64 88.0205 1358.91 94.2885 1358.91 102.021H1361.91H1364.91C1364.91 90.9748 1355.95 82.0205 1344.91 82.0205V85.0205ZM1361.91 102.021H1358.91V699.932H1361.91H1364.91V102.021H1361.91ZM1344.91 716.932V713.932H17V716.932V719.932H1344.91V716.932ZM0 699.932H3V102.021H0H-3V699.932H0ZM17 85.0205V88.0205H859.905V85.0205V82.0205H17V85.0205ZM876.468 71.8527L879.39 72.529L892.969 13.8441L890.046 13.1678L887.123 12.4916L873.545 71.1764L876.468 71.8527ZM906.608 0V3H1204.19V0V-3H906.608V0ZM1220.75 13.1678L1217.83 13.8441L1231.41 72.529L1234.33 71.8527L1237.26 71.1764L1223.68 12.4915L1220.75 13.1678ZM1204.19 0V3C1210.71 3 1216.36 7.49565 1217.83 13.8441L1220.75 13.1678L1223.68 12.4915C1221.58 3.42235 1213.5 -3 1204.19 -3V0ZM890.046 13.1678L892.969 13.8441C894.438 7.49565 900.092 3 906.608 3V0V-3C897.3 -3 889.222 3.42236 887.123 12.4916L890.046 13.1678ZM859.905 85.0205V88.0205C869.214 88.0205 877.292 81.5981 879.39 72.529L876.468 71.8527L873.545 71.1764C872.076 77.5249 866.421 82.0205 859.905 82.0205V85.0205ZM17 716.932V713.932C9.26803 713.932 3 707.664 3 699.932H0H-3C-3 710.977 5.95434 719.932 17 719.932V716.932ZM1361.91 699.932H1358.91C1358.91 707.664 1352.64 713.932 1344.91 713.932V716.932V719.932C1355.95 719.932 1364.91 710.977 1364.91 699.932H1361.91ZM0 102.021H3C3 94.2885 9.26802 88.0205 17 88.0205V85.0205V82.0205C5.9543 82.0205 -3 90.9748 -3 102.021H0ZM1250.89 85.0205V82.0205C1244.38 82.0205 1238.72 77.5249 1237.26 71.1764L1234.33 71.8527L1231.41 72.529C1233.51 81.5982 1241.59 88.0205 1250.89 88.0205V85.0205Z" fill="url(#paint0_linear_12_269)" mask="url(#path-1-inside-1_12_269)"/>
-                </g>
-                <path d="M991.418 15.8356C991.401 16.3505 991.373 16.8748 991.508 17.3802C992.004 21.5873 992.48 25.8007 992.977 30.0078C993.087 30.6077 993.196 31.2328 992.996 31.828C989.34 29.2048 985.73 26.5187 982.08 23.8861C981.412 23.4138 980.8 22.8359 980.036 22.521C978.781 24.5458 977.63 26.6336 976.421 28.6852C976.766 29.0143 977.246 29.1088 977.67 29.2962C981.626 30.9557 985.593 32.5963 989.551 34.2512C990.192 34.5109 990.841 34.7534 991.453 35.0778C990.488 35.6462 989.408 35.9611 988.392 36.4208C984.665 38.0017 980.902 39.5037 977.191 41.1208C977.298 41.3648 977.404 41.6104 977.525 41.8466C978.555 43.6337 979.621 45.4019 980.6 47.2173C981.08 47.0394 981.439 46.6678 981.841 46.3655C985.141 43.7959 988.468 41.2593 991.768 38.6866C992.187 38.3307 992.631 38.0095 993.108 37.734C993.113 38.0678 993.12 38.4016 993.083 38.7338C992.409 43.3786 991.79 48.0313 991.127 52.6777C991.022 53.1202 990.998 53.5752 991.006 54.0287C991.754 54.057 992.503 54.0334 993.253 54.0444C993.777 54.0397 994.281 54.2349 994.807 54.2271C995.843 54.2223 996.879 54.2255 997.916 54.2208C997.934 53.7516 997.95 53.2776 997.831 52.8194C997.682 52.2054 997.825 51.5614 997.647 50.9521C997.499 50.3726 997.638 49.7617 997.483 49.1839C997.329 48.6092 997.441 48.0077 997.318 47.4299C997.175 46.8095 997.246 46.1671 997.135 45.5436C996.945 44.6477 997.03 43.7219 996.825 42.826C996.871 41.8702 996.575 40.9523 996.616 39.9966C996.471 39.3605 996.392 38.7133 996.477 38.0615C996.553 38.1024 996.704 38.1827 996.78 38.2237C1000.98 41.3066 1005.16 44.4304 1009.37 47.5054C1009.84 46.9764 1010.12 46.3246 1010.49 45.7278C1011.39 44.1486 1012.34 42.6008 1013.23 41.0153C1008.49 39.1448 1003.73 37.3041 998.987 35.4446C998.667 35.3203 998.36 35.1691 998.066 34.9943C999.888 34.0669 1001.82 33.3867 1003.69 32.557C1006.71 31.2911 1009.71 30.0126 1012.73 28.7577C1011.68 26.6525 1010.37 24.6844 1009.26 22.6076C1008.65 22.9886 1008.09 23.4515 1007.52 23.894C1004.29 26.3864 1001.05 28.8663 997.817 31.3509C997.403 31.6642 997.043 32.113 996.488 32.1508C997.123 27.4209 997.693 22.68 998.312 17.9455C998.343 17.2385 998.59 16.5552 998.507 15.8403C996.145 15.823 993.782 15.8293 991.418 15.8356Z" fill="#333333"/>
-                <path d="M1037.85 19.5083C1039.45 21.5883 1040.97 23.8283 1042.41 26.3083L1039.81 27.6283C1038.37 25.0683 1036.85 22.7883 1035.21 20.7883L1037.85 19.5083ZM1052.89 19.1483L1055.65 19.9083C1054.69 22.7883 1053.49 25.3883 1052.05 27.6683H1060.29V30.4683H1046.93V32.3483C1046.85 34.3483 1046.69 36.2283 1046.37 37.9083H1062.61V40.7083H1048.05C1050.01 46.1083 1055.17 50.3083 1063.57 53.3083L1061.89 55.9883C1053.09 52.4283 1047.65 47.5883 1045.49 41.5083C1044.73 43.7883 1043.73 45.7883 1042.45 47.5083C1039.73 51.0283 1035.29 53.7883 1029.13 55.7483L1027.57 53.2283C1033.69 51.2683 1037.97 48.6683 1040.37 45.4683C1041.33 44.0283 1042.09 42.4683 1042.65 40.7083H1028.29V37.9083H1043.37C1043.73 36.1483 1043.93 34.3083 1043.97 32.3483V30.4683H1030.57V27.6683H1048.85C1050.37 25.3483 1051.69 22.5083 1052.89 19.1483ZM1070.29 20.9083H1100.33V23.7083H1087.25V34.5883H1103.13V37.4683H1087.25V51.6683C1087.25 54.2683 1085.89 55.5883 1083.21 55.5883H1076.97L1076.37 52.8283C1078.41 52.9083 1080.37 52.9883 1082.21 52.9883C1083.61 52.9883 1084.33 52.3083 1084.33 50.9483V37.4683H1067.77V34.5883H1084.33V23.7083H1070.29V20.9083ZM1125.89 37.9483V40.8683C1123.57 41.6283 1121.17 42.3483 1118.61 43.0283V52.0283C1118.61 54.3483 1117.37 55.5083 1114.93 55.5083H1110.49L1109.89 52.7483C1111.29 52.8683 1112.65 52.9483 1113.97 52.9483C1115.09 52.9483 1115.65 52.3883 1115.65 51.3083V43.7083C1113.09 44.2683 1110.49 44.7883 1107.77 45.2283L1107.37 42.3083C1110.29 41.8283 1113.05 41.3483 1115.65 40.7883V32.9083H1107.41V30.1483H1115.65V24.7883C1113.53 25.2283 1111.33 25.5883 1109.05 25.9083L1108.45 23.1483C1114.13 22.5083 1119.17 21.3483 1123.57 19.6283L1124.53 22.3483C1122.69 22.9883 1120.69 23.5883 1118.61 24.1483V30.1483H1128.21C1127.97 26.9083 1127.85 23.3483 1127.85 19.4283H1130.73C1130.77 23.4683 1130.89 27.0283 1131.13 30.1483H1143.49V32.9083H1131.37C1131.65 35.7883 1132.01 38.1883 1132.49 40.1483C1132.73 41.1883 1133.01 42.1083 1133.29 42.9883C1135.21 40.6683 1136.93 38.0283 1138.37 35.0683L1140.85 36.3883C1139.01 40.1483 1136.85 43.3483 1134.33 46.0283C1134.89 47.3883 1135.45 48.5483 1136.09 49.4683C1137.37 51.3883 1138.41 52.3883 1139.17 52.3883C1139.97 52.3483 1140.65 50.1083 1141.29 45.6283L1143.81 46.9483C1142.85 52.6283 1141.45 55.4683 1139.61 55.4683C1137.97 55.4683 1136.25 54.2683 1134.41 51.8683C1133.61 50.7883 1132.85 49.5083 1132.21 48.0683C1129.33 50.6283 1126.05 52.6283 1122.41 54.0683L1120.85 51.5883C1124.77 50.1483 1128.17 48.0283 1131.09 45.2683C1130.61 43.9083 1130.17 42.4283 1129.77 40.8683C1129.21 38.5883 1128.77 35.9483 1128.45 32.9083H1118.61V40.1083C1121.21 39.4283 1123.65 38.7083 1125.89 37.9483ZM1135.13 19.8683C1138.01 21.7883 1140.45 23.6683 1142.45 25.5883L1140.37 27.6683C1138.61 25.8283 1136.25 23.8283 1133.21 21.7083L1135.13 19.8683Z" fill="#333333"/>
-                <defs>
-                  <clipPath id="bgblur_0_12_269_clip_path" transform="translate(40 40)">
-                    <path d="M1234.33 71.8527C1236.12 79.5615 1242.98 85.0205 1250.89 85.0205H1344.91C1354.3 85.0205 1361.91 92.6317 1361.91 102.021V699.932C1361.91 709.32 1354.3 716.932 1344.91 716.932H17C7.61119 716.932 0 709.32 0 699.932V102.021C0 92.6317 7.61116 85.0205 17 85.0205H859.905C867.818 85.0205 874.684 79.5615 876.468 71.8527L890.046 13.1678C891.83 5.459 898.696 0 906.608 0H1204.19C1212.1 0 1218.97 5.459 1220.75 13.1678L1234.33 71.8527Z"/>
-                  </clipPath>
-                  <linearGradient id="paint0_linear_12_269" x1="680.953" y1="0" x2="680.953" y2="716.932" gradientUnits="userSpaceOnUse">
-                    <stop stop-color="white"/>
-                    <stop offset="1" stop-color="white" stop-opacity="0"/>
-                  </linearGradient>
-                </defs>
-              </svg>
-            </article>
-          </div>
-
-          <p class="folder-hint">点击卡片可再次收纳</p>
-        </div>
-      </section>
-
-      <section class="works-showcase" id="about">
+      <section class="works-showcase" id="works">
         <div class="works-showcase-inner">
-          <div class="works-header">
-            <p class="works-eyebrow">持续更新中</p>
-            <div class="works-tabs" role="tablist" aria-label="作品分类">
-              <button class="works-tab is-active" type="button" data-work-filter="all" aria-selected="true">全部</button>
-              <button class="works-tab" type="button" data-work-filter="ux" aria-selected="false">UX设计</button>
-              <button class="works-tab" type="button" data-work-filter="product" aria-selected="false">产品设计</button>
-              <button class="works-tab" type="button" data-work-filter="visual" aria-selected="false">视觉设计</button>
-            </div>
-          </div>
-
           <div class="works-grid">
-            <article class="work-card work-card-large work-card-project" data-work-category="ux product" data-project-gallery="ai-thrombolysis" tabindex="0" role="button" aria-label="打开项目 AI 溶栓助手" data-cursor-icon="view">
+            <article class="work-card work-card-project" data-work-category="ux product" data-project-gallery="ai-thrombolysis" tabindex="0" role="button" aria-label="打开项目 AI 溶栓助手" data-cursor-icon="view">
               <div class="work-card-surface">
-                <div class="work-card-cover work-card-cover-ai-thrombolysis"></div>
-                <div class="work-card-tags">
-                  <span class="work-tag"># UX设计</span>
-                  <span class="work-tag"># AI医疗</span>
+                <div class="work-card-media">
+                  <img class="work-card-image" src="./assets/project-ai-thrombolysis-cover.jpg" alt="" loading="lazy" />
+                  <div class="work-card-overlay" aria-hidden="true">
+                    <span class="work-card-blur work-card-blur-1"></span>
+                    <span class="work-card-blur work-card-blur-2"></span>
+                    <span class="work-card-blur work-card-blur-3"></span>
+                    <span class="work-card-blur work-card-blur-4"></span>
+                    <span class="work-card-blur work-card-blur-5"></span>
+                    <span class="work-card-blur work-card-blur-6"></span>
+                    <span class="work-card-blur work-card-blur-7"></span>
+                    <span class="work-card-tint"></span>
+                  </div>
+                  <div class="work-card-content">
+                    <div class="work-card-tags">
+                      <span class="work-tag"># UX设计</span>
+                      <span class="work-tag"># AI医疗</span>
+                    </div>
+                    <h3>AI 溶栓助手</h3>
+                  </div>
                 </div>
-                <h3>AI 溶栓助手</h3>
               </div>
             </article>
 
             <article class="work-card work-card-project" data-work-category="ux visual" data-project-gallery="iknow" tabindex="0" role="button" aria-label="打开项目 iKonw" data-cursor-icon="view">
               <div class="work-card-surface">
-                <div class="work-card-cover work-card-cover-iknow"></div>
-                <div class="work-card-tags">
-                  <span class="work-tag"># UX设计</span>
-                  <span class="work-tag"># 视觉设计</span>
+                <div class="work-card-media">
+                  <img class="work-card-image" src="./assets/project-iknow-pages/01.jpg" alt="" loading="lazy" />
+                  <div class="work-card-overlay" aria-hidden="true">
+                    <span class="work-card-blur work-card-blur-1"></span>
+                    <span class="work-card-blur work-card-blur-2"></span>
+                    <span class="work-card-blur work-card-blur-3"></span>
+                    <span class="work-card-blur work-card-blur-4"></span>
+                    <span class="work-card-blur work-card-blur-5"></span>
+                    <span class="work-card-blur work-card-blur-6"></span>
+                    <span class="work-card-blur work-card-blur-7"></span>
+                    <span class="work-card-tint"></span>
+                  </div>
+                  <div class="work-card-content">
+                    <div class="work-card-tags">
+                      <span class="work-tag"># UX设计</span>
+                      <span class="work-tag"># 视觉设计</span>
+                    </div>
+                    <h3>iKonw</h3>
+                  </div>
                 </div>
-                <h3>iKonw</h3>
               </div>
             </article>
 
             <article class="work-card work-card-project" data-work-category="ux" data-project-gallery="adhd-ai" tabindex="0" role="button" aria-label="打开项目 AI如何帮助 ADHD？" data-cursor-icon="view">
               <div class="work-card-surface">
-                <div class="work-card-cover work-card-cover-adhd-ai"></div>
-                <div class="work-card-tags">
-                  <span class="work-tag"># UX设计</span>
-                  <span class="work-tag"># AI</span>
+                <div class="work-card-media">
+                  <img class="work-card-image" src="./assets/project-adhd-pages/01.jpg" alt="" loading="lazy" />
+                  <div class="work-card-overlay" aria-hidden="true">
+                    <span class="work-card-blur work-card-blur-1"></span>
+                    <span class="work-card-blur work-card-blur-2"></span>
+                    <span class="work-card-blur work-card-blur-3"></span>
+                    <span class="work-card-blur work-card-blur-4"></span>
+                    <span class="work-card-blur work-card-blur-5"></span>
+                    <span class="work-card-blur work-card-blur-6"></span>
+                    <span class="work-card-blur work-card-blur-7"></span>
+                    <span class="work-card-tint"></span>
+                  </div>
+                  <div class="work-card-content">
+                    <div class="work-card-tags">
+                      <span class="work-tag"># UX设计</span>
+                      <span class="work-tag"># AI</span>
+                    </div>
+                    <h3>AI如何帮助 ADHD？</h3>
+                  </div>
                 </div>
-                <h3>AI如何帮助 ADHD？</h3>
               </div>
             </article>
 
             <article class="work-card work-card-project" data-work-category="ux product" data-project-gallery="etea" tabindex="0" role="button" aria-label="打开项目 E-TEA" data-cursor-icon="view">
               <div class="work-card-surface">
-                <div class="work-card-cover work-card-cover-etea"></div>
-                <div class="work-card-tags">
-                  <span class="work-tag"># UX设计</span>
-                  <span class="work-tag"># 产品设计</span>
+                <div class="work-card-media">
+                  <img class="work-card-image" src="./assets/project-etea-pages/01.jpg" alt="" loading="lazy" />
+                  <div class="work-card-overlay" aria-hidden="true">
+                    <span class="work-card-blur work-card-blur-1"></span>
+                    <span class="work-card-blur work-card-blur-2"></span>
+                    <span class="work-card-blur work-card-blur-3"></span>
+                    <span class="work-card-blur work-card-blur-4"></span>
+                    <span class="work-card-blur work-card-blur-5"></span>
+                    <span class="work-card-blur work-card-blur-6"></span>
+                    <span class="work-card-blur work-card-blur-7"></span>
+                    <span class="work-card-tint"></span>
+                  </div>
+                  <div class="work-card-content">
+                    <div class="work-card-tags">
+                      <span class="work-tag"># UX设计</span>
+                      <span class="work-tag"># 产品设计</span>
+                    </div>
+                    <h3>E-TEA</h3>
+                  </div>
                 </div>
-                <h3>E-TEA</h3>
               </div>
             </article>
 
             <article class="work-card work-card-project" data-work-category="visual" data-project-gallery="marry-christmas" tabindex="0" role="button" aria-label="打开项目 Merry Christmas" data-cursor-icon="view">
               <div class="work-card-surface">
-                <div class="work-card-cover work-card-cover-marry-christmas"></div>
-                <div class="work-card-tags">
-                  <span class="work-tag"># 平面设计</span>
-                  <span class="work-tag"># 字体设计</span>
+                <div class="work-card-media">
+                  <img class="work-card-image" src="./assets/project-marry-christmas-pages/01.jpg" alt="" loading="lazy" />
+                  <div class="work-card-overlay" aria-hidden="true">
+                    <span class="work-card-blur work-card-blur-1"></span>
+                    <span class="work-card-blur work-card-blur-2"></span>
+                    <span class="work-card-blur work-card-blur-3"></span>
+                    <span class="work-card-blur work-card-blur-4"></span>
+                    <span class="work-card-blur work-card-blur-5"></span>
+                    <span class="work-card-blur work-card-blur-6"></span>
+                    <span class="work-card-blur work-card-blur-7"></span>
+                    <span class="work-card-tint"></span>
+                  </div>
+                  <div class="work-card-content">
+                    <div class="work-card-tags">
+                      <span class="work-tag"># 平面设计</span>
+                      <span class="work-tag"># 字体设计</span>
+                    </div>
+                    <h3>Merry Christmas</h3>
+                  </div>
                 </div>
-                <h3>Merry Christmas</h3>
               </div>
             </article>
 
@@ -265,6 +263,48 @@
         </div>
       </section>
     </main>
+
+    <button class="ai-chat-fab" type="button" aria-controls="ai-chat-sidebar" aria-expanded="false" data-ai-chat-toggle>
+      <span class="ai-chat-fab-dot" aria-hidden="true"></span>
+      <span class="ai-chat-fab-label">Ask Long</span>
+    </button>
+
+    <aside class="ai-chat-sidebar" id="ai-chat-sidebar" aria-hidden="true" data-ai-chat-sidebar>
+      <div class="ai-chat-shell">
+        <div class="ai-chat-header">
+          <div>
+            <p class="ai-chat-eyebrow">AI Persona</p>
+            <h2>Ask Long</h2>
+            <p class="ai-chat-subtitle">可以问我关于龙湘玉的作品、经历和联系方式。</p>
+          </div>
+          <button class="ai-chat-close" type="button" aria-label="关闭 AI 对话窗口" data-ai-chat-close>
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="ai-chat-messages" aria-live="polite" data-ai-chat-messages></div>
+
+        <form class="ai-chat-form" data-ai-chat-form>
+          <label class="sr-only" for="ai-chat-input">输入你想问龙湘玉 AI 分身的问题</label>
+          <textarea
+            class="ai-chat-input"
+            id="ai-chat-input"
+            name="message"
+            rows="1"
+            maxlength="800"
+            placeholder="问问我：你做过哪些项目？你擅长什么？"
+            data-ai-chat-input
+          ></textarea>
+          <div class="ai-chat-actions">
+            <p class="ai-chat-hint">Enter 发送，Shift + Enter 换行</p>
+            <button class="ai-chat-send" type="submit" data-ai-chat-send>发送</button>
+          </div>
+        </form>
+      </div>
+    </aside>
 
     <div class="project-viewer" aria-hidden="true" data-project-viewer>
       <button class="project-viewer-present" type="button" aria-label="进入放映模式" data-project-viewer-present>

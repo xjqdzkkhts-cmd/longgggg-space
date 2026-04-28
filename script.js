@@ -5,20 +5,18 @@ const cursor = document.querySelector('.custom-cursor');
 const scrollTrigger = document.querySelector('[data-scroll-target]');
 const hero = document.querySelector('.hero');
 const heroTitle = document.querySelector('.hero-title');
-const typedRole = document.querySelector('[data-typed-role]');
-const aboutSection = document.querySelector('#works');
-const worksSection = document.querySelector('#works .folder-stage');
-const portfolioWrapper = document.querySelector('#about');
-const portfolioSection = document.querySelector('#about .works-showcase-inner');
+const roleStack = document.querySelector('[data-role-stack]');
+const currentRoleLayer = document.querySelector('[data-role-current]');
+const nextRoleLayer = document.querySelector('[data-role-next]');
+const worksSection = document.querySelector('#works');
+const portfolioSection = document.querySelector('#works .works-showcase-inner');
 const contactWrapper = document.querySelector('#contact');
 const contactSection = document.querySelector('#contact .contact-footer');
-const folderStage = document.querySelector('.folder-stage');
-const folderPages = [...document.querySelectorAll('[data-folder-page]')];
-const folderTabHits = [...document.querySelectorAll('[data-folder-target]')];
 const siteHeader = document.querySelector('.site-header');
 const navLinks = [...document.querySelectorAll('[data-nav-section]')];
 const worksTabs = [...document.querySelectorAll('[data-work-filter]')];
 const workCards = [...document.querySelectorAll('[data-work-category]')];
+const workCardMedia = [...document.querySelectorAll('.work-card-media')];
 const projectCards = [...document.querySelectorAll('[data-project-gallery]')];
 const projectViewer = document.querySelector('[data-project-viewer]');
 const projectViewerPages = document.querySelector('[data-project-viewer-pages]');
@@ -32,6 +30,13 @@ const projectSlideNext = document.querySelector('[data-project-slide-next]');
 const copyButtons = [...document.querySelectorAll('[data-copy-value]')];
 const siteToast = document.querySelector('[data-site-toast]');
 const cursorIcon = document.querySelector('.custom-cursor-icon');
+const aiChatToggle = document.querySelector('[data-ai-chat-toggle]');
+const aiChatSidebar = document.querySelector('[data-ai-chat-sidebar]');
+const aiChatClose = document.querySelector('[data-ai-chat-close]');
+const aiChatMessages = document.querySelector('[data-ai-chat-messages]');
+const aiChatForm = document.querySelector('[data-ai-chat-form]');
+const aiChatInput = document.querySelector('[data-ai-chat-input]');
+const aiChatSend = document.querySelector('[data-ai-chat-send]');
 const heroRoles = ['UX设计师', 'Vibe Coder', 'HCI 爱好者', 'UI 设计师'];
 const heroCardSources = {
   UX设计师: './assets/user-card.png',
@@ -39,8 +44,237 @@ const heroCardSources = {
   'HCI 爱好者': './assets/hero-card-hci-lover.png',
   'UI 设计师': './assets/hero-card-ui-designer.png',
 };
+const workCardTintCache = new Map();
+const workCardTintInflight = new Map();
+const aiChatApiBaseUrl = (window.LONG_AI_CONFIG?.apiBaseUrl || '').replace(/\/$/, '');
+const aiChatEndpoint = `${aiChatApiBaseUrl}/api/chat`;
+const aiChatState = {
+  isOpen: false,
+  isSending: false,
+  hasBooted: false,
+  messages: [],
+};
+const AI_CHAT_COPY = {
+  welcome:
+    '你好，我是龙湘玉的 AI 分身。你可以问我关于她的作品、经历、研究兴趣和联系方式。',
+  serviceUnavailable: 'AI 服务暂时不可用，请稍后再试。',
+  notConfigured: 'AI 服务还没有接通，请先部署 Vercel 后端并填写前端 API 地址。',
+};
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+const rgbToHsl = (r, g, b) => {
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const lightness = (max + min) / 2;
+  const delta = max - min;
+
+  if (delta === 0) {
+    return { h: 0, s: 0, l: lightness };
+  }
+
+  const saturation = lightness > 0.5 ? delta / (2 - max - min) : delta / (max + min);
+  let hue = 0;
+
+  switch (max) {
+    case rn:
+      hue = (gn - bn) / delta + (gn < bn ? 6 : 0);
+      break;
+    case gn:
+      hue = (bn - rn) / delta + 2;
+      break;
+    default:
+      hue = (rn - gn) / delta + 4;
+  }
+
+  return { h: hue / 6, s: saturation, l: lightness };
+};
+
+const hslToRgb = (h, s, l) => {
+  if (s === 0) {
+    const value = Math.round(l * 255);
+    return [value, value, value];
+  }
+
+  const hueToRgb = (p, q, t) => {
+    let nextT = t;
+
+    if (nextT < 0) nextT += 1;
+    if (nextT > 1) nextT -= 1;
+    if (nextT < 1 / 6) return p + (q - p) * 6 * nextT;
+    if (nextT < 1 / 2) return q;
+    if (nextT < 2 / 3) return p + (q - p) * (2 / 3 - nextT) * 6;
+    return p;
+  };
+
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+
+  return [
+    Math.round(hueToRgb(p, q, h + 1 / 3) * 255),
+    Math.round(hueToRgb(p, q, h) * 255),
+    Math.round(hueToRgb(p, q, h - 1 / 3) * 255),
+  ];
+};
+
+const mixRgb = (source, target, amount) =>
+  source.map((channel, index) => Math.round(channel + (target[index] - channel) * amount));
+
+const extractDominantWorkCardTint = (imageUrl) => {
+  if (!imageUrl) {
+    return Promise.resolve({
+      tintRgb: [24, 24, 24],
+      contrastBoost: 0.45,
+    });
+  }
+
+  if (workCardTintCache.has(imageUrl)) {
+    return Promise.resolve(workCardTintCache.get(imageUrl));
+  }
+
+  if (workCardTintInflight.has(imageUrl)) {
+    return workCardTintInflight.get(imageUrl);
+  }
+
+  const extractionPromise = new Promise((resolve) => {
+    const image = new Image();
+    image.decoding = 'async';
+
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+
+      if (!context) {
+        const fallbackTint = {
+          tintRgb: [24, 24, 24],
+          contrastBoost: 0.45,
+        };
+        workCardTintCache.set(imageUrl, fallbackTint);
+        resolve(fallbackTint);
+        return;
+      }
+
+      const sampleWidth = 48;
+      const sampleHeight = 28;
+      const sourceHeight = Math.max(1, Math.floor(image.naturalHeight * 0.35));
+      const sourceY = Math.max(0, image.naturalHeight - sourceHeight);
+      canvas.width = sampleWidth;
+      canvas.height = sampleHeight;
+      context.drawImage(
+        image,
+        0,
+        sourceY,
+        image.naturalWidth,
+        sourceHeight,
+        0,
+        0,
+        sampleWidth,
+        sampleHeight
+      );
+
+      const pixels = context.getImageData(0, 0, sampleWidth, sampleHeight).data;
+      const clusters = new Map();
+      let luminanceTotal = 0;
+      let sampledPixels = 0;
+
+      for (let index = 0; index < pixels.length; index += 4) {
+        const alpha = pixels[index + 3];
+
+        if (alpha < 120) {
+          continue;
+        }
+
+        const red = pixels[index];
+        const green = pixels[index + 1];
+        const blue = pixels[index + 2];
+        const quantizedRed = Math.round(red / 24) * 24;
+        const quantizedGreen = Math.round(green / 24) * 24;
+        const quantizedBlue = Math.round(blue / 24) * 24;
+        const key = `${quantizedRed}-${quantizedGreen}-${quantizedBlue}`;
+        const { s } = rgbToHsl(red, green, blue);
+        const nextCluster = clusters.get(key) || { count: 0, red: 0, green: 0, blue: 0, saturation: 0 };
+        const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
+
+        nextCluster.count += 1;
+        nextCluster.red += red;
+        nextCluster.green += green;
+        nextCluster.blue += blue;
+        nextCluster.saturation += s;
+        clusters.set(key, nextCluster);
+        luminanceTotal += luminance;
+        sampledPixels += 1;
+      }
+
+      if (!clusters.size) {
+        const fallbackTint = {
+          tintRgb: [24, 24, 24],
+          contrastBoost: 0.45,
+        };
+        workCardTintCache.set(imageUrl, fallbackTint);
+        resolve(fallbackTint);
+        return;
+      }
+
+      const winner = [...clusters.values()].sort((clusterA, clusterB) => {
+        const scoreA = (clusterA.saturation / clusterA.count) * clusterA.count;
+        const scoreB = (clusterB.saturation / clusterB.count) * clusterB.count;
+        return scoreB - scoreA;
+      })[0];
+
+      const averageRed = Math.round(winner.red / winner.count);
+      const averageGreen = Math.round(winner.green / winner.count);
+      const averageBlue = Math.round(winner.blue / winner.count);
+      const tintHsl = rgbToHsl(averageRed, averageGreen, averageBlue);
+      const clampedTint = hslToRgb(tintHsl.h, tintHsl.s, Math.min(tintHsl.l, 0.2));
+      const sampleLuminance = sampledPixels ? luminanceTotal / sampledPixels : tintHsl.l;
+      const saturationPenalty = clamp((0.22 - tintHsl.s) / 0.22, 0, 1) * 0.28;
+      const lightnessBoost = clamp((sampleLuminance - 0.52) / 0.28, 0, 1) * 0.72;
+      const contrastBoost = clamp(lightnessBoost + saturationPenalty, 0, 1);
+      const tintData = {
+        tintRgb: clampedTint,
+        contrastBoost,
+      };
+
+      workCardTintCache.set(imageUrl, tintData);
+      resolve(tintData);
+    };
+
+    image.onerror = () => {
+      const fallbackTint = {
+        tintRgb: [24, 24, 24],
+        contrastBoost: 0.45,
+      };
+      workCardTintCache.set(imageUrl, fallbackTint);
+      resolve(fallbackTint);
+    };
+
+    image.src = imageUrl;
+  }).finally(() => {
+    workCardTintInflight.delete(imageUrl);
+  });
+
+  workCardTintInflight.set(imageUrl, extractionPromise);
+  return extractionPromise;
+};
+
+const applyWorkCardTint = async (mediaElement) => {
+  const imageElement = mediaElement?.querySelector('.work-card-image');
+
+  if (!mediaElement || !imageElement) {
+    return;
+  }
+
+  const { tintRgb, contrastBoost } = await extractDominantWorkCardTint(imageElement.currentSrc || imageElement.src);
+  const glassRgb = mixRgb(tintRgb, [255, 255, 255], 0.58 - contrastBoost * 0.16);
+
+  mediaElement.style.setProperty('--work-card-tint-rgb', tintRgb.join(' '));
+  mediaElement.style.setProperty('--work-card-glass-rgb', glassRgb.join(' '));
+  mediaElement.style.setProperty('--work-card-contrast-boost', contrastBoost.toFixed(3));
+  mediaElement.classList.add('is-tinted');
+};
 const PHYSICS = {
   gravity: 0.0024,
   damping: 0.988,
@@ -56,12 +290,19 @@ const PHYSICS = {
   introDurationMs: 2600,
 };
 
-const roleTypingState = {
-  roleIndex: 0,
-  charIndex: 0,
-  deleting: false,
-  timeoutId: 0,
+const ROLE_SWAP = {
+  hold: 2400,
+  initialDelay: 1850,
+  duration: 720,
+  stagger: 45,
 };
+
+const roleSwapState = {
+  roleIndex: 0,
+  timeoutId: 0,
+  animationFrameId: 0,
+};
+let heroIntroHasPlayed = false;
 
 function createCardState(element) {
   const anchorX = Number(element.dataset.anchorX);
@@ -98,6 +339,10 @@ Object.values(heroCardSources).forEach((src) => {
   image.src = src;
 });
 
+workCardMedia.forEach((mediaElement) => {
+  applyWorkCardTint(mediaElement);
+});
+
 function setHeroCardForRole(roleName) {
   const nextSource = heroCardSources[roleName] || heroCardSources.UX设计师;
 
@@ -128,64 +373,73 @@ states.forEach((state) => {
   triggerCardIntro(state);
 });
 
+if (currentRoleLayer && nextRoleLayer) {
+  setDisplayedRole(heroRoles[0]);
+}
+
+function buildRoleMarkup(roleName) {
+  return [...roleName]
+    .map((character, index) => {
+      if (character === ' ') {
+        return '<span class="hero-role-char hero-role-space" aria-hidden="true">&nbsp;</span>';
+      }
+
+      return `<span class="hero-role-char" style="--char-index:${index}">${character}</span>`;
+    })
+    .join('');
+}
+
+function setDisplayedRole(roleName) {
+  if (!currentRoleLayer || !nextRoleLayer) {
+    return;
+  }
+
+  currentRoleLayer.innerHTML = buildRoleMarkup(roleName);
+  currentRoleLayer.classList.remove('is-leaving');
+  nextRoleLayer.innerHTML = '';
+  nextRoleLayer.classList.remove('is-entering');
+}
+
+function scheduleRoleSwap() {
+  if (!currentRoleLayer || !nextRoleLayer) {
+    return;
+  }
+
+  window.clearTimeout(roleSwapState.timeoutId);
+  cancelAnimationFrame(roleSwapState.animationFrameId);
+
+  const nextIndex = (roleSwapState.roleIndex + 1) % heroRoles.length;
+  const nextRole = heroRoles[nextIndex];
+
+  setHeroCardForRole(nextRole);
+  nextRoleLayer.innerHTML = buildRoleMarkup(nextRole);
+  currentRoleLayer.classList.add('is-leaving');
+  nextRoleLayer.classList.add('is-entering');
+
+  const totalDuration =
+    ROLE_SWAP.duration + (Math.max([...nextRole].length, [...heroRoles[roleSwapState.roleIndex]].length) - 1) * ROLE_SWAP.stagger;
+
+  roleSwapState.timeoutId = window.setTimeout(() => {
+    roleSwapState.roleIndex = nextIndex;
+    setDisplayedRole(nextRole);
+    roleSwapState.timeoutId = window.setTimeout(scheduleRoleSwap, ROLE_SWAP.hold);
+  }, totalDuration);
+}
+
 function resetHeroTextAnimations() {
   if (!heroTitle) {
     return;
   }
 
   hero.classList.remove('is-active');
-  if (typedRole) {
-    window.clearTimeout(roleTypingState.timeoutId);
-    roleTypingState.timeoutId = 0;
-    roleTypingState.roleIndex = 0;
-    roleTypingState.charIndex = 0;
-    roleTypingState.deleting = false;
-    typedRole.textContent = '';
-  }
+  window.clearTimeout(roleSwapState.timeoutId);
+  cancelAnimationFrame(roleSwapState.animationFrameId);
+  roleSwapState.timeoutId = 0;
+  roleSwapState.animationFrameId = 0;
+  roleSwapState.roleIndex = 0;
+  setDisplayedRole(heroRoles[0]);
   setHeroCardForRole(heroRoles[0]);
   void hero.offsetWidth;
-}
-
-function scheduleRoleTyping() {
-  if (!typedRole) {
-    return;
-  }
-
-  window.clearTimeout(roleTypingState.timeoutId);
-
-  const currentRole = heroRoles[roleTypingState.roleIndex];
-
-  if (!roleTypingState.deleting) {
-    if (roleTypingState.charIndex === 0) {
-      setHeroCardForRole(currentRole);
-    }
-
-    roleTypingState.charIndex += 1;
-    typedRole.textContent = currentRole.slice(0, roleTypingState.charIndex);
-
-    if (roleTypingState.charIndex >= currentRole.length) {
-      roleTypingState.timeoutId = window.setTimeout(() => {
-        roleTypingState.deleting = true;
-        scheduleRoleTyping();
-      }, 2200);
-      return;
-    }
-
-    roleTypingState.timeoutId = window.setTimeout(scheduleRoleTyping, 120);
-    return;
-  }
-
-  roleTypingState.charIndex -= 1;
-  typedRole.textContent = currentRole.slice(0, Math.max(0, roleTypingState.charIndex));
-
-  if (roleTypingState.charIndex <= 0) {
-    roleTypingState.deleting = false;
-    roleTypingState.roleIndex = (roleTypingState.roleIndex + 1) % heroRoles.length;
-    roleTypingState.timeoutId = window.setTimeout(scheduleRoleTyping, 240);
-    return;
-  }
-
-  roleTypingState.timeoutId = window.setTimeout(scheduleRoleTyping, 70);
 }
 
 function activateHeroIntro() {
@@ -193,19 +447,192 @@ function activateHeroIntro() {
     return;
   }
 
-  hero.classList.add('is-active');
-  if (typedRole) {
-    window.clearTimeout(roleTypingState.timeoutId);
-    roleTypingState.roleIndex = 0;
-    roleTypingState.charIndex = 0;
-    roleTypingState.deleting = false;
-    typedRole.textContent = '';
-    setHeroCardForRole(heroRoles[0]);
-    roleTypingState.timeoutId = window.setTimeout(scheduleRoleTyping, 1550);
+  if (heroIntroHasPlayed) {
+    return;
   }
+
+  hero.classList.add('is-active');
+  window.clearTimeout(roleSwapState.timeoutId);
+  cancelAnimationFrame(roleSwapState.animationFrameId);
+  roleSwapState.roleIndex = 0;
+  setDisplayedRole(heroRoles[0]);
+  setHeroCardForRole(heroRoles[0]);
+  roleSwapState.timeoutId = window.setTimeout(scheduleRoleSwap, ROLE_SWAP.initialDelay);
   states.forEach((state) => {
     triggerCardIntro(state);
   });
+  heroIntroHasPlayed = true;
+}
+
+function autoResizeAiChatInput() {
+  if (!aiChatInput) {
+    return;
+  }
+
+  aiChatInput.style.height = 'auto';
+  aiChatInput.style.height = `${Math.min(aiChatInput.scrollHeight, 168)}px`;
+}
+
+function renderAiChatMessages() {
+  if (!aiChatMessages) {
+    return;
+  }
+
+  aiChatMessages.innerHTML = '';
+
+  aiChatState.messages.forEach((message) => {
+    const item = document.createElement('div');
+    item.className = 'ai-chat-message';
+    item.dataset.role = message.role;
+
+    if (message.role === 'status') {
+      item.classList.add('is-status');
+    } else {
+      const meta = document.createElement('div');
+      meta.className = 'ai-chat-message-meta';
+      meta.textContent = message.role === 'user' ? 'You' : 'Long AI';
+      item.appendChild(meta);
+    }
+
+    const bubble = document.createElement('div');
+    bubble.className = 'ai-chat-bubble';
+    bubble.textContent = message.text;
+    item.appendChild(bubble);
+    aiChatMessages.appendChild(item);
+  });
+
+  aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+}
+
+function ensureAiChatBooted() {
+  if (aiChatState.hasBooted) {
+    return;
+  }
+
+  aiChatState.hasBooted = true;
+  aiChatState.messages.push({
+    role: 'assistant',
+    text: AI_CHAT_COPY.welcome,
+    includeInHistory: false,
+  });
+  renderAiChatMessages();
+}
+
+function setAiChatOpen(nextOpen) {
+  if (!aiChatSidebar || !aiChatToggle) {
+    return;
+  }
+
+  aiChatState.isOpen = nextOpen;
+  document.body.classList.toggle('is-chat-open', nextOpen);
+  aiChatSidebar.setAttribute('aria-hidden', String(!nextOpen));
+  aiChatToggle.setAttribute('aria-expanded', String(nextOpen));
+
+  if (nextOpen) {
+    ensureAiChatBooted();
+    requestAnimationFrame(() => {
+      aiChatInput?.focus();
+    });
+  }
+}
+
+function setAiChatSending(nextSending) {
+  aiChatState.isSending = nextSending;
+
+  if (aiChatInput) {
+    aiChatInput.disabled = nextSending;
+  }
+
+  if (aiChatSend) {
+    aiChatSend.disabled = nextSending;
+    aiChatSend.textContent = nextSending ? '思考中…' : '发送';
+  }
+}
+
+function buildAiChatHistoryPayload() {
+  return aiChatState.messages
+    .filter((message) => (message.role === 'user' || message.role === 'assistant') && message.includeInHistory !== false)
+    .slice(-8)
+    .map((message) => ({
+      role: message.role,
+      text: message.text,
+    }));
+}
+
+function pushAiChatMessage(message) {
+  aiChatState.messages.push(message);
+  renderAiChatMessages();
+}
+
+function removeAiChatStatusMessages() {
+  aiChatState.messages = aiChatState.messages.filter((message) => message.role !== 'status');
+  renderAiChatMessages();
+}
+
+async function sendAiChatMessage(rawText) {
+  const messageText = rawText.trim();
+  if (!messageText || aiChatState.isSending) {
+    return;
+  }
+
+  ensureAiChatBooted();
+  pushAiChatMessage({
+    role: 'user',
+    text: messageText,
+  });
+
+  if (aiChatInput) {
+    aiChatInput.value = '';
+    autoResizeAiChatInput();
+  }
+
+  pushAiChatMessage({
+    role: 'status',
+    text: 'Long AI 正在思考...',
+    includeInHistory: false,
+  });
+
+  setAiChatSending(true);
+
+  try {
+    const response = await fetch(aiChatEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: messageText,
+        history: buildAiChatHistoryPayload(),
+      }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    removeAiChatStatusMessages();
+
+    if (!response.ok) {
+      const fallbackMessage =
+        response.status === 404 ? AI_CHAT_COPY.notConfigured : data.error || AI_CHAT_COPY.serviceUnavailable;
+      pushAiChatMessage({
+        role: 'assistant',
+        text: fallbackMessage,
+      });
+      return;
+    }
+
+    pushAiChatMessage({
+      role: 'assistant',
+      text: data.reply || AI_CHAT_COPY.serviceUnavailable,
+    });
+  } catch (_error) {
+    removeAiChatStatusMessages();
+    pushAiChatMessage({
+      role: 'assistant',
+      text: AI_CHAT_COPY.serviceUnavailable,
+    });
+  } finally {
+    setAiChatSending(false);
+  }
 }
 
 function updateBounds() {
@@ -435,107 +862,6 @@ if (scrollTrigger) {
       behavior: 'smooth',
     });
   });
-}
-
-if (hero && worksSection && portfolioSection && contactSection) {
-  let wheelSnapLocked = false;
-
-  const smoothScrollTo = (target) => {
-    const targetTop = window.scrollY + target.getBoundingClientRect().top - window.innerHeight * 0.12;
-    window.scrollTo({
-      top: Math.max(0, targetTop),
-      behavior: 'smooth',
-    });
-  };
-
-  window.addEventListener(
-    'wheel',
-    (event) => {
-      if (wheelSnapLocked) {
-        return;
-      }
-
-      const heroRect = hero.getBoundingClientRect();
-      const heroMostlyVisible = heroRect.top <= 20 && heroRect.bottom > window.innerHeight * 0.55;
-      const worksRect = worksSection.getBoundingClientRect();
-      const worksMostlyVisible = worksRect.top <= window.innerHeight * 0.35 && worksRect.bottom > window.innerHeight * 0.45;
-      const portfolioRect = portfolioSection.getBoundingClientRect();
-      const portfolioMostlyVisible =
-        portfolioRect.top <= window.innerHeight * 0.35 && portfolioRect.bottom > window.innerHeight * 0.45;
-      const contactRect = contactSection.getBoundingClientRect();
-      const contactMostlyVisible =
-        contactRect.top <= window.innerHeight * 0.35 && contactRect.bottom > window.innerHeight * 0.45;
-
-      if (event.deltaY > 0 && heroMostlyVisible) {
-        event.preventDefault();
-        wheelSnapLocked = true;
-        smoothScrollTo(worksSection);
-      } else if (event.deltaY > 0 && worksMostlyVisible) {
-        event.preventDefault();
-        wheelSnapLocked = true;
-        smoothScrollTo(portfolioSection);
-      } else if (event.deltaY < 0 && portfolioMostlyVisible && !contactMostlyVisible) {
-        event.preventDefault();
-        wheelSnapLocked = true;
-        smoothScrollTo(worksSection);
-      } else if (event.deltaY < 0 && worksMostlyVisible) {
-        event.preventDefault();
-        wheelSnapLocked = true;
-        smoothScrollTo(hero);
-      } else {
-        return;
-      }
-
-      window.setTimeout(() => {
-        wheelSnapLocked = false;
-      }, 900);
-    },
-    { passive: false }
-  );
-}
-
-if (folderStage && folderPages.length) {
-  let sequenceStep = 0;
-  const maxSequenceStep = 4;
-
-  const applyFolderSequence = () => {
-    folderStage.dataset.sequenceStep = String(sequenceStep);
-  };
-
-  const advanceFolderSequence = () => {
-    sequenceStep = sequenceStep >= maxSequenceStep ? 0 : sequenceStep + 1;
-    applyFolderSequence();
-  };
-
-  const collapseFolderSequence = () => {
-    if (sequenceStep === 0) {
-      return;
-    }
-
-    sequenceStep = 0;
-    applyFolderSequence();
-  };
-
-  folderStage.addEventListener('click', () => {
-    advanceFolderSequence();
-  });
-
-  folderTabHits.forEach((tab) => {
-    tab.addEventListener('click', (event) => {
-      event.stopPropagation();
-      advanceFolderSequence();
-    });
-  });
-
-  window.addEventListener(
-    'scroll',
-    () => {
-      collapseFolderSequence();
-    },
-    { passive: true }
-  );
-
-  applyFolderSequence();
 }
 
 if (worksTabs.length && workCards.length) {
@@ -799,18 +1125,48 @@ if (copyButtons.length) {
   });
 }
 
-if (navLinks.length && hero && aboutSection && worksSection && portfolioWrapper && portfolioSection && contactWrapper && contactSection) {
+if (aiChatToggle && aiChatSidebar && aiChatForm && aiChatInput) {
+  autoResizeAiChatInput();
+
+  aiChatToggle.addEventListener('click', () => {
+    setAiChatOpen(!aiChatState.isOpen);
+  });
+
+  aiChatClose?.addEventListener('click', () => {
+    setAiChatOpen(false);
+  });
+
+  aiChatInput.addEventListener('input', autoResizeAiChatInput);
+
+  aiChatInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      aiChatForm.requestSubmit();
+    }
+  });
+
+  aiChatForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    sendAiChatMessage(aiChatInput.value);
+  });
+
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && aiChatState.isOpen && !projectViewer?.classList.contains('is-open')) {
+      setAiChatOpen(false);
+    }
+  });
+}
+
+if (navLinks.length && hero && worksSection && portfolioSection && contactWrapper && contactSection) {
   const sectionMap = {
     home: hero,
     works: worksSection,
-    about: portfolioWrapper,
     contact: contactWrapper,
   };
 
   const navOffsetMap = {
     home: () => 0,
-    works: () => window.scrollY + worksSection.getBoundingClientRect().top - window.innerHeight * 0.12,
-    about: () => window.scrollY + portfolioSection.getBoundingClientRect().top - window.innerHeight * 0.08,
+    works: () => window.scrollY + portfolioSection.getBoundingClientRect().top - window.innerHeight * 0.08,
     contact: () => window.scrollY + contactWrapper.getBoundingClientRect().top - window.innerHeight * 0.06,
   };
 
@@ -844,8 +1200,6 @@ if (navLinks.length && hero && aboutSection && worksSection && portfolioWrapper 
 
     if (contactWrapper.getBoundingClientRect().top <= viewportMid) {
       activeSection = 'contact';
-    } else if (portfolioWrapper.getBoundingClientRect().top <= viewportMid) {
-      activeSection = 'about';
     } else if (worksSection.getBoundingClientRect().top <= viewportMid) {
       activeSection = 'works';
     }
@@ -917,8 +1271,6 @@ if (hero && heroTitle) {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           activateHeroIntro();
-        } else {
-          resetHeroTextAnimations();
         }
       });
     },
