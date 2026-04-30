@@ -10,6 +10,7 @@ function setCorsHeaders(res) {
 
 function sendJson(res, statusCode, payload) {
   setCorsHeaders(res);
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
   res.statusCode = statusCode;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.end(JSON.stringify(payload));
@@ -75,16 +76,34 @@ async function fetchSpotifyJson(url, accessToken) {
     },
   });
 
+  const result = {
+    status: response.status,
+    ok: response.ok,
+    data: null,
+    error: '',
+  };
+
   if (response.status === 204) {
-    return null;
+    return result;
   }
 
   const data = await response.json().catch(() => ({}));
+  result.data = data;
+
   if (!response.ok) {
-    throw new Error(data.error?.message || 'Unable to fetch Spotify data.');
+    result.error = data.error?.message || 'Unable to fetch Spotify data.';
   }
 
-  return data;
+  return result;
+}
+
+function isDebugRequest(req) {
+  try {
+    const url = new URL(req.url || '', `https://${req.headers.host || 'localhost'}`);
+    return url.searchParams.get('debug') === '1';
+  } catch (_error) {
+    return false;
+  }
 }
 
 module.exports = async function handler(req, res) {
@@ -102,19 +121,32 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    const debug = isDebugRequest(req);
     const accessToken = await getAccessToken();
     const [current, recent] = await Promise.all([
-      fetchSpotifyJson(SPOTIFY_CURRENT_URL, accessToken).catch(() => null),
-      fetchSpotifyJson(SPOTIFY_RECENT_URL, accessToken).catch(() => null),
+      fetchSpotifyJson(SPOTIFY_CURRENT_URL, accessToken).catch((error) => ({
+        status: 0,
+        ok: false,
+        data: null,
+        error: error.message,
+      })),
+      fetchSpotifyJson(SPOTIFY_RECENT_URL, accessToken).catch((error) => ({
+        status: 0,
+        ok: false,
+        data: null,
+        error: error.message,
+      })),
     ]);
 
     const tracks = [];
-    const currentTrack = normalizeTrack(current?.item, 'current');
+    const currentData = current?.data;
+    const recentData = recent?.data;
+    const currentTrack = normalizeTrack(currentData?.item, 'current');
     if (currentTrack) {
       tracks.push(currentTrack);
     }
 
-    (recent?.items || []).forEach((item) => {
+    (recentData?.items || []).forEach((item) => {
       const normalized = normalizeTrack(item?.track, 'recent');
       if (!normalized) {
         return;
@@ -129,6 +161,22 @@ module.exports = async function handler(req, res) {
     sendJson(res, 200, {
       tracks: tracks.slice(0, 4),
       updatedAt: new Date().toISOString(),
+      ...(debug
+        ? {
+            debug: {
+              currentStatus: current?.status ?? null,
+              currentOk: Boolean(current?.ok),
+              currentType: currentData?.currently_playing_type || null,
+              currentIsPlaying: currentData?.is_playing ?? null,
+              currentHasItem: Boolean(currentData?.item),
+              currentError: current?.error || '',
+              recentStatus: recent?.status ?? null,
+              recentOk: Boolean(recent?.ok),
+              recentItems: Array.isArray(recentData?.items) ? recentData.items.length : 0,
+              recentError: recent?.error || '',
+            },
+          }
+        : {}),
     });
   } catch (error) {
     sendJson(res, 500, {
