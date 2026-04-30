@@ -62,6 +62,7 @@ const workCardTintCache = new Map();
 const workCardTintInflight = new Map();
 const aiChatApiBaseUrl = (window.LONG_AI_CONFIG?.apiBaseUrl || '').replace(/\/$/, '');
 const aiChatEndpoint = `${aiChatApiBaseUrl}/api/chat`;
+const spotifyRecentEndpoint = `${aiChatApiBaseUrl}/api/spotify-recent`;
 let openProjectViewerByGallery = null;
 let attachCursorBehavior = () => {};
 const aiChatState = {
@@ -72,6 +73,8 @@ const aiChatState = {
   starterIndex: -1,
   starterOptions: [],
   hasBooted: false,
+  spotifyTracks: null,
+  spotifyTracksPromise: null,
   messages: [],
 };
 const AI_CHAT_COPY = {
@@ -577,6 +580,107 @@ function getDefaultAiLifeItems() {
   ];
 }
 
+function normalizeSpotifyTracksPayload(payload) {
+  if (!Array.isArray(payload?.tracks)) {
+    return [];
+  }
+
+  return payload.tracks
+    .filter((track) => track && typeof track.title === 'string' && track.title.trim())
+    .slice(0, 4)
+    .map((track) => ({
+      title: track.title.trim(),
+      artist: typeof track.artist === 'string' ? track.artist.trim() : '',
+      image: typeof track.image === 'string' ? track.image : '',
+      url: typeof track.url === 'string' ? track.url : '',
+      theme: 'spotify',
+    }));
+}
+
+function getAiMusicTracks(fallbackTracks = []) {
+  const spotifyTracks = Array.isArray(aiChatState.spotifyTracks) ? aiChatState.spotifyTracks : [];
+  return spotifyTracks.length ? spotifyTracks : fallbackTracks;
+}
+
+function renderAiMusicCover(track) {
+  const cover = document.createElement(track.url ? 'a' : 'span');
+  cover.className = `ai-chat-music-cover is-${track.theme || 'default'}`;
+
+  if (track.image) {
+    cover.classList.add('has-image');
+    cover.style.backgroundImage = `url("${track.image.replace(/"/g, '%22')}")`;
+  }
+
+  if (track.url) {
+    cover.href = track.url;
+    cover.target = '_blank';
+    cover.rel = 'noopener noreferrer';
+    cover.setAttribute('aria-label', `在 Spotify 打开 ${track.title}`);
+  }
+
+  return cover;
+}
+
+function renderAiMusicTrack(track) {
+  const trackEl = document.createElement('div');
+  trackEl.className = 'ai-chat-music-track';
+
+  const cover = renderAiMusicCover(track);
+
+  const trackTitle = document.createElement('b');
+  trackTitle.textContent = track.title || '';
+
+  const artist = document.createElement('span');
+  artist.textContent = track.artist || '';
+
+  trackEl.append(cover, trackTitle, artist);
+  return trackEl;
+}
+
+function updateAiMusicCards() {
+  if (!aiChatMessages || !Array.isArray(aiChatState.spotifyTracks) || !aiChatState.spotifyTracks.length) {
+    return;
+  }
+
+  aiChatMessages.querySelectorAll('[data-ai-music-grid]').forEach((grid) => {
+    grid.innerHTML = '';
+    getAiMusicTracks().forEach((track) => {
+      grid.appendChild(renderAiMusicTrack(track));
+    });
+  });
+}
+
+function loadAiSpotifyTracks() {
+  if (aiChatState.spotifyTracks || aiChatState.spotifyTracksPromise) {
+    return aiChatState.spotifyTracksPromise;
+  }
+
+  aiChatState.spotifyTracksPromise = fetch(spotifyRecentEndpoint, {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error('Spotify request failed.');
+      }
+      return response.json();
+    })
+    .then((payload) => {
+      const tracks = normalizeSpotifyTracksPayload(payload);
+      if (tracks.length) {
+        aiChatState.spotifyTracks = tracks;
+        updateAiMusicCards();
+      }
+      return tracks;
+    })
+    .catch(() => {
+      aiChatState.spotifyTracks = [];
+      return [];
+    });
+
+  return aiChatState.spotifyTracksPromise;
+}
+
 function updateAiLifeCarousel(carousel) {
   if (!carousel) {
     return;
@@ -736,24 +840,14 @@ function renderAiFeedbackCard(card) {
 
         const grid = document.createElement('div');
         grid.className = 'ai-chat-music-grid';
-        (item.tracks || []).forEach((track) => {
-          const trackEl = document.createElement('div');
-          trackEl.className = 'ai-chat-music-track';
-
-          const cover = document.createElement('span');
-          cover.className = `ai-chat-music-cover is-${track.theme || 'default'}`;
-
-          const trackTitle = document.createElement('b');
-          trackTitle.textContent = track.title || '';
-
-          const artist = document.createElement('span');
-          artist.textContent = track.artist || '';
-
-          trackEl.append(cover, trackTitle, artist);
+        grid.dataset.aiMusicGrid = 'true';
+        getAiMusicTracks(item.tracks || []).forEach((track) => {
+          const trackEl = renderAiMusicTrack(track);
           grid.appendChild(trackEl);
         });
 
         lifeCard.append(title, grid);
+        loadAiSpotifyTracks();
       } else {
         const marker = document.createElement('span');
         marker.className = 'ai-chat-life-marker';

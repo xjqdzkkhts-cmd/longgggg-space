@@ -2211,6 +2211,8 @@ body.is-chat-open .ai-chat-sidebar {
   overflow: hidden;
   border-radius: 8px;
   background: #d8dce2;
+  background-position: center;
+  background-size: cover;
 }
 
 .ai-chat-music-cover::before,
@@ -2218,6 +2220,11 @@ body.is-chat-open .ai-chat-sidebar {
   content: "";
   position: absolute;
   inset: 0;
+}
+
+.ai-chat-music-cover.has-image::before,
+.ai-chat-music-cover.has-image::after {
+  content: none;
 }
 
 .ai-chat-music-cover.is-magnetic {
