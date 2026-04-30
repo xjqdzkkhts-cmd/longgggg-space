@@ -248,7 +248,7 @@ function inferCards(message) {
         { title: '喜欢记录', description: '手帐、音乐和旅行会帮我整理生活，也给设计带来灵感。' },
       ],
     });
-  } else if (/设计思考|思考方式|方法|design thinking/.test(text)) {
+  } else if (/设计思考|思考设计|思考方式|如何思考|怎么思考|方法|design thinking/.test(text)) {
     cards.push({
       type: 'profile',
       title: '我的设计思考',
@@ -286,7 +286,7 @@ function buildFallbackReply(message) {
     return '生活中，朋友常说我是一个温柔的人。我也很看重韧性，喜欢人在面对变化时依然保持乐观和进取。平时我喜欢手帐、旅行和音乐，也会沉浸在不断完善个人网站这种从 0 到 1 搭建体系的过程里。';
   }
 
-  if (/设计思考|思考方式|方法|design thinking/.test(text)) {
+  if (/设计思考|思考设计|思考方式|如何思考|怎么思考|方法|design thinking/.test(text)) {
     return '我的设计思考通常从真实需求和具体场景开始：先理解用户、问题和利益相关者，再把想法做成原型、界面或动效，让它变成可以讨论、验证和继续迭代的东西。';
   }
 
@@ -312,7 +312,7 @@ function inferSuggestions(message) {
     return ['和你合作是什么感觉？', '你最近在关注什么？', '你如何思考设计？'];
   }
 
-  if (/设计思考|思考方式|方法|design thinking/.test(text)) {
+  if (/设计思考|思考设计|思考方式|如何思考|怎么思考|方法|design thinking/.test(text)) {
     return ['你做过哪些项目？', '和你合作是什么感觉？', '你的技能有哪些？'];
   }
 
