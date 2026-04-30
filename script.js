@@ -47,6 +47,7 @@ const aiChatToggle = document.querySelector('[data-ai-chat-toggle]');
 const aiChatSidebar = document.querySelector('[data-ai-chat-sidebar]');
 const aiChatClose = document.querySelector('[data-ai-chat-close]');
 const aiChatMessages = document.querySelector('[data-ai-chat-messages]');
+const aiChatStarters = document.querySelector('[data-ai-chat-starters]');
 const aiChatForm = document.querySelector('[data-ai-chat-form]');
 const aiChatInput = document.querySelector('[data-ai-chat-input]');
 const aiChatSend = document.querySelector('[data-ai-chat-send]');
@@ -486,12 +487,178 @@ function autoResizeAiChatInput() {
   aiChatInput.style.height = `${Math.min(aiChatInput.scrollHeight, 168)}px`;
 }
 
+function getAiCardIcon(icon) {
+  const icons = {
+    mail: '✉',
+    phone: '☎',
+    wechat: '微',
+    link: '↗',
+  };
+
+  return icons[icon] || '•';
+}
+
+function handleAiCardAction(item) {
+  const value = item.value || item.url || '';
+
+  if (!value) {
+    return;
+  }
+
+  if (item.action === 'email') {
+    window.location.href = `mailto:${value}`;
+    return;
+  }
+
+  if (item.action === 'tel') {
+    window.location.href = `tel:${value.replace(/\s/g, '')}`;
+    return;
+  }
+
+  if (item.action === 'link' && item.url) {
+    window.open(item.url, '_blank', 'noopener,noreferrer');
+    return;
+  }
+
+  navigator.clipboard?.writeText(value).catch(() => {});
+}
+
+function renderAiFeedbackCard(card) {
+  const cardEl = document.createElement('div');
+  cardEl.className = 'ai-chat-feedback-card';
+  cardEl.dataset.cardType = card.type;
+
+  if (card.title) {
+    const title = document.createElement('div');
+    title.className = 'ai-chat-feedback-title';
+    title.textContent = card.title;
+    cardEl.appendChild(title);
+  }
+
+  if (card.type === 'contact') {
+    const grid = document.createElement('div');
+    grid.className = 'ai-chat-contact-grid';
+
+    (card.items || []).forEach((item) => {
+      const button = document.createElement('button');
+      button.className = 'ai-chat-contact-item';
+      button.type = 'button';
+
+      const icon = document.createElement('span');
+      icon.className = 'ai-chat-contact-icon';
+      icon.textContent = getAiCardIcon(item.icon);
+
+      const label = document.createElement('span');
+      label.textContent = item.label || item.value || 'Contact';
+
+      button.append(icon, label);
+      button.addEventListener('click', () => handleAiCardAction(item));
+      grid.appendChild(button);
+    });
+
+    cardEl.appendChild(grid);
+    return cardEl;
+  }
+
+  if (card.type === 'projects' || card.type === 'profile') {
+    const list = document.createElement('div');
+    list.className = card.type === 'profile' ? 'ai-chat-profile-list' : 'ai-chat-project-list';
+
+    (card.items || []).forEach((item) => {
+      const project = document.createElement('div');
+      project.className = card.type === 'profile' ? 'ai-chat-profile-item' : 'ai-chat-project-item';
+
+      const title = document.createElement('strong');
+      title.textContent = item.title || '项目';
+      project.appendChild(title);
+
+      if (item.description) {
+        const description = document.createElement('span');
+        description.textContent = item.description;
+        project.appendChild(description);
+      }
+
+      if (item.tag) {
+        const tag = document.createElement('em');
+        tag.textContent = item.tag;
+        project.appendChild(tag);
+      }
+
+      list.appendChild(project);
+    });
+
+    cardEl.appendChild(list);
+    return cardEl;
+  }
+
+  if (card.type === 'tags') {
+    const tags = document.createElement('div');
+    tags.className = 'ai-chat-tag-list';
+
+    (card.items || []).forEach((item) => {
+      const tag = document.createElement('span');
+      tag.textContent = typeof item === 'string' ? item : item.label || item.title || '';
+      if (tag.textContent) {
+        tags.appendChild(tag);
+      }
+    });
+
+    cardEl.appendChild(tags);
+    return cardEl;
+  }
+
+  if (card.type === 'timeline') {
+    const timeline = document.createElement('div');
+    timeline.className = 'ai-chat-timeline';
+
+    (card.items || []).forEach((item) => {
+      const row = document.createElement('div');
+      row.className = 'ai-chat-timeline-item';
+      const title = document.createElement('strong');
+      title.textContent = item.title || '';
+      const description = document.createElement('span');
+      description.textContent = item.description || '';
+      row.append(title, description);
+      timeline.appendChild(row);
+    });
+
+    cardEl.appendChild(timeline);
+    return cardEl;
+  }
+
+  return cardEl;
+}
+
+function renderAiSuggestions(suggestions) {
+  if (!Array.isArray(suggestions) || !suggestions.length) {
+    return null;
+  }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-chat-suggestions';
+
+  suggestions.slice(0, 3).forEach((suggestion) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = suggestion;
+    button.addEventListener('click', () => sendAiChatMessage(suggestion));
+    wrap.appendChild(button);
+  });
+
+  return wrap;
+}
+
 function renderAiChatMessages() {
   if (!aiChatMessages) {
     return;
   }
 
   aiChatMessages.innerHTML = '';
+
+  const hasUserMessage = aiChatState.messages.some((message) => message.role === 'user');
+  if (aiChatStarters) {
+    aiChatStarters.classList.toggle('is-hidden', hasUserMessage);
+  }
 
   aiChatState.messages.forEach((message) => {
     const item = document.createElement('div');
@@ -511,10 +678,36 @@ function renderAiChatMessages() {
     bubble.className = 'ai-chat-bubble';
     bubble.textContent = message.text;
     item.appendChild(bubble);
+
+    if (Array.isArray(message.cards) && message.cards.length) {
+      const cardsWrap = document.createElement('div');
+      cardsWrap.className = 'ai-chat-feedback';
+      message.cards.forEach((card) => {
+        cardsWrap.appendChild(renderAiFeedbackCard(card));
+      });
+      item.appendChild(cardsWrap);
+    }
+
+    const suggestions = renderAiSuggestions(message.suggestions);
+    if (suggestions) {
+      item.appendChild(suggestions);
+    }
+
     aiChatMessages.appendChild(item);
   });
 
   aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+}
+
+if (aiChatStarters) {
+  aiChatStarters.addEventListener('click', (event) => {
+    const starter = event.target.closest('[data-ai-chat-starter]');
+    if (!starter) {
+      return;
+    }
+
+    sendAiChatMessage(starter.dataset.aiChatStarter || starter.textContent || '');
+  });
 }
 
 function ensureAiChatBooted() {
@@ -636,6 +829,8 @@ async function sendAiChatMessage(rawText) {
     pushAiChatMessage({
       role: 'assistant',
       text: data.reply || AI_CHAT_COPY.serviceUnavailable,
+      cards: data.cards,
+      suggestions: data.suggestions,
     });
   } catch (_error) {
     removeAiChatStatusMessages();

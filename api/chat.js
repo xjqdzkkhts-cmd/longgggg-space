@@ -32,11 +32,25 @@ async function readPersonaMarkdown() {
 function buildInstructions(personaMarkdown) {
   return [
     '你是“龙湘玉的 AI 分身”，服务于她的个人作品集网站。',
-    '你只回答和龙湘玉本人、教育经历、设计方向、项目作品、技能、研究兴趣、求职方向、联系方式相关的问题。',
+    '你只回答和龙湘玉本人、教育经历、生活兴趣、性格特点、协作方式、设计方向、项目作品、技能、研究兴趣、求职方向、联系方式相关的问题。',
     '如果资料中没有明确提到，请直接说“我目前没有这部分资料”，不要编造经历、数字、头衔或项目细节。',
     '回答风格保持真诚、专业、简洁，优先帮助访客快速了解龙湘玉是谁、做过什么、擅长什么。',
     '当被问到不适合回答的话题时，礼貌地把话题拉回到龙湘玉本人和她的作品。',
     '如果用户想联系龙湘玉，可以自然给出资料里已有的联系方式。',
+    '你必须只返回一个 JSON 对象，不要使用 Markdown 代码块，不要输出 JSON 之外的文字。',
+    'JSON 格式：{"reply":"简洁回答","cards":[],"suggestions":[]}',
+    'cards 最多 2 个。可用类型：',
+    '- {"type":"contact","title":"联系我","items":[{"label":"Email","value":"Xiangyu-Long@outlook.com","action":"email","icon":"mail"}]}',
+    '- {"type":"projects","title":"相关作品","items":[{"title":"AI 溶栓助手","description":"一句话说明","tag":"UX"}]}',
+    '- {"type":"profile","title":"她给人的感觉","items":[{"title":"好奇","description":"对设计、AI 产品和新工具保持探索欲。"}]}',
+    '- {"type":"tags","title":"关键词","items":["UX 设计","HCI","AI 产品"]}',
+    '- {"type":"timeline","title":"学习历程","items":[{"title":"阶段","description":"说明"}]}',
+    'suggestions 最多 3 条，每条是访客可能继续追问的问题。',
+    '当用户问联系方式、联系、邮箱、微信、电话时，必须包含 contact card。',
+    '当用户问项目、作品、案例时，优先包含 projects card。',
+    'projects card 只展示当前网站已有项目：BBHust、AI 溶栓助手、iKnow、AI 如何帮助 ADHD、E-TEA、Merry Christmas。不要把“金蝉子计划”放进 projects card，除非用户明确问简历里的其他经历。',
+    '当用户问技能、工具、擅长什么时，优先包含 tags card。',
+    '当用户问生活中的样子、性格、合作体验、一起工作感觉时，优先包含 profile card 或 tags card。',
     '',
     '以下是龙湘玉的人设与知识资料：',
     personaMarkdown || '目前还没有更完整的人设文档，请仅根据已有资料进行保守回答。',
@@ -105,6 +119,119 @@ function extractReplyText(data) {
   });
 
   return chunks.join('\n').trim();
+}
+
+function parseStructuredReply(text) {
+  if (!text) {
+    return null;
+  }
+
+  const normalized = text
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/```$/i, '')
+    .trim();
+
+  try {
+    const parsed = JSON.parse(normalized);
+    if (parsed && typeof parsed === 'object') {
+      return parsed;
+    }
+  } catch (_error) {
+    return null;
+  }
+
+  return null;
+}
+
+function normalizeSuggestions(suggestions) {
+  if (!Array.isArray(suggestions)) {
+    return [];
+  }
+
+  return suggestions.filter((item) => typeof item === 'string' && item.trim()).slice(0, 3).map((item) => item.trim());
+}
+
+function normalizeCards(cards) {
+  if (!Array.isArray(cards)) {
+    return [];
+  }
+
+  return cards
+    .filter((card) => card && typeof card === 'object' && typeof card.type === 'string')
+    .slice(0, 2)
+    .map((card) => ({
+      type: card.type,
+      title: typeof card.title === 'string' ? card.title.slice(0, 40) : '',
+      items: Array.isArray(card.items) ? card.items.slice(0, 6) : [],
+    }));
+}
+
+function inferCards(message) {
+  const text = message.toLowerCase();
+  const cards = [];
+
+  if (/联系|邮箱|email|微信|电话|contact|reach|linkedin/.test(text)) {
+    cards.push({
+      type: 'contact',
+      title: '联系我',
+      items: [
+        { label: 'Email', value: 'Xiangyu-Long@outlook.com', action: 'email', icon: 'mail' },
+        { label: 'WeChat', value: 'xjqdzkkhts', action: 'copy', icon: 'wechat' },
+        { label: '电话 CN', value: '86-19186818073', action: 'tel', icon: 'phone' },
+        { label: '电话 UK', value: '44-7962889579', action: 'tel', icon: 'phone' },
+      ],
+    });
+  }
+
+  if (/项目|作品|案例|portfolio|project|case/.test(text)) {
+    cards.push({
+      type: 'projects',
+      title: '相关作品',
+      items: [
+        { title: 'AI 溶栓助手', description: '围绕医疗决策与 AI 辅助体验的 UX 项目。', tag: 'UX / AI' },
+        { title: 'iKnow', description: '面向认知与家庭场景的产品体验设计。', tag: 'Product' },
+        { title: 'E-TEA', description: '茶园生产管理相关的信息界面设计。', tag: 'Dashboard' },
+      ],
+    });
+  }
+
+  if (/技能|工具|会什么|擅长|skill|tool|能力/.test(text)) {
+    cards.push({
+      type: 'tags',
+      title: '关键词',
+      items: ['UX 设计', '产品设计', '视觉设计', 'HCI', 'AI 产品', '轻量前端实现'],
+    });
+  }
+
+  if (/生活|性格|日常|工作|协作|合作|一起|感觉|设计思考|思考方式|方法|personality|collaborat|work with|design thinking/.test(text)) {
+    cards.push({
+      type: 'profile',
+      title: '她给人的感觉',
+      items: [
+        { title: '好奇', description: '对设计、AI 产品和新工具保持探索欲，愿意持续试验新的表达方式。' },
+        { title: '细致', description: '会关注界面、动效、文案和真实使用情境里的小问题。' },
+        { title: '可落地', description: '喜欢把想法推进成原型、界面或轻量代码，让讨论更具体。' },
+      ],
+    });
+  }
+
+  return cards.slice(0, 2);
+}
+
+function buildChatPayload(replyText, message) {
+  const structured = parseStructuredReply(replyText);
+  const fallbackReply = replyText.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
+  const reply = typeof structured?.reply === 'string' && structured.reply.trim() ? structured.reply.trim() : fallbackReply;
+  const inferredCards = inferCards(message);
+  const cards = normalizeCards(structured?.cards);
+  const suggestions = normalizeSuggestions(structured?.suggestions);
+
+  return {
+    reply,
+    cards: cards.length ? cards : inferredCards,
+    suggestions: suggestions.length ? suggestions : ['生活中的她是什么样？', '和她合作是什么感觉？', '看看她的作品'],
+  };
 }
 
 module.exports = async function handler(req, res) {
@@ -188,5 +315,5 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  sendJson(res, 200, { reply });
+  sendJson(res, 200, buildChatPayload(reply, message));
 };
