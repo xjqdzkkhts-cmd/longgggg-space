@@ -701,7 +701,7 @@ function renderAiFeedbackCard(card) {
 
     const track = document.createElement('div');
     track.className = 'ai-chat-life-track';
-    const lifeItems = Array.isArray(card.items) && card.items.length >= 3 ? card.items : getDefaultAiLifeItems();
+    const lifeItems = getDefaultAiLifeItems();
 
     lifeItems.forEach((item, index) => {
       const lifeCard = document.createElement('article');
