@@ -2011,17 +2011,14 @@ body.is-chat-open .ai-chat-sidebar {
   max-width: min(88%, 100%);
 }
 
-.ai-chat-message[data-role="assistant"]:has(.ai-chat-life-carousel) {
+.ai-chat-message[data-role="assistant"] {
+  align-self: flex-start;
   max-width: 100%;
   width: 100%;
 }
 
 .ai-chat-message[data-role="user"] {
   align-self: flex-end;
-}
-
-.ai-chat-message[data-role="assistant"] {
-  align-self: flex-start;
 }
 
 .ai-chat-message-meta {
