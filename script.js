@@ -566,7 +566,7 @@ function getDefaultAiLifeItems() {
       title: '最近在听',
       description: '最近很喜欢听 Kpop，尤其是晚上边听活力的音乐边做自己的事情。',
       accent: '#74B0FF',
-      tracks: getDefaultAiMusicTracks(),
+      tracks: [],
     },
     { title: '我喜欢的宠物', description: '喜欢能带来陪伴感的小动物，安静、柔软、让生活慢下来一点。', accent: '#C4A8F5' },
     { title: '最近收藏的一句话', description: '我很喜欢“韧性”这个词：面对变化时，依然保持乐观进取。', accent: '#D2FD5F' },
@@ -603,21 +603,14 @@ function normalizeSpotifyTracksPayload(payload) {
 
 function getAiMusicTracks(fallbackTracks = []) {
   const spotifyTracks = Array.isArray(aiChatState.spotifyTracks) ? aiChatState.spotifyTracks : [];
-  const mergedTracks = [...spotifyTracks];
-  const fillTracks = fallbackTracks.length ? fallbackTracks : getDefaultAiMusicTracks();
+  return (spotifyTracks.length ? spotifyTracks : fallbackTracks).slice(0, 4);
+}
 
-  fillTracks.forEach((track) => {
-    if (mergedTracks.length >= 4) {
-      return;
-    }
-
-    const isDuplicate = mergedTracks.some((item) => item.title === track.title && item.artist === track.artist);
-    if (!isDuplicate) {
-      mergedTracks.push(track);
-    }
-  });
-
-  return mergedTracks.slice(0, 4);
+function renderAiMusicLoading() {
+  const loading = document.createElement('div');
+  loading.className = 'ai-chat-music-loading';
+  loading.textContent = '正在读取 Spotify';
+  return loading;
 }
 
 function renderAiMusicCover(track) {
@@ -656,7 +649,7 @@ function renderAiMusicTrack(track) {
 }
 
 function updateAiMusicCards() {
-  if (!aiChatMessages || !Array.isArray(aiChatState.spotifyTracks) || !aiChatState.spotifyTracks.length) {
+  if (!aiChatMessages || !Array.isArray(aiChatState.spotifyTracks)) {
     return;
   }
 
@@ -693,6 +686,7 @@ function loadAiSpotifyTracks() {
     })
     .catch(() => {
       aiChatState.spotifyTracks = [];
+      updateAiMusicCards();
       return [];
     });
 
@@ -859,10 +853,15 @@ function renderAiFeedbackCard(card) {
         const grid = document.createElement('div');
         grid.className = 'ai-chat-music-grid';
         grid.dataset.aiMusicGrid = 'true';
-        getAiMusicTracks(item.tracks || []).forEach((track) => {
-          const trackEl = renderAiMusicTrack(track);
-          grid.appendChild(trackEl);
-        });
+        const musicTracks = getAiMusicTracks(item.tracks || []);
+        if (musicTracks.length) {
+          musicTracks.forEach((track) => {
+            const trackEl = renderAiMusicTrack(track);
+            grid.appendChild(trackEl);
+          });
+        } else {
+          grid.appendChild(renderAiMusicLoading());
+        }
 
         lifeCard.append(title, grid);
         loadAiSpotifyTracks();
