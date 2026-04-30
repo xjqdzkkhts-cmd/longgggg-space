@@ -43,16 +43,19 @@ function buildInstructions(personaMarkdown) {
     'JSON 格式：{"reply":"简洁回答","cards":[],"suggestions":[]}',
     'cards 最多 2 个。可用类型：',
     '- {"type":"contact","title":"联系我","items":[{"label":"Email","value":"Xiangyu-Long@outlook.com","action":"email","icon":"mail"}]}',
-    '- {"type":"projects","title":"相关作品","items":[{"title":"AI 溶栓助手","description":"一句话说明","tag":"UX"}]}',
+    '- {"type":"projects","title":"相关作品","items":[{"title":"AI 溶栓助手","description":"一句话说明","tag":"UX","gallery":"ai-thrombolysis"}]}',
     '- {"type":"profile","title":"我给人的感觉","items":[{"title":"好奇","description":"对设计、AI 产品和新工具保持探索欲。"}]}',
     '- {"type":"tags","title":"关键词","items":["UX 设计","HCI","AI 产品"]}',
     '- {"type":"timeline","title":"学习历程","items":[{"title":"阶段","description":"说明"}]}',
     'suggestions 最多 3 条，每条是访客可能继续追问的问题。',
     '当用户问联系方式、联系、邮箱、微信、电话时，必须包含 contact card。',
     '当用户问项目、作品、案例时，优先包含 projects card。',
-    'projects card 只展示当前网站已有项目：BBHust、AI 溶栓助手、iKnow、AI 如何帮助 ADHD、E-TEA、Merry Christmas。不要把“金蝉子计划”放进 projects card，除非用户明确问简历里的其他经历。',
+    'projects card 只展示当前网站已有项目：AI 溶栓助手、iKnow、AI 如何帮助 ADHD、E-TEA、Merry Christmas。不要把“金蝉子计划”放进 projects card，除非用户明确问简历里的其他经历。',
+    'projects card 的 gallery 必须从这些值选择：ai-thrombolysis、iknow、adhd-ai、etea、marry-christmas。',
     '当用户问技能、工具、擅长什么时，优先包含 tags card。',
-    '当用户问生活中的样子、性格、合作体验、一起工作感觉时，优先包含 profile card 或 tags card。',
+    '当用户问生活中的样子、性格时，回答应偏生活状态、兴趣和个人气质。',
+    '当用户问合作体验、一起工作感觉时，回答应偏协作方式、团队角色、沟通偏好和项目推进方式。',
+    '生活问题和合作问题不要回答成同一套内容。',
     '',
     '以下是龙湘玉的人设与知识资料：',
     personaMarkdown || '目前还没有更完整的人设文档，请仅根据已有资料进行保守回答。',
@@ -195,9 +198,24 @@ function inferCards(message) {
       type: 'projects',
       title: '相关作品',
       items: [
-        { title: 'AI 溶栓助手', description: '围绕医疗决策与 AI 辅助体验的 UX 项目。', tag: 'UX / AI' },
-        { title: 'iKnow', description: '面向认知与家庭场景的产品体验设计。', tag: 'Product' },
-        { title: 'E-TEA', description: '茶园生产管理相关的信息界面设计。', tag: 'Dashboard' },
+        {
+          title: 'AI 溶栓助手',
+          description: '围绕急性脑卒中院前智能诊疗、三端协同与可解释 AI 的 UX 项目。',
+          tag: 'UX / AI',
+          gallery: 'ai-thrombolysis',
+        },
+        {
+          title: 'iKnow',
+          description: '面向认知与家庭场景的产品体验设计。',
+          tag: 'Product',
+          gallery: 'iknow',
+        },
+        {
+          title: 'E-TEA',
+          description: '茶园生产管理相关的信息界面设计。',
+          tag: 'Dashboard',
+          gallery: 'etea',
+        },
       ],
     });
   }
@@ -210,14 +228,34 @@ function inferCards(message) {
     });
   }
 
-  if (/生活|性格|日常|工作|协作|合作|一起|感觉|设计思考|思考方式|方法|personality|collaborat|work with|design thinking/.test(text)) {
+  if (/协作|合作|一起工作|工作感觉|共事|collaborat|work with/.test(text)) {
     cards.push({
       type: 'profile',
-      title: '我给人的感觉',
+      title: '和我合作',
       items: [
-        { title: '好奇', description: '对设计、AI 产品和新工具保持探索欲，愿意持续试验新的表达方式。' },
-        { title: '细致', description: '会关注界面、动效、文案和真实使用情境里的小问题。' },
-        { title: '可落地', description: '喜欢把想法推进成原型、界面或轻量代码，让讨论更具体。' },
+        { title: '靠谱推进', description: '我会主动整理信息、把握节奏，并推动项目继续往前走。' },
+        { title: '认真倾听', description: '我重视多元意见，也希望成员能直接表达想法和诉求。' },
+        { title: '回到问题', description: '遇到不确定时，我会回到目标用户、利益相关者和项目目标中寻找判断依据。' },
+      ],
+    });
+  } else if (/生活|性格|日常|personality/.test(text)) {
+    cards.push({
+      type: 'profile',
+      title: '生活中的我',
+      items: [
+        { title: '温柔', description: '朋友常用温柔来描述我，我也希望用稳定和真诚对待身边的人。' },
+        { title: '有韧性', description: '我很看重在困难中保持乐观进取的能力。' },
+        { title: '喜欢记录', description: '手帐、音乐和旅行会帮我整理生活，也给设计带来灵感。' },
+      ],
+    });
+  } else if (/设计思考|思考方式|方法|design thinking/.test(text)) {
+    cards.push({
+      type: 'profile',
+      title: '我的设计思考',
+      items: [
+        { title: '从真实需求出发', description: '我习惯先理解用户、场景和利益相关者，再进入方案。' },
+        { title: '把想法做出来', description: '我喜欢通过原型、界面、动效或轻量代码让想法更可讨论。' },
+        { title: '关注可落地性', description: '我会同时考虑体验、视觉表达和实现成本。' },
       ],
     });
   }
@@ -240,8 +278,16 @@ function buildFallbackReply(message) {
     return '我的能力集中在 UX 设计、产品设计、视觉设计、HCI 与 AI 产品方向，也会使用 Figma、Blender、Adobe Illustrator、SPSS、Arduino IDE，并能在 AI 辅助下完成轻量前端实现。';
   }
 
-  if (/生活|性格|日常|工作|协作|合作|一起|感觉|设计思考|思考方式|方法|personality|collaborat|work with|design thinking/.test(text)) {
-    return '生活中我常被朋友评价为温柔，也很看重韧性、诚信、努力和尊重。合作中我通常会认真倾听、主动整理信息并推进项目，把抽象想法尽快变成可以讨论的原型或界面。';
+  if (/协作|合作|一起工作|工作感觉|共事|collaborat|work with/.test(text)) {
+    return '和我合作时，你大概率会感受到我是一个认真倾听、愿意整理信息并主动推进的人。我在团队里更自然承担整理者和执行者的角色，遇到不确定时会回到目标用户、利益相关者和项目目标中寻找判断依据。';
+  }
+
+  if (/生活|性格|日常|personality/.test(text)) {
+    return '生活中，朋友常说我是一个温柔的人。我也很看重韧性，喜欢人在面对变化时依然保持乐观和进取。平时我喜欢手帐、旅行和音乐，也会沉浸在不断完善个人网站这种从 0 到 1 搭建体系的过程里。';
+  }
+
+  if (/设计思考|思考方式|方法|design thinking/.test(text)) {
+    return '我的设计思考通常从真实需求和具体场景开始：先理解用户、问题和利益相关者，再把想法做成原型、界面或动效，让它变成可以讨论、验证和继续迭代的东西。';
   }
 
   return '我可以介绍我的作品、教育经历、设计方向、技能、协作方式和联系方式。你可以问我“你做过哪些项目？”或“和你一起工作是什么感觉？”。';

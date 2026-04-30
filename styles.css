@@ -2086,8 +2086,21 @@ body.is-chat-open .ai-chat-sidebar {
   display: grid;
   gap: 5px;
   padding: 11px;
+  border: 0;
   border-radius: var(--radius-control);
   background: #f7f7f7;
+  font: inherit;
+  text-align: left;
+}
+
+button.ai-chat-project-item {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button.ai-chat-project-item:hover,
+button.ai-chat-project-item:focus-visible {
+  background: #eef2f8;
 }
 
 .ai-chat-project-item strong,

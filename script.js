@@ -62,6 +62,8 @@ const workCardTintCache = new Map();
 const workCardTintInflight = new Map();
 const aiChatApiBaseUrl = (window.LONG_AI_CONFIG?.apiBaseUrl || '').replace(/\/$/, '');
 const aiChatEndpoint = `${aiChatApiBaseUrl}/api/chat`;
+let openProjectViewerByGallery = null;
+let attachCursorBehavior = () => {};
 const aiChatState = {
   isOpen: false,
   isSending: false,
@@ -523,6 +525,31 @@ function handleAiCardAction(item) {
   navigator.clipboard?.writeText(value).catch(() => {});
 }
 
+function getAiProjectGallery(item) {
+  const rawGallery = typeof item?.gallery === 'string' ? item.gallery.trim() : '';
+  const title = `${item?.title || ''} ${item?.label || ''}`.toLowerCase();
+  const galleryMap = {
+    'ai-thrombolysis': 'ai-thrombolysis',
+    'ai 溶栓': 'ai-thrombolysis',
+    溶栓: 'ai-thrombolysis',
+    iknow: 'iknow',
+    ikonw: 'iknow',
+    'adhd-ai': 'adhd-ai',
+    adhd: 'adhd-ai',
+    etea: 'etea',
+    'e-tea': 'etea',
+    'marry-christmas': 'marry-christmas',
+    merry: 'marry-christmas',
+    christmas: 'marry-christmas',
+  };
+
+  if (galleryMap[rawGallery]) {
+    return galleryMap[rawGallery];
+  }
+
+  return Object.entries(galleryMap).find(([key]) => title.includes(key))?.[1] || '';
+}
+
 function renderAiFeedbackCard(card) {
   const cardEl = document.createElement('div');
   cardEl.className = 'ai-chat-feedback-card';
@@ -565,8 +592,21 @@ function renderAiFeedbackCard(card) {
     list.className = card.type === 'profile' ? 'ai-chat-profile-list' : 'ai-chat-project-list';
 
     (card.items || []).forEach((item) => {
-      const project = document.createElement('div');
+      const galleryName = card.type === 'projects' ? getAiProjectGallery(item) : '';
+      const project = document.createElement(galleryName ? 'button' : 'div');
       project.className = card.type === 'profile' ? 'ai-chat-profile-item' : 'ai-chat-project-item';
+
+      if (galleryName) {
+        project.type = 'button';
+        project.dataset.projectGallery = galleryName;
+        project.dataset.cursorIcon = 'view';
+        project.setAttribute('aria-label', `打开项目 ${item.title || '详情'}`);
+        project.addEventListener('click', () => {
+          setAiChatOpen(false);
+          openProjectViewerByGallery?.(galleryName);
+        });
+        attachCursorBehavior(project);
+      }
 
       const title = document.createElement('strong');
       title.textContent = item.title || '项目';
@@ -1052,8 +1092,12 @@ if (cursor) {
     cursor.classList.remove('has-label');
   });
 
-  const hoverTargets = [...document.querySelectorAll('a, button, [data-card], [data-cursor-icon]')];
-  hoverTargets.forEach((target) => {
+  attachCursorBehavior = (target) => {
+    if (!target || target.dataset.cursorReady === 'true') {
+      return;
+    }
+
+    target.dataset.cursorReady = 'true';
     target.addEventListener('mouseenter', () => {
       cursor.classList.add('is-hovering');
       setCursorIcon(target.dataset.cursorIcon, target.dataset.cursorLabel);
@@ -1063,7 +1107,10 @@ if (cursor) {
       cursor.classList.remove('is-hovering');
       setCursorIcon('', '');
     });
-  });
+  };
+
+  const hoverTargets = [...document.querySelectorAll('a, button, [data-card], [data-cursor-icon]')];
+  hoverTargets.forEach(attachCursorBehavior);
 }
 
 if (scrollTrigger) {
@@ -1545,6 +1592,9 @@ if (
 
   const openProjectViewer = (galleryName) => {
     const images = projectGalleries[galleryName] || [];
+    if (!images.length) {
+      return;
+    }
     activeProjectImages = images;
     activeSlideIndex = 0;
     projectViewerPages.innerHTML = images
@@ -1557,6 +1607,8 @@ if (
     projectViewer.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
   };
+
+  openProjectViewerByGallery = openProjectViewer;
 
   const closeProjectViewer = () => {
     exitPresentationMode();
