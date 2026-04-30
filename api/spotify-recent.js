@@ -69,6 +69,22 @@ function normalizeTrack(track, source = 'recent') {
   };
 }
 
+function getSpotifyErrorMessage(data) {
+  if (typeof data?.error_description === 'string') {
+    return data.error_description;
+  }
+
+  if (typeof data?.error === 'string') {
+    return data.error;
+  }
+
+  if (typeof data?.error?.message === 'string') {
+    return data.error.message;
+  }
+
+  return 'Unable to fetch Spotify data.';
+}
+
 async function fetchSpotifyJson(url, accessToken) {
   const response = await fetch(url, {
     headers: {
@@ -91,7 +107,7 @@ async function fetchSpotifyJson(url, accessToken) {
   result.data = data;
 
   if (!response.ok) {
-    result.error = data.error?.message || 'Unable to fetch Spotify data.';
+    result.error = getSpotifyErrorMessage(data);
   }
 
   return result;
