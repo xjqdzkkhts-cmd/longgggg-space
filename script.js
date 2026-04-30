@@ -556,6 +556,16 @@ function getAiProjectGallery(item) {
   return Object.entries(galleryMap).find(([key]) => title.includes(key))?.[1] || '';
 }
 
+function getDefaultAiLifeItems() {
+  return [
+    { title: '最近在听', description: '最近很喜欢听 Kpop，尤其是晚上边听活力的音乐边做自己的事情。', accent: '#74B0FF' },
+    { title: '我喜欢的宠物', description: '喜欢能带来陪伴感的小动物，安静、柔软、让生活慢下来一点。', accent: '#C4A8F5' },
+    { title: '最近收藏的一句话', description: '我很喜欢“韧性”这个词：面对变化时，依然保持乐观进取。', accent: '#D2FD5F' },
+    { title: '最近在看的书', description: 'DK 出版的 How to Be a Genius，想让自己的大脑保持活力。', accent: '#FF5CA6' },
+    { title: '朋友喜欢这样描述我', description: '很多朋友会说我是一个很温柔的人。', accent: '#0045DD' },
+  ];
+}
+
 function updateAiLifeCarousel(carousel) {
   if (!carousel) {
     return;
@@ -691,8 +701,9 @@ function renderAiFeedbackCard(card) {
 
     const track = document.createElement('div');
     track.className = 'ai-chat-life-track';
+    const lifeItems = Array.isArray(card.items) && card.items.length >= 3 ? card.items : getDefaultAiLifeItems();
 
-    (card.items || []).forEach((item, index) => {
+    lifeItems.forEach((item, index) => {
       const lifeCard = document.createElement('article');
       lifeCard.className = 'ai-chat-life-card';
       lifeCard.style.setProperty('--life-card-accent', item.accent || ['#D2FD5F', '#74B0FF', '#FF5CA6'][index % 3]);
