@@ -52,7 +52,8 @@ function buildInstructions(personaMarkdown) {
     '当用户问项目、作品、案例时，优先包含 projects card。',
     'projects card 只展示当前网站已有项目：AI 溶栓助手、iKnow、AI 如何帮助 ADHD、E-TEA、Merry Christmas。不要把“金蝉子计划”放进 projects card，除非用户明确问简历里的其他经历。',
     'projects card 的 gallery 必须从这些值选择：ai-thrombolysis、iknow、adhd-ai、etea、marry-christmas。',
-    '当用户问技能、工具、擅长什么时，优先包含 tags card。',
+    '当用户问技能、工具、擅长什么时，回答不要只列 UX 或软件工具；必须体现我的特殊性：能运用 AI 构建产品、能独立完成前端和后端的轻量搭建、自我驱动性强、能把设计想法推进成可运行原型。',
+    '当用户问技能、工具、擅长什么时，优先包含 profile card 或 tags card。',
     '当用户问生活中的样子、性格时，回答应偏生活状态、兴趣和个人气质。',
     '当用户问合作体验、一起工作感觉时，回答应偏协作方式、团队角色、沟通偏好和项目推进方式。',
     '生活问题和合作问题不要回答成同一套内容。',
@@ -222,9 +223,13 @@ function inferCards(message) {
 
   if (/技能|工具|会什么|擅长|skill|tool|能力/.test(text)) {
     cards.push({
-      type: 'tags',
-      title: '关键词',
-      items: ['UX 设计', '产品设计', '视觉设计', 'HCI', 'AI 产品', '轻量前端实现'],
+      type: 'profile',
+      title: '我擅长的事',
+      items: [
+        { title: '把 AI 用进产品构建', description: '我不仅关注 AI 产品体验，也会用 AI 辅助完成编程、生图、动效和原型探索。' },
+        { title: '从设计到实现', description: '我能把设计想法推进成可运行的小型应用，独立完成轻量前端与后端搭建。' },
+        { title: '自我驱动推进', description: '我习惯主动学习、整理知识和持续迭代，把抽象想法落到具体结果。' },
+      ],
     });
   }
 
@@ -275,7 +280,7 @@ function buildFallbackReply(message) {
   }
 
   if (/技能|工具|会什么|擅长|skill|tool|能力/.test(text)) {
-    return '我的能力集中在 UX 设计、产品设计、视觉设计、HCI 与 AI 产品方向，也会使用 Figma、Blender、Adobe Illustrator、SPSS、Arduino IDE，并能在 AI 辅助下完成轻量前端实现。';
+    return '我擅长的不只是 UX 设计、产品设计和三维/视觉表达，更特别的是我能把 AI 当作生产工具来构建产品：从想法、界面、动效，到轻量前端和后端搭建，我都能在 AI 辅助下独立推进。我也很自我驱动，习惯主动学习、整理知识，并把抽象想法落成可运行、可讨论、可迭代的原型。';
   }
 
   if (/协作|合作|一起工作|工作感觉|共事|collaborat|work with/.test(text)) {
@@ -317,7 +322,7 @@ function inferSuggestions(message) {
   }
 
   if (/技能|工具|会什么|擅长|skill|tool|能力/.test(text)) {
-    return ['你如何使用 AI 工具？', '看看你的作品', '你的求职方向是什么？'];
+    return ['你如何用 AI 构建产品？', '你能独立完成哪些实现？', '看看你的作品'];
   }
 
   return ['生活中的你是什么样？', '和你合作是什么感觉？', '看看你的作品'];
