@@ -42,6 +42,9 @@ const projectSlidePrev = document.querySelector('[data-project-slide-prev]');
 const projectSlideNext = document.querySelector('[data-project-slide-next]');
 const copyButtons = [...document.querySelectorAll('[data-copy-value]')];
 const siteToast = document.querySelector('[data-site-toast]');
+const versionUpdate = document.querySelector('[data-version-update]');
+const versionUpdateValue = document.querySelector('[data-version-update-value]');
+const versionUpdateRefresh = document.querySelector('[data-version-update-refresh]');
 const cursorIcon = document.querySelector('.custom-cursor-icon');
 const aiChatToggle = document.querySelector('[data-ai-chat-toggle]');
 const aiChatSidebar = document.querySelector('[data-ai-chat-sidebar]');
@@ -87,6 +90,7 @@ const AI_CHAT_COPY = {
 const DEFAULT_AI_CHAT_STARTERS = ['生活中的你是什么样？', '和你合作是什么感觉？', '你如何思考设计？'];
 const AI_CHAT_TYPE_SPEED_MS = 24;
 const AI_SPOTIFY_CACHE_KEY = 'long-ai-spotify-tracks';
+const VERSION_CHECK_INTERVAL_MS = 60000;
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -2281,6 +2285,73 @@ if (copyButtons.length) {
     });
   });
 }
+
+function showVersionUpdate(version) {
+  if (!versionUpdate || !versionUpdateValue) {
+    return;
+  }
+
+  versionUpdateValue.textContent = version;
+  versionUpdate.setAttribute('aria-hidden', 'false');
+  versionUpdate.classList.add('is-visible');
+}
+
+async function fetchSiteVersion() {
+  const response = await fetch(`/version.json?t=${Date.now()}`, {
+    cache: 'no-store',
+    headers: { Accept: 'application/json' },
+  });
+
+  if (!response.ok) {
+    throw new Error('Version check failed.');
+  }
+
+  const data = await response.json();
+  return typeof data.version === 'string' ? data.version.trim() : '';
+}
+
+function initVersionUpdateCheck() {
+  if (!versionUpdate || !versionUpdateRefresh) {
+    return;
+  }
+
+  let currentVersion = '';
+  let hasUpdate = false;
+
+  const checkVersion = async () => {
+    if (hasUpdate) {
+      return;
+    }
+
+    try {
+      const nextVersion = await fetchSiteVersion();
+      if (!nextVersion) {
+        return;
+      }
+
+      if (!currentVersion) {
+        currentVersion = nextVersion;
+        return;
+      }
+
+      if (nextVersion !== currentVersion) {
+        hasUpdate = true;
+        showVersionUpdate(nextVersion);
+      }
+    } catch (_error) {
+      // Ignore transient network errors; the next interval will try again.
+    }
+  };
+
+  versionUpdateRefresh.addEventListener('click', () => {
+    window.location.reload();
+  });
+
+  checkVersion();
+  window.setInterval(checkVersion, VERSION_CHECK_INTERVAL_MS);
+}
+
+initVersionUpdateCheck();
 
 if (aiChatToggle && aiChatSidebar && aiChatForm && aiChatInput) {
   autoResizeAiChatInput();
