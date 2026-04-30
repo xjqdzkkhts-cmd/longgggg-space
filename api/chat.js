@@ -4,8 +4,9 @@ const path = require('node:path');
 const MAX_INPUT_CHARS = 800;
 const MAX_HISTORY_MESSAGES = 8;
 const MAX_HISTORY_CHARS = 1200;
-const MAX_OUTPUT_TOKENS = 1200;
-const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'gpt-5';
+const MAX_OUTPUT_TOKENS = 700;
+const OPENAI_TIMEOUT_MS = 12000;
+const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
 
 function setCorsHeaders(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -301,32 +302,51 @@ module.exports = async function handler(req, res) {
   const personaMarkdown = await readPersonaMarkdown();
   const history = sanitizeHistory(body.history);
 
-  const response = await fetch('https://api.openai.com/v1/responses', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: DEFAULT_MODEL,
-      instructions: buildInstructions(personaMarkdown),
-      input: [
-        ...history,
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'input_text',
-              text: message,
-            },
-          ],
-        },
-      ],
-      max_output_tokens: MAX_OUTPUT_TOKENS,
-    }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
 
-  const data = await response.json().catch(() => ({}));
+  let response;
+  let data;
+
+  try {
+    response = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: DEFAULT_MODEL,
+        instructions: buildInstructions(personaMarkdown),
+        input: [
+          ...history,
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'input_text',
+                text: message,
+              },
+            ],
+          },
+        ],
+        max_output_tokens: MAX_OUTPUT_TOKENS,
+      }),
+    });
+
+    data = await response.json().catch(() => ({}));
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      sendJson(res, 200, buildChatPayload(buildFallbackReply(message), message));
+      return;
+    }
+
+    sendJson(res, 502, { error: 'OpenAI request failed.' });
+    return;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     sendJson(res, response.status, {
