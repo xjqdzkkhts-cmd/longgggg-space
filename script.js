@@ -677,8 +677,17 @@ function renderAiMusicRefreshButton() {
     </svg>
   `;
   button.addEventListener('click', (event) => {
+    event.preventDefault();
     event.stopPropagation();
     loadAiSpotifyTracks({ force: true });
+  });
+  button.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  button.addEventListener('pointerup', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
   });
   return button;
 }
@@ -791,7 +800,7 @@ function loadAiSpotifyTracks(options = {}) {
   return aiChatState.spotifyTracksPromise;
 }
 
-function renderAiMusicCardContent(lifeCard, item = {}) {
+function renderAiMusicCardContent(lifeCard, item = {}, options = {}) {
   const header = document.createElement('div');
   header.className = 'ai-chat-music-header';
 
@@ -800,6 +809,9 @@ function renderAiMusicCardContent(lifeCard, item = {}) {
   title.textContent = item.title || '最近在听';
 
   header.append(title, renderAiMusicRefreshButton());
+  if (options.compactHeader) {
+    header.classList.add('is-compact');
+  }
 
   const grid = document.createElement('div');
   grid.className = 'ai-chat-music-grid';
@@ -1070,7 +1082,7 @@ function renderAiFeedbackCard(card) {
     musicCard.style.setProperty('--life-card-accent', '#74B0FF');
     musicCard.style.setProperty('--life-card-offset', 0);
     musicCard.style.setProperty('--life-card-abs-offset', 0);
-    renderAiMusicCardContent(musicCard, { title: card.title || '最近在听', tracks: [] });
+    renderAiMusicCardContent(musicCard, { title: card.title || '最近在听', tracks: [] }, { compactHeader: true });
     musicWrap.appendChild(musicCard);
     cardEl.appendChild(musicWrap);
     return cardEl;
