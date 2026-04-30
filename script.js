@@ -67,6 +67,8 @@ let attachCursorBehavior = () => {};
 const aiChatState = {
   isOpen: false,
   isSending: false,
+  isTyping: false,
+  typingTimer: null,
   hasBooted: false,
   messages: [],
 };
@@ -77,6 +79,7 @@ const AI_CHAT_COPY = {
   notConfigured: 'AI 服务还没有接通，请先部署 Vercel 后端并填写前端 API 地址。',
 };
 const DEFAULT_AI_CHAT_STARTERS = ['生活中的你是什么样？', '和你合作是什么感觉？', '你如何思考设计？'];
+const AI_CHAT_TYPE_SPEED_MS = 24;
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -724,6 +727,9 @@ function renderAiChatMessages() {
     if (message.role === 'status') {
       item.classList.add('is-status');
     } else {
+      if (message.isTyping) {
+        item.classList.add('is-typing');
+      }
       const meta = document.createElement('div');
       meta.className = 'ai-chat-message-meta';
       meta.textContent = message.role === 'user' ? 'You' : 'Long AI';
@@ -735,7 +741,7 @@ function renderAiChatMessages() {
     bubble.textContent = message.text;
     item.appendChild(bubble);
 
-    if (Array.isArray(message.cards) && message.cards.length) {
+    if (!message.isTyping && Array.isArray(message.cards) && message.cards.length) {
       const cardsWrap = document.createElement('div');
       cardsWrap.className = 'ai-chat-feedback';
       message.cards.forEach((card) => {
@@ -827,9 +833,53 @@ function removeAiChatStatusMessages() {
   renderAiChatMessages();
 }
 
+function typeAiChatAssistantMessage({ text, cards }) {
+  return new Promise((resolve) => {
+    const fullText = text || AI_CHAT_COPY.serviceUnavailable;
+    const chars = Array.from(fullText);
+    const message = {
+      role: 'assistant',
+      text: '',
+      cards,
+      isTyping: true,
+    };
+    let index = 0;
+
+    if (aiChatState.typingTimer) {
+      clearTimeout(aiChatState.typingTimer);
+      aiChatState.typingTimer = null;
+    }
+
+    aiChatState.isTyping = true;
+    aiChatState.messages.push(message);
+
+    const typeNext = () => {
+      if (index >= chars.length) {
+        message.text = fullText;
+        message.isTyping = false;
+        aiChatState.isTyping = false;
+        aiChatState.typingTimer = null;
+        renderAiChatMessages();
+        resolve();
+        return;
+      }
+
+      const nextChar = chars[index];
+      message.text += nextChar;
+      index += 1;
+      renderAiChatMessages();
+
+      const delay = /[。！？!?；;，,]/.test(nextChar) ? AI_CHAT_TYPE_SPEED_MS * 5 : AI_CHAT_TYPE_SPEED_MS;
+      aiChatState.typingTimer = setTimeout(typeNext, delay);
+    };
+
+    typeNext();
+  });
+}
+
 async function sendAiChatMessage(rawText) {
   const messageText = rawText.trim();
-  if (!messageText || aiChatState.isSending) {
+  if (!messageText || aiChatState.isSending || aiChatState.isTyping) {
     return;
   }
 
@@ -871,25 +921,22 @@ async function sendAiChatMessage(rawText) {
     if (!response.ok) {
       const fallbackMessage =
         response.status === 404 ? AI_CHAT_COPY.notConfigured : data.error || AI_CHAT_COPY.serviceUnavailable;
-      pushAiChatMessage({
-        role: 'assistant',
+      setAiChatStarterOptions();
+      await typeAiChatAssistantMessage({
         text: fallbackMessage,
       });
-      setAiChatStarterOptions();
       return;
     }
 
     setAiChatStarterOptions(data.suggestions);
-    pushAiChatMessage({
-      role: 'assistant',
+    await typeAiChatAssistantMessage({
       text: data.reply || AI_CHAT_COPY.serviceUnavailable,
       cards: data.cards,
     });
   } catch (_error) {
     removeAiChatStatusMessages();
     setAiChatStarterOptions();
-    pushAiChatMessage({
-      role: 'assistant',
+    await typeAiChatAssistantMessage({
       text: AI_CHAT_COPY.serviceUnavailable,
     });
   } finally {
