@@ -568,10 +568,25 @@ function getDefaultAiLifeItems() {
       accent: '#74B0FF',
       tracks: [],
     },
-    { title: '我喜欢的宠物', description: '喜欢能带来陪伴感的小动物，安静、柔软、让生活慢下来一点。', accent: '#C4A8F5' },
-    { title: '最近收藏的一句话', description: '我很喜欢“韧性”这个词：面对变化时，依然保持乐观进取。', accent: '#D2FD5F' },
-    { title: '最近在看的书', description: 'DK 出版的 How to Be a Genius，想让自己的大脑保持活力。', accent: '#FF5CA6' },
-    { title: '朋友喜欢这样描述我', description: '很多朋友会说我是一个很温柔的人。', accent: '#0045DD' },
+    {
+      type: 'dogs',
+      title: '我是狗狗派',
+      accent: '#C4A8F5',
+      images: [
+        { src: './assets/life-cards/dog-beagle.jpg', label: 'Beagle' },
+        { src: './assets/life-cards/dog-husky.png', label: 'Husky' },
+        { src: './assets/life-cards/dog-border-collie.png', label: 'Border Collie' },
+      ],
+    },
+    { type: 'quote', title: '“现在开始，虽晚不迟”', description: '最近收藏的一句话', accent: '#D2FD5F' },
+    {
+      type: 'book',
+      title: '《夜晚的潜水艇》',
+      description: '最近在看陈春成的这本极具想象力的小说，推荐。',
+      image: './assets/life-cards/book-night-submarine.jpg',
+      accent: '#74B0FF',
+    },
+    { type: 'friend', title: '温柔', description: '朋友喜欢这样描述我。', accent: '#0045DD' },
   ];
 }
 
@@ -842,7 +857,7 @@ function renderAiFeedbackCard(card) {
 
     lifeItems.forEach((item, index) => {
       const lifeCard = document.createElement('article');
-      lifeCard.className = item.type === 'music' ? 'ai-chat-life-card ai-chat-life-card-music' : 'ai-chat-life-card';
+      lifeCard.className = `ai-chat-life-card ai-chat-life-card-${item.type || 'text'}`;
       lifeCard.style.setProperty('--life-card-accent', item.accent || ['#D2FD5F', '#74B0FF', '#FF5CA6'][index % 3]);
 
       if (item.type === 'music') {
@@ -865,6 +880,69 @@ function renderAiFeedbackCard(card) {
 
         lifeCard.append(title, grid);
         loadAiSpotifyTracks();
+      } else if (item.type === 'dogs') {
+        const title = document.createElement('strong');
+        title.className = 'ai-chat-life-heading';
+        title.textContent = item.title || '';
+
+        const dogGrid = document.createElement('div');
+        dogGrid.className = 'ai-chat-dog-grid';
+        (item.images || []).forEach((image) => {
+          const figure = document.createElement('figure');
+          figure.className = 'ai-chat-dog-photo';
+
+          const img = document.createElement('img');
+          img.src = image.src || '';
+          img.alt = image.label || item.title || '狗狗照片';
+
+          const caption = document.createElement('figcaption');
+          caption.textContent = image.label || '';
+
+          figure.append(img, caption);
+          dogGrid.appendChild(figure);
+        });
+
+        lifeCard.append(title, dogGrid);
+      } else if (item.type === 'quote') {
+        const title = document.createElement('strong');
+        title.className = 'ai-chat-life-quote';
+        title.textContent = item.title || '';
+
+        const description = document.createElement('span');
+        description.className = 'ai-chat-life-description';
+        description.textContent = item.description || '';
+
+        lifeCard.append(title, description);
+      } else if (item.type === 'book') {
+        const copy = document.createElement('div');
+        copy.className = 'ai-chat-book-copy';
+
+        const title = document.createElement('strong');
+        title.className = 'ai-chat-life-heading';
+        title.textContent = item.title || '';
+
+        const description = document.createElement('span');
+        description.className = 'ai-chat-life-description';
+        description.textContent = item.description || '';
+
+        copy.append(title, description);
+
+        const cover = document.createElement('img');
+        cover.className = 'ai-chat-book-cover';
+        cover.src = item.image || '';
+        cover.alt = item.title || '书籍封面';
+
+        lifeCard.append(copy, cover);
+      } else if (item.type === 'friend') {
+        const title = document.createElement('strong');
+        title.className = 'ai-chat-life-friend-title';
+        title.textContent = item.title || '';
+
+        const description = document.createElement('span');
+        description.className = 'ai-chat-life-description';
+        description.textContent = item.description || '';
+
+        lifeCard.append(title, description);
       } else {
         const marker = document.createElement('span');
         marker.className = 'ai-chat-life-marker';
