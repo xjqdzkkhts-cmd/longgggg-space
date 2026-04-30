@@ -69,6 +69,8 @@ const aiChatState = {
   isSending: false,
   isTyping: false,
   typingTimer: null,
+  starterIndex: -1,
+  starterOptions: [],
   hasBooted: false,
   messages: [],
 };
@@ -830,17 +832,24 @@ function setAiChatStarterOptions(suggestions = DEFAULT_AI_CHAT_STARTERS) {
 
   const options = (Array.isArray(suggestions) ? suggestions : [])
     .filter((item) => typeof item === 'string' && item.trim())
-    .slice(0, 3);
+    .slice(0, 6);
   const nextOptions = options.length ? options : DEFAULT_AI_CHAT_STARTERS;
+  const isSamePool =
+    nextOptions.length === aiChatState.starterOptions.length &&
+    nextOptions.every((item, index) => item === aiChatState.starterOptions[index]);
+
+  aiChatState.starterOptions = nextOptions;
+  aiChatState.starterIndex = isSamePool
+    ? (aiChatState.starterIndex + 1) % nextOptions.length
+    : 0;
+  const suggestion = nextOptions[aiChatState.starterIndex] || DEFAULT_AI_CHAT_STARTERS[0];
 
   aiChatStarters.innerHTML = '';
-  nextOptions.forEach((suggestion) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.dataset.aiChatStarter = suggestion;
-    button.textContent = suggestion;
-    aiChatStarters.appendChild(button);
-  });
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.dataset.aiChatStarter = suggestion;
+  button.textContent = suggestion;
+  aiChatStarters.appendChild(button);
 }
 
 function renderAiChatMessages() {

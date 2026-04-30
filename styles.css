@@ -1804,6 +1804,7 @@ a,
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 7px;
   min-height: 34px;
   padding: 0 12px;
   border: 0;
@@ -1876,6 +1877,14 @@ a,
   max-width: 72px;
   height: auto;
   object-fit: contain;
+}
+
+.floating-dock-ai-spark {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  color: #050505;
+  fill: currentColor;
 }
 
 @keyframes dock-ai-border-spin {
@@ -2304,7 +2313,7 @@ button.ai-chat-project-item:focus-visible {
 
 .ai-chat-starters {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
   padding: 0 30px 16px;
   background: rgba(255, 255, 255, 0.5);
@@ -2317,6 +2326,7 @@ button.ai-chat-project-item:focus-visible {
 
 .ai-chat-starters button {
   min-height: 30px;
+  max-width: 100%;
   padding: 0 11px;
   border: 1px solid rgba(15, 15, 15, 0.08);
   border-radius: var(--radius-pill);
@@ -2324,6 +2334,9 @@ button.ai-chat-project-item:focus-visible {
   color: rgba(15, 15, 15, 0.62);
   font: inherit;
   font-size: 0.74rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   cursor: pointer;
   transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
@@ -2954,6 +2967,11 @@ button.ai-chat-project-item:focus-visible {
 
   .floating-dock-ai-logo {
     max-width: 70px;
+  }
+
+  .floating-dock-ai-spark {
+    width: 13px;
+    height: 13px;
   }
 
   .floating-dock-location-current {
