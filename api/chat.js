@@ -46,6 +46,7 @@ function buildInstructions(personaMarkdown) {
     '- {"type":"projects","title":"相关作品","items":[{"title":"AI 溶栓助手","description":"一句话说明","tag":"UX","gallery":"ai-thrombolysis"}]}',
     '- {"type":"profile","title":"我给人的感觉","items":[{"title":"好奇","description":"对设计、AI 产品和新工具保持探索欲。"}]}',
     '- {"type":"life","title":"生活中的我","items":[{"title":"温柔","description":"朋友常这样描述我。","accent":"#D2FD5F"}]}',
+    '- {"type":"music","title":"最近在听","items":[]}',
     '- {"type":"tags","title":"关键词","items":["UX 设计","HCI","AI 产品"]}',
     '- {"type":"timeline","title":"学习历程","items":[{"title":"阶段","description":"说明"}]}',
     'suggestions 最多 3 条，每条是访客可能继续追问的问题。',
@@ -56,6 +57,7 @@ function buildInstructions(personaMarkdown) {
     '当用户问技能、工具、擅长什么时，回答不要只列 UX 或软件工具；必须体现我的特殊性：能运用 AI 构建产品、能独立完成前端和后端的轻量搭建、自我驱动性强、能把设计想法推进成可运行原型。',
     '当用户问技能、工具、擅长什么时，优先包含 profile card 或 tags card。',
     '当用户问生活中的样子、性格时，回答应偏生活状态、兴趣和个人气质，并优先包含 life card。',
+    '当用户只问音乐、喜欢听什么、最近在听什么时，优先包含 music card，不要包含完整 life card。',
     '当用户问合作体验、一起工作感觉时，回答应偏协作方式、团队角色、沟通偏好和项目推进方式。',
     '生活问题和合作问题不要回答成同一套内容。',
     '',
@@ -178,6 +180,10 @@ function normalizeCards(cards) {
     }));
 }
 
+function isMusicQuestion(message) {
+  return /音乐|听什么|喜欢听|最近在听|歌单|歌曲|kpop|spotify|music|song|playlist/.test(message.toLowerCase());
+}
+
 function inferCards(message) {
   const text = message.toLowerCase();
   const cards = [];
@@ -234,6 +240,14 @@ function inferCards(message) {
     });
   }
 
+  if (isMusicQuestion(message)) {
+    cards.push({
+      type: 'music',
+      title: '最近在听',
+      items: [],
+    });
+  }
+
   if (/协作|合作|一起工作|工作感觉|共事|collaborat|work with/.test(text)) {
     cards.push({
       type: 'profile',
@@ -274,6 +288,10 @@ function inferCards(message) {
 function buildFallbackReply(message) {
   const text = message.toLowerCase();
 
+  if (isMusicQuestion(message)) {
+    return '最近我会通过音乐切换状态，也很喜欢那些能让我进入创作节奏或放松下来的歌。你可以看下面的“最近在听”卡片，它会读取我的 Spotify 最近播放。';
+  }
+
   if (/联系|邮箱|email|微信|电话|contact|reach|linkedin/.test(text)) {
     return '你可以通过邮箱 Xiangyu-Long@outlook.com 联系我，也可以通过微信 xjqdzkkhts 找到我。';
   }
@@ -291,6 +309,9 @@ function buildFallbackReply(message) {
   }
 
   if (/生活|性格|日常|personality/.test(text)) {
+    if (isMusicQuestion(message)) {
+      return '最近我会通过音乐切换状态，也很喜欢那些能让我进入创作节奏或放松下来的歌。你可以看下面的“最近在听”卡片，它会读取我的 Spotify 最近播放。';
+    }
     return '生活中，朋友常说我是一个温柔的人。我也很看重韧性，喜欢人在面对变化时依然保持乐观和进取。平时我喜欢手帐、旅行和音乐，也会沉浸在不断完善个人网站这种从 0 到 1 搭建体系的过程里。';
   }
 
@@ -303,6 +324,10 @@ function buildFallbackReply(message) {
 
 function inferSuggestions(message) {
   const text = message.toLowerCase();
+
+  if (isMusicQuestion(message)) {
+    return ['你平时有哪些兴趣爱好？', '生活中的你是什么样？', '你对旅游有什么看法？'];
+  }
 
   if (/联系|邮箱|email|微信|电话|contact|reach|linkedin/.test(text)) {
     return ['你目前在哪里？', '看看你的作品', '和你合作是什么感觉？'];
@@ -317,6 +342,9 @@ function inferSuggestions(message) {
   }
 
   if (/生活|性格|日常|personality/.test(text)) {
+    if (isMusicQuestion(message)) {
+      return ['你平时有哪些兴趣爱好？', '生活中的你是什么样？', '你对旅游有什么看法？'];
+    }
     return ['和你合作是什么感觉？', '你最近在关注什么？', '你如何思考设计？'];
   }
 
@@ -336,7 +364,9 @@ function buildChatPayload(replyText, message) {
   const fallbackReply = replyText.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
   const reply = typeof structured?.reply === 'string' && structured.reply.trim() ? structured.reply.trim() : fallbackReply;
   const inferredCards = inferCards(message);
-  const cards = normalizeCards(structured?.cards);
+  const cards = isMusicQuestion(message)
+    ? normalizeCards(structured?.cards).filter((card) => card.type !== 'life')
+    : normalizeCards(structured?.cards);
   const suggestions = normalizeSuggestions(structured?.suggestions);
 
   return {

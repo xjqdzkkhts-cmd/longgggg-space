@@ -49,7 +49,10 @@ async function getAccessToken() {
     throw new Error(data.error_description || data.error || 'Unable to refresh Spotify token.');
   }
 
-  return data.access_token;
+  return {
+    accessToken: data.access_token,
+    scope: data.scope || '',
+  };
 }
 
 function normalizeTrack(track, source = 'recent') {
@@ -138,15 +141,15 @@ module.exports = async function handler(req, res) {
 
   try {
     const debug = isDebugRequest(req);
-    const accessToken = await getAccessToken();
+    const token = await getAccessToken();
     const [current, recent] = await Promise.all([
-      fetchSpotifyJson(SPOTIFY_CURRENT_URL, accessToken).catch((error) => ({
+      fetchSpotifyJson(SPOTIFY_CURRENT_URL, token.accessToken).catch((error) => ({
         status: 0,
         ok: false,
         data: null,
         error: error.message,
       })),
-      fetchSpotifyJson(SPOTIFY_RECENT_URL, accessToken).catch((error) => ({
+      fetchSpotifyJson(SPOTIFY_RECENT_URL, token.accessToken).catch((error) => ({
         status: 0,
         ok: false,
         data: null,
@@ -176,10 +179,12 @@ module.exports = async function handler(req, res) {
 
     sendJson(res, 200, {
       tracks: tracks.slice(0, 4),
+      pool: tracks.slice(0, 20),
       updatedAt: new Date().toISOString(),
       ...(debug
         ? {
             debug: {
+              tokenScope: token.scope,
               currentStatus: current?.status ?? null,
               currentOk: Boolean(current?.ok),
               currentType: currentData?.currently_playing_type || null,

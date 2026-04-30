@@ -74,6 +74,7 @@ const aiChatState = {
   starterOptions: [],
   hasBooted: false,
   spotifyTracks: null,
+  spotifyTrackPool: null,
   spotifyTracksPromise: null,
   messages: [],
 };
@@ -85,6 +86,7 @@ const AI_CHAT_COPY = {
 };
 const DEFAULT_AI_CHAT_STARTERS = ['生活中的你是什么样？', '和你合作是什么感觉？', '你如何思考设计？'];
 const AI_CHAT_TYPE_SPEED_MS = 24;
+const AI_SPOTIFY_CACHE_KEY = 'long-ai-spotify-tracks';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -573,8 +575,8 @@ function getDefaultAiLifeItems() {
       title: '我是狗狗派',
       accent: '#C4A8F5',
       images: [
-        { src: './assets/life-cards/dog-beagle.jpg', label: 'Beagle' },
         { src: './assets/life-cards/dog-husky.png', label: 'Husky' },
+        { src: './assets/life-cards/dog-beagle.jpg', label: 'Beagle' },
         { src: './assets/life-cards/dog-border-collie.png', label: 'Border Collie' },
       ],
     },
@@ -600,13 +602,13 @@ function getDefaultAiMusicTracks() {
 }
 
 function normalizeSpotifyTracksPayload(payload) {
-  if (!Array.isArray(payload?.tracks)) {
+  const sourceTracks = Array.isArray(payload?.pool) ? payload.pool : payload?.tracks;
+  if (!Array.isArray(sourceTracks)) {
     return [];
   }
 
-  return payload.tracks
+  return sourceTracks
     .filter((track) => track && typeof track.title === 'string' && track.title.trim())
-    .slice(0, 4)
     .map((track) => ({
       title: track.title.trim(),
       artist: typeof track.artist === 'string' ? track.artist.trim() : '',
@@ -614,6 +616,40 @@ function normalizeSpotifyTracksPayload(payload) {
       url: typeof track.url === 'string' ? track.url : '',
       theme: 'spotify',
     }));
+}
+
+function getTrackFingerprint(tracks = []) {
+  return tracks.map((track) => `${track.title}__${track.artist}`).join('|');
+}
+
+function shuffleTracks(tracks = []) {
+  const nextTracks = [...tracks];
+  for (let index = nextTracks.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [nextTracks[index], nextTracks[randomIndex]] = [nextTracks[randomIndex], nextTracks[index]];
+  }
+  return nextTracks;
+}
+
+function readSavedSpotifyTracks() {
+  try {
+    const parsed = JSON.parse(window.localStorage?.getItem(AI_SPOTIFY_CACHE_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_error) {
+    return [];
+  }
+}
+
+function saveSpotifyTracks(tracks = []) {
+  if (!tracks.length) {
+    return;
+  }
+
+  try {
+    window.localStorage?.setItem(AI_SPOTIFY_CACHE_KEY, JSON.stringify(tracks.slice(0, 20)));
+  } catch (_error) {
+    // Local storage may be unavailable in private browsing; live Spotify data still works.
+  }
 }
 
 function getAiMusicTracks(fallbackTracks = []) {
@@ -626,6 +662,25 @@ function renderAiMusicLoading() {
   loading.className = 'ai-chat-music-loading';
   loading.textContent = '正在读取 Spotify';
   return loading;
+}
+
+function renderAiMusicRefreshButton() {
+  const button = document.createElement('button');
+  button.className = 'ai-chat-music-refresh';
+  button.type = 'button';
+  button.setAttribute('aria-label', '刷新最近在听');
+  button.innerHTML = `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M21 12a9 9 0 0 1-15.32 6.36M3 12A9 9 0 0 1 18.32 5.64" />
+      <path d="M21 5v7h-7" />
+      <path d="M3 19v-7h7" />
+    </svg>
+  `;
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    loadAiSpotifyTracks({ force: true });
+  });
+  return button;
 }
 
 function renderAiMusicCover(track) {
@@ -664,24 +719,37 @@ function renderAiMusicTrack(track) {
 }
 
 function updateAiMusicCards() {
-  if (!aiChatMessages || !Array.isArray(aiChatState.spotifyTracks)) {
+  if (!aiChatMessages) {
     return;
   }
 
   aiChatMessages.querySelectorAll('[data-ai-music-grid]').forEach((grid) => {
     grid.innerHTML = '';
+    if (!Array.isArray(aiChatState.spotifyTracks)) {
+      grid.appendChild(renderAiMusicLoading());
+      return;
+    }
+
     getAiMusicTracks(getDefaultAiMusicTracks()).forEach((track) => {
       grid.appendChild(renderAiMusicTrack(track));
     });
   });
 }
 
-function loadAiSpotifyTracks() {
-  if (aiChatState.spotifyTracks || aiChatState.spotifyTracksPromise) {
+function loadAiSpotifyTracks(options = {}) {
+  const force = Boolean(options.force);
+  if (!force && (aiChatState.spotifyTracks || aiChatState.spotifyTracksPromise)) {
     return aiChatState.spotifyTracksPromise;
   }
 
-  aiChatState.spotifyTracksPromise = fetch(spotifyRecentEndpoint, {
+  if (force) {
+    aiChatState.spotifyTracks = null;
+    aiChatState.spotifyTracksPromise = null;
+    updateAiMusicCards();
+  }
+
+  const endpoint = force ? `${spotifyRecentEndpoint}?t=${Date.now()}` : spotifyRecentEndpoint;
+  aiChatState.spotifyTracksPromise = fetch(endpoint, {
     method: 'GET',
     headers: { Accept: 'application/json' },
   })
@@ -693,19 +761,61 @@ function loadAiSpotifyTracks() {
     })
     .then((payload) => {
       const tracks = normalizeSpotifyTracksPayload(payload);
+      const savedTracks = readSavedSpotifyTracks();
+      const hasSamePool =
+        force &&
+        tracks.length &&
+        savedTracks.length &&
+        getTrackFingerprint(tracks.slice(0, 8)) === getTrackFingerprint(savedTracks.slice(0, 8));
+
       if (tracks.length) {
-        aiChatState.spotifyTracks = tracks;
+        aiChatState.spotifyTrackPool = tracks;
+        aiChatState.spotifyTracks = hasSamePool ? shuffleTracks(savedTracks).slice(0, 4) : tracks.slice(0, 4);
+        saveSpotifyTracks(tracks);
+        updateAiMusicCards();
+      } else {
+        aiChatState.spotifyTrackPool = savedTracks;
+        aiChatState.spotifyTracks = savedTracks.length ? shuffleTracks(savedTracks).slice(0, 4) : [];
         updateAiMusicCards();
       }
       return tracks;
     })
     .catch(() => {
-      aiChatState.spotifyTracks = [];
+      const savedTracks = readSavedSpotifyTracks();
+      aiChatState.spotifyTrackPool = savedTracks;
+      aiChatState.spotifyTracks = savedTracks.length ? shuffleTracks(savedTracks).slice(0, 4) : [];
       updateAiMusicCards();
       return [];
     });
 
   return aiChatState.spotifyTracksPromise;
+}
+
+function renderAiMusicCardContent(lifeCard, item = {}) {
+  const header = document.createElement('div');
+  header.className = 'ai-chat-music-header';
+
+  const title = document.createElement('strong');
+  title.className = 'ai-chat-music-title';
+  title.textContent = item.title || '最近在听';
+
+  header.append(title, renderAiMusicRefreshButton());
+
+  const grid = document.createElement('div');
+  grid.className = 'ai-chat-music-grid';
+  grid.dataset.aiMusicGrid = 'true';
+  const musicTracks = getAiMusicTracks(item.tracks || []);
+  if (musicTracks.length) {
+    musicTracks.forEach((track) => {
+      const trackEl = renderAiMusicTrack(track);
+      grid.appendChild(trackEl);
+    });
+  } else {
+    grid.appendChild(renderAiMusicLoading());
+  }
+
+  lifeCard.append(header, grid);
+  loadAiSpotifyTracks();
 }
 
 function updateAiLifeCarousel(carousel) {
@@ -861,25 +971,7 @@ function renderAiFeedbackCard(card) {
       lifeCard.style.setProperty('--life-card-accent', item.accent || ['#D2FD5F', '#74B0FF', '#FF5CA6'][index % 3]);
 
       if (item.type === 'music') {
-        const title = document.createElement('strong');
-        title.className = 'ai-chat-music-title';
-        title.textContent = item.title || '';
-
-        const grid = document.createElement('div');
-        grid.className = 'ai-chat-music-grid';
-        grid.dataset.aiMusicGrid = 'true';
-        const musicTracks = getAiMusicTracks(item.tracks || []);
-        if (musicTracks.length) {
-          musicTracks.forEach((track) => {
-            const trackEl = renderAiMusicTrack(track);
-            grid.appendChild(trackEl);
-          });
-        } else {
-          grid.appendChild(renderAiMusicLoading());
-        }
-
-        lifeCard.append(title, grid);
-        loadAiSpotifyTracks();
+        renderAiMusicCardContent(lifeCard, item);
       } else if (item.type === 'dogs') {
         const title = document.createElement('strong');
         title.className = 'ai-chat-life-heading';
@@ -895,10 +987,7 @@ function renderAiFeedbackCard(card) {
           img.src = image.src || '';
           img.alt = image.label || item.title || '狗狗照片';
 
-          const caption = document.createElement('figcaption');
-          caption.textContent = image.label || '';
-
-          figure.append(img, caption);
+          figure.appendChild(img);
           dogGrid.appendChild(figure);
         });
 
@@ -969,6 +1058,21 @@ function renderAiFeedbackCard(card) {
     carousel.append(track, controls);
     cardEl.appendChild(carousel);
     attachAiLifeCarousel(carousel);
+    return cardEl;
+  }
+
+  if (card.type === 'music') {
+    const musicWrap = document.createElement('div');
+    musicWrap.className = 'ai-chat-single-music';
+    const musicCard = document.createElement('article');
+    musicCard.className = 'ai-chat-life-card ai-chat-life-card-music';
+    musicCard.dataset.offset = '0';
+    musicCard.style.setProperty('--life-card-accent', '#74B0FF');
+    musicCard.style.setProperty('--life-card-offset', 0);
+    musicCard.style.setProperty('--life-card-abs-offset', 0);
+    renderAiMusicCardContent(musicCard, { title: card.title || '最近在听', tracks: [] });
+    musicWrap.appendChild(musicCard);
+    cardEl.appendChild(musicWrap);
     return cardEl;
   }
 
