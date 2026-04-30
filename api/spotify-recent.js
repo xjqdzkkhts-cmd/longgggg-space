@@ -1,6 +1,6 @@
 const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
 const SPOTIFY_CURRENT_URL = 'https://api.spotify.com/v1/me/player/currently-playing';
-const SPOTIFY_RECENT_URL = 'https://api.spotify.com/v1/me/player/recently-played?limit=4';
+const SPOTIFY_RECENT_URL = 'https://api.spotify.com/v1/me/player/recently-played?limit=20';
 
 function setCorsHeaders(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
