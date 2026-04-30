@@ -558,7 +558,18 @@ function getAiProjectGallery(item) {
 
 function getDefaultAiLifeItems() {
   return [
-    { title: '最近在听', description: '最近很喜欢听 Kpop，尤其是晚上边听活力的音乐边做自己的事情。', accent: '#74B0FF' },
+    {
+      type: 'music',
+      title: '最近在听',
+      description: '最近很喜欢听 Kpop，尤其是晚上边听活力的音乐边做自己的事情。',
+      accent: '#74B0FF',
+      tracks: [
+        { title: 'Magnetic', artist: 'illit', theme: 'magnetic' },
+        { title: '陀飞轮', artist: '陈奕迅', theme: 'dark' },
+        { title: 'Ditto', artist: 'Newjeans', theme: 'ditto' },
+        { title: 'Love Lee', artist: 'AKMU', theme: 'love' },
+      ],
+    },
     { title: '我喜欢的宠物', description: '喜欢能带来陪伴感的小动物，安静、柔软、让生活慢下来一点。', accent: '#C4A8F5' },
     { title: '最近收藏的一句话', description: '我很喜欢“韧性”这个词：面对变化时，依然保持乐观进取。', accent: '#D2FD5F' },
     { title: '最近在看的书', description: 'DK 出版的 How to Be a Genius，想让自己的大脑保持活力。', accent: '#FF5CA6' },
@@ -609,10 +620,20 @@ function attachAiLifeCarousel(carousel) {
   };
 
   carousel.dataset.activeIndex = carousel.dataset.activeIndex || '0';
-  carousel.querySelector('[data-life-prev]')?.addEventListener('click', () => {
+  const controls = carousel.querySelector('.ai-chat-life-controls');
+  controls?.addEventListener('pointerdown', (event) => {
+    event.stopPropagation();
+  });
+  controls?.addEventListener('pointerup', (event) => {
+    event.stopPropagation();
+  });
+
+  carousel.querySelector('[data-life-prev]')?.addEventListener('click', (event) => {
+    event.stopPropagation();
     setActiveIndex(Number(carousel.dataset.activeIndex || 0) - 1);
   });
-  carousel.querySelector('[data-life-next]')?.addEventListener('click', () => {
+  carousel.querySelector('[data-life-next]')?.addEventListener('click', (event) => {
+    event.stopPropagation();
     setActiveIndex(Number(carousel.dataset.activeIndex || 0) + 1);
   });
 
@@ -705,20 +726,47 @@ function renderAiFeedbackCard(card) {
 
     lifeItems.forEach((item, index) => {
       const lifeCard = document.createElement('article');
-      lifeCard.className = 'ai-chat-life-card';
+      lifeCard.className = item.type === 'music' ? 'ai-chat-life-card ai-chat-life-card-music' : 'ai-chat-life-card';
       lifeCard.style.setProperty('--life-card-accent', item.accent || ['#D2FD5F', '#74B0FF', '#FF5CA6'][index % 3]);
 
-      const marker = document.createElement('span');
-      marker.className = 'ai-chat-life-marker';
-      marker.textContent = String(index + 1).padStart(2, '0');
+      if (item.type === 'music') {
+        const title = document.createElement('strong');
+        title.className = 'ai-chat-music-title';
+        title.textContent = item.title || '';
 
-      const title = document.createElement('strong');
-      title.textContent = item.title || '';
+        const grid = document.createElement('div');
+        grid.className = 'ai-chat-music-grid';
+        (item.tracks || []).forEach((track) => {
+          const trackEl = document.createElement('div');
+          trackEl.className = 'ai-chat-music-track';
 
-      const description = document.createElement('span');
-      description.textContent = item.description || '';
+          const cover = document.createElement('span');
+          cover.className = `ai-chat-music-cover is-${track.theme || 'default'}`;
 
-      lifeCard.append(marker, title, description);
+          const trackTitle = document.createElement('b');
+          trackTitle.textContent = track.title || '';
+
+          const artist = document.createElement('span');
+          artist.textContent = track.artist || '';
+
+          trackEl.append(cover, trackTitle, artist);
+          grid.appendChild(trackEl);
+        });
+
+        lifeCard.append(title, grid);
+      } else {
+        const marker = document.createElement('span');
+        marker.className = 'ai-chat-life-marker';
+        marker.textContent = String(index + 1).padStart(2, '0');
+
+        const title = document.createElement('strong');
+        title.textContent = item.title || '';
+
+        const description = document.createElement('span');
+        description.textContent = item.description || '';
+
+        lifeCard.append(marker, title, description);
+      }
       track.appendChild(lifeCard);
     });
 
@@ -853,14 +901,19 @@ function setAiChatStarterOptions(suggestions = DEFAULT_AI_CHAT_STARTERS) {
   aiChatState.starterIndex = isSamePool
     ? (aiChatState.starterIndex + 1) % nextOptions.length
     : 0;
-  const suggestion = nextOptions[aiChatState.starterIndex] || DEFAULT_AI_CHAT_STARTERS[0];
+  const visibleOptions = Array.from({ length: Math.min(3, nextOptions.length) }, (_, index) => {
+    const optionIndex = (aiChatState.starterIndex + index) % nextOptions.length;
+    return nextOptions[optionIndex];
+  });
 
   aiChatStarters.innerHTML = '';
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.dataset.aiChatStarter = suggestion;
-  button.textContent = suggestion;
-  aiChatStarters.appendChild(button);
+  visibleOptions.forEach((suggestion) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.aiChatStarter = suggestion;
+    button.textContent = suggestion;
+    aiChatStarters.appendChild(button);
+  });
 }
 
 function renderAiChatMessages() {

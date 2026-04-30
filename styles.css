@@ -2162,6 +2162,142 @@ body.is-chat-open .ai-chat-sidebar {
   pointer-events: auto;
 }
 
+.ai-chat-life-card-music {
+  width: min(86%, 330px);
+  aspect-ratio: 518 / 309;
+  min-height: auto;
+  padding: 20px 16px 18px;
+  align-content: start;
+  gap: 12px;
+  background: #ffffff;
+}
+
+.ai-chat-life-card-music::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  height: 64%;
+  z-index: -1;
+  border-radius: 18px;
+  background: #f1f3f6;
+}
+
+.ai-chat-music-title {
+  font-size: 1.05rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.ai-chat-music-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 2px;
+  padding: 0 2px;
+}
+
+.ai-chat-music-track {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.ai-chat-music-cover {
+  position: relative;
+  aspect-ratio: 1;
+  display: block;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #d8dce2;
+}
+
+.ai-chat-music-cover::before,
+.ai-chat-music-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.ai-chat-music-cover.is-magnetic {
+  background:
+    radial-gradient(circle at 25% 30%, #ffffff 0 7%, transparent 8%),
+    radial-gradient(circle at 70% 72%, #ffffff 0 8%, transparent 9%),
+    linear-gradient(135deg, #29343c, #f4eee4 46%, #2f3a42);
+}
+
+.ai-chat-music-cover.is-magnetic::before {
+  inset: 18% 16%;
+  border: 5px solid rgba(255, 255, 255, 0.76);
+  border-left-color: transparent;
+  border-bottom-color: transparent;
+  transform: rotate(24deg);
+}
+
+.ai-chat-music-cover.is-dark {
+  background:
+    radial-gradient(circle at 50% 32%, #6f6f79 0 12%, transparent 13%),
+    linear-gradient(135deg, #07070a, #303039 48%, #0d0d12);
+}
+
+.ai-chat-music-cover.is-dark::before {
+  left: 45%;
+  right: auto;
+  width: 18%;
+  background: linear-gradient(#111, #777, #111);
+  transform: skewX(-14deg);
+}
+
+.ai-chat-music-cover.is-ditto {
+  background:
+    radial-gradient(circle at 72% 42%, rgba(255, 255, 255, 0.72) 0 17%, transparent 18%),
+    repeating-linear-gradient(0deg, rgba(160, 0, 30, 0.22) 0 2px, transparent 2px 6px),
+    #d35a6e;
+}
+
+.ai-chat-music-cover.is-ditto::before {
+  content: "DITTO";
+  inset: auto 6px 5px;
+  color: rgba(130, 0, 25, 0.6);
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.ai-chat-music-cover.is-love {
+  background:
+    radial-gradient(circle at 50% 50%, #ff4aa3 0 23%, transparent 24%),
+    linear-gradient(135deg, #6f45ff, #48e0cc 45%, #d2fd5f);
+}
+
+.ai-chat-music-cover.is-love::before,
+.ai-chat-music-cover.is-love::after {
+  inset: 26% 23%;
+  border-radius: 50% 50% 0 50%;
+  background: #ff4aa3;
+  transform: rotate(45deg);
+}
+
+.ai-chat-music-track b {
+  min-width: 0;
+  color: #111111;
+  font-size: 0.72rem;
+  line-height: 1.05;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-chat-music-track > span:last-child {
+  min-width: 0;
+  color: rgba(15, 15, 15, 0.48);
+  font-size: 0.62rem;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .ai-chat-life-marker {
   justify-self: start;
   min-height: 24px;
@@ -2194,6 +2330,7 @@ body.is-chat-open .ai-chat-sidebar {
   left: 14px;
   right: 14px;
   bottom: 6px;
+  z-index: 60;
   display: flex;
   justify-content: center;
   gap: 8px;
