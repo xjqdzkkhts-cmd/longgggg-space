@@ -70,7 +70,7 @@ const aiChatState = {
 };
 const AI_CHAT_COPY = {
   welcome:
-    '你好，我是龙湘玉的 AI 分身。你可以问我关于她的作品、经历、研究兴趣和联系方式。',
+    '你好，我是龙湘玉的 AI 分身。我会以第一人称介绍我的作品、经历、研究兴趣和联系方式。',
   serviceUnavailable: 'AI 服务暂时不可用，请稍后再试。',
   notConfigured: 'AI 服务还没有接通，请先部署 Vercel 后端并填写前端 API 地址。',
 };
