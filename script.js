@@ -76,6 +76,7 @@ const AI_CHAT_COPY = {
   serviceUnavailable: 'AI 服务暂时不可用，请稍后再试。',
   notConfigured: 'AI 服务还没有接通，请先部署 Vercel 后端并填写前端 API 地址。',
 };
+const DEFAULT_AI_CHAT_STARTERS = ['生活中的你是什么样？', '和你合作是什么感觉？', '你如何思考设计？'];
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -688,17 +689,32 @@ function renderAiSuggestions(suggestions) {
   return wrap;
 }
 
+function setAiChatStarterOptions(suggestions = DEFAULT_AI_CHAT_STARTERS) {
+  if (!aiChatStarters) {
+    return;
+  }
+
+  const options = (Array.isArray(suggestions) ? suggestions : [])
+    .filter((item) => typeof item === 'string' && item.trim())
+    .slice(0, 3);
+  const nextOptions = options.length ? options : DEFAULT_AI_CHAT_STARTERS;
+
+  aiChatStarters.innerHTML = '';
+  nextOptions.forEach((suggestion) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.aiChatStarter = suggestion;
+    button.textContent = suggestion;
+    aiChatStarters.appendChild(button);
+  });
+}
+
 function renderAiChatMessages() {
   if (!aiChatMessages) {
     return;
   }
 
   aiChatMessages.innerHTML = '';
-
-  const hasUserMessage = aiChatState.messages.some((message) => message.role === 'user');
-  if (aiChatStarters) {
-    aiChatStarters.classList.toggle('is-hidden', hasUserMessage);
-  }
 
   aiChatState.messages.forEach((message) => {
     const item = document.createElement('div');
@@ -728,11 +744,6 @@ function renderAiChatMessages() {
       item.appendChild(cardsWrap);
     }
 
-    const suggestions = renderAiSuggestions(message.suggestions);
-    if (suggestions) {
-      item.appendChild(suggestions);
-    }
-
     aiChatMessages.appendChild(item);
   });
 
@@ -756,6 +767,7 @@ function ensureAiChatBooted() {
   }
 
   aiChatState.hasBooted = true;
+  setAiChatStarterOptions();
   aiChatState.messages.push({
     role: 'assistant',
     text: AI_CHAT_COPY.welcome,
@@ -863,17 +875,19 @@ async function sendAiChatMessage(rawText) {
         role: 'assistant',
         text: fallbackMessage,
       });
+      setAiChatStarterOptions();
       return;
     }
 
+    setAiChatStarterOptions(data.suggestions);
     pushAiChatMessage({
       role: 'assistant',
       text: data.reply || AI_CHAT_COPY.serviceUnavailable,
       cards: data.cards,
-      suggestions: data.suggestions,
     });
   } catch (_error) {
     removeAiChatStatusMessages();
+    setAiChatStarterOptions();
     pushAiChatMessage({
       role: 'assistant',
       text: AI_CHAT_COPY.serviceUnavailable,

@@ -293,6 +293,36 @@ function buildFallbackReply(message) {
   return '我可以介绍我的作品、教育经历、设计方向、技能、协作方式和联系方式。你可以问我“你做过哪些项目？”或“和你一起工作是什么感觉？”。';
 }
 
+function inferSuggestions(message) {
+  const text = message.toLowerCase();
+
+  if (/联系|邮箱|email|微信|电话|contact|reach|linkedin/.test(text)) {
+    return ['你目前在哪里？', '看看你的作品', '和你合作是什么感觉？'];
+  }
+
+  if (/项目|作品|案例|portfolio|project|case/.test(text)) {
+    return ['AI 溶栓助手里你做了什么？', 'iKnow 项目目标是什么？', '你如何思考设计？'];
+  }
+
+  if (/协作|合作|一起工作|工作感觉|共事|collaborat|work with/.test(text)) {
+    return ['生活中的你是什么样？', '你做项目时从哪里开始？', '看看你的作品'];
+  }
+
+  if (/生活|性格|日常|personality/.test(text)) {
+    return ['和你合作是什么感觉？', '你最近在关注什么？', '你如何思考设计？'];
+  }
+
+  if (/设计思考|思考方式|方法|design thinking/.test(text)) {
+    return ['你做过哪些项目？', '和你合作是什么感觉？', '你的技能有哪些？'];
+  }
+
+  if (/技能|工具|会什么|擅长|skill|tool|能力/.test(text)) {
+    return ['你如何使用 AI 工具？', '看看你的作品', '你的求职方向是什么？'];
+  }
+
+  return ['生活中的你是什么样？', '和你合作是什么感觉？', '看看你的作品'];
+}
+
 function buildChatPayload(replyText, message) {
   const structured = parseStructuredReply(replyText);
   const fallbackReply = replyText.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
@@ -304,7 +334,7 @@ function buildChatPayload(replyText, message) {
   return {
     reply,
     cards: cards.length ? cards : inferredCards,
-    suggestions: suggestions.length ? suggestions : ['生活中的你是什么样？', '和你合作是什么感觉？', '看看你的作品'],
+    suggestions: suggestions.length ? suggestions : inferSuggestions(message),
   };
 }
 
