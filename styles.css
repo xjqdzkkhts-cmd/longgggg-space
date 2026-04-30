@@ -36,7 +36,7 @@
   --radius-tag: var(--radius-sm);
   --radius-icon: var(--radius-xs);
   --radius-strap: var(--radius-none);
-  --ai-chat-width: min(480px, 36vw);
+  --ai-chat-width: min(560px, 42vw);
   --layout-shift-x: 0px;
 }
 
@@ -1785,7 +1785,7 @@ a,
   min-height: 43px;
   padding: 7px 9px;
   display: grid;
-  grid-template-columns: minmax(74px, 98px) minmax(0, 1fr);
+  grid-template-columns: minmax(88px, 116px) minmax(0, 1fr);
   align-items: center;
   gap: 14px;
   border-radius: 12px;
@@ -1804,8 +1804,8 @@ a,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 29px;
-  padding: 0 9px;
+  min-height: 34px;
+  padding: 0 12px;
   border: 0;
   border-radius: 8px;
   border: 3px solid transparent;
@@ -1813,13 +1813,13 @@ a,
   --ai-button-fill: linear-gradient(#ffffff, #ffffff);
   --ai-gradient-border: conic-gradient(
     from var(--border-angle),
-    transparent 12%,
-    #b9ddff 22%,
-    #aef4e5 36%,
-    #e8ffd2 48%,
-    #fff5cf 58%,
-    #ffd6e6 72%,
-    #e9ddff 86%,
+    transparent 9%,
+    #69B7FF 20%,
+    #72F0DD 34%,
+    #D2FD5F 48%,
+    #FFFFFF 57%,
+    #FF7AB8 72%,
+    #9B7CFF 88%,
     transparent 100%
   );
   background:
@@ -1857,8 +1857,8 @@ a,
 }
 
 .floating-dock-ai::after {
-  opacity: 0.22;
-  filter: blur(8px);
+  opacity: 0.32;
+  filter: blur(9px) saturate(1.2);
 }
 
 .floating-dock-ai::selection {
@@ -1867,13 +1867,13 @@ a,
 
 .floating-dock-ai:hover,
 .floating-dock-ai:focus-visible {
-  filter: saturate(1.08);
+  filter: saturate(1.18);
   transform: translateY(-2px) scale(1.08);
 }
 
 .floating-dock-ai-logo {
   width: 100%;
-  max-width: 58px;
+  max-width: 72px;
   height: auto;
   object-fit: contain;
 }
@@ -1908,7 +1908,7 @@ a,
   width: var(--ai-chat-width);
   height: 100vh;
   z-index: 130;
-  padding: 18px 18px 18px 0;
+  padding: 20px 20px 20px 0;
   pointer-events: none;
   transform: translateX(calc(100% + 24px));
   transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
@@ -1937,7 +1937,7 @@ body.is-chat-open .ai-chat-sidebar {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 16px;
-  padding: 22px 24px 18px;
+  padding: 26px 30px 20px;
   border-bottom: 1px solid rgba(15, 15, 15, 0.06);
 }
 
@@ -1973,7 +1973,7 @@ body.is-chat-open .ai-chat-sidebar {
   flex-direction: column;
   gap: 14px;
   min-height: 0;
-  padding: 22px 24px;
+  padding: 26px 30px;
   overflow-y: auto;
   scrollbar-width: thin;
 }
@@ -2163,7 +2163,7 @@ button.ai-chat-project-item:focus-visible {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 0 24px 14px;
+  padding: 0 30px 16px;
   background: rgba(255, 255, 255, 0.5);
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
@@ -2206,16 +2206,16 @@ button.ai-chat-project-item:focus-visible {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   gap: 12px;
-  padding: 18px 24px 22px;
+  padding: 20px 30px 26px;
   border-top: 1px solid rgba(15, 15, 15, 0.06);
   background: rgba(255, 255, 255, 0.5);
 }
 
 .ai-chat-input {
   width: 100%;
-  min-height: 48px;
-  max-height: 168px;
-  padding: 14px 16px;
+  min-height: 54px;
+  max-height: 190px;
+  padding: 15px 17px;
   border: 1px solid rgba(15, 15, 15, 0.08);
   border-radius: var(--radius-input);
   background: rgba(255, 255, 255, 0.92);
@@ -2240,7 +2240,7 @@ button.ai-chat-project-item:focus-visible {
 
 .ai-chat-send {
   min-width: 88px;
-  height: 48px;
+  height: 54px;
   padding: 0 18px;
   border: 0;
   border-radius: var(--radius-button);
@@ -2797,20 +2797,20 @@ button.ai-chat-project-item:focus-visible {
     width: min(calc(100% - 32px), 260px);
     min-height: 43px;
     padding: 7px 9px;
-    grid-template-columns: minmax(74px, 98px) minmax(0, 1fr);
+    grid-template-columns: minmax(86px, 112px) minmax(0, 1fr);
     gap: 14px;
     border-radius: 12px;
   }
 
   .floating-dock-ai {
-    min-height: 29px;
-    padding: 0 9px;
+    min-height: 33px;
+    padding: 0 11px;
     border-width: 3px;
     border-radius: 8px;
   }
 
   .floating-dock-ai-logo {
-    max-width: 58px;
+    max-width: 70px;
   }
 
   .floating-dock-location-current {
