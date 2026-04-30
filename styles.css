@@ -2097,35 +2097,34 @@ body.is-chat-open .ai-chat-sidebar {
 }
 
 .ai-chat-life-carousel {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(168px, 74%);
-  gap: 10px;
-  margin: 0 -14px -4px;
-  padding: 2px 14px 8px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
+  position: relative;
+  min-height: 226px;
+  margin: 0 -14px -6px;
+  padding: 2px 14px 42px;
+  overflow: hidden;
   cursor: grab;
-  touch-action: pan-x;
-}
-
-.ai-chat-life-carousel::-webkit-scrollbar {
-  display: none;
+  touch-action: pan-y;
+  perspective: 900px;
 }
 
 .ai-chat-life-carousel.is-dragging {
   cursor: grabbing;
-  scroll-snap-type: none;
+}
+
+.ai-chat-life-track {
+  position: relative;
+  min-height: 178px;
 }
 
 .ai-chat-life-card {
   --life-card-accent: #D2FD5F;
-  --life-card-scale: 0.9;
-  --life-card-opacity: 0.68;
-  min-height: 154px;
-  padding: 15px;
+  --life-card-offset: 0;
+  --life-card-abs-offset: 0;
+  position: absolute;
+  inset: 4px auto auto 50%;
+  width: min(76%, 260px);
+  min-height: 170px;
+  padding: 16px;
   display: grid;
   align-content: space-between;
   gap: 12px;
@@ -2135,12 +2134,23 @@ body.is-chat-open .ai-chat-sidebar {
     radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--life-card-accent) 52%, transparent), transparent 42%),
     linear-gradient(145deg, #ffffff, #f7f7f7);
   color: #151515;
-  scroll-snap-align: center;
-  transform: scale(var(--life-card-scale));
-  opacity: var(--life-card-opacity);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, calc(0.08 - min(var(--life-card-abs-offset), 1) * 0.04));
+  transform:
+    translateX(calc(-50% + var(--life-card-offset) * 118px))
+    translateY(calc(var(--life-card-abs-offset) * 10px))
+    translateZ(calc(var(--life-card-abs-offset) * -70px))
+    rotateY(calc(var(--life-card-offset) * -17deg))
+    rotateZ(calc(var(--life-card-offset) * -2deg))
+    scale(calc(1 - min(var(--life-card-abs-offset), 2) * 0.12));
+  opacity: calc(1 - min(var(--life-card-abs-offset), 3) * 0.22);
   transform-origin: center;
-  transition: transform 0.22s ease, opacity 0.22s ease, background-color 0.22s ease;
+  transition: transform 0.44s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease;
   user-select: none;
+  pointer-events: none;
+}
+
+.ai-chat-life-card[data-offset="0"] {
+  pointer-events: auto;
 }
 
 .ai-chat-life-marker {
@@ -2168,6 +2178,37 @@ body.is-chat-open .ai-chat-sidebar {
   color: rgba(15, 15, 15, 0.62);
   font-size: 0.76rem;
   line-height: 1.45;
+}
+
+.ai-chat-life-controls {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 6px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.ai-chat-life-controls button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(15, 15, 15, 0.08);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(15, 15, 15, 0.62);
+  font: inherit;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.ai-chat-life-controls button:hover,
+.ai-chat-life-controls button:focus-visible {
+  background: #f1f5ff;
+  color: #0045DD;
 }
 
 .ai-chat-project-list,

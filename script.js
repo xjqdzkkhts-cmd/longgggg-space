@@ -560,17 +560,20 @@ function updateAiLifeCarousel(carousel) {
   }
 
   const cards = [...carousel.querySelectorAll('.ai-chat-life-card')];
-  const carouselRect = carousel.getBoundingClientRect();
-  const center = carousel.scrollLeft + carouselRect.width / 2;
+  const activeIndex = Number(carousel.dataset.activeIndex || 0);
+  const total = cards.length;
 
-  cards.forEach((card) => {
-    const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-    const distance = Math.abs(center - cardCenter);
-    const ratio = Math.min(distance / Math.max(carouselRect.width, 1), 1);
-    const scale = 1 - ratio * 0.18;
-    const opacity = 1 - ratio * 0.38;
-    card.style.setProperty('--life-card-scale', scale.toFixed(3));
-    card.style.setProperty('--life-card-opacity', opacity.toFixed(3));
+  cards.forEach((card, index) => {
+    let offset = index - activeIndex;
+    if (total > 2) {
+      if (offset > total / 2) offset -= total;
+      if (offset < -total / 2) offset += total;
+    }
+
+    card.dataset.offset = String(offset);
+    card.style.setProperty('--life-card-offset', offset);
+    card.style.setProperty('--life-card-abs-offset', Math.min(Math.abs(offset), 3));
+    card.style.zIndex = String(20 - Math.abs(offset));
   });
 }
 
@@ -581,37 +584,35 @@ function attachAiLifeCarousel(carousel) {
 
   let isDragging = false;
   let startX = 0;
-  let startScrollLeft = 0;
-  let rafId = 0;
+  const cards = [...carousel.querySelectorAll('.ai-chat-life-card')];
+  const total = cards.length;
 
-  const scheduleUpdate = () => {
-    if (rafId) {
+  const setActiveIndex = (nextIndex) => {
+    if (!total) {
       return;
     }
 
-    rafId = requestAnimationFrame(() => {
-      rafId = 0;
-      updateAiLifeCarousel(carousel);
-    });
+    carousel.dataset.activeIndex = String((nextIndex + total) % total);
+    updateAiLifeCarousel(carousel);
   };
 
-  carousel.addEventListener('scroll', scheduleUpdate, { passive: true });
+  carousel.dataset.activeIndex = carousel.dataset.activeIndex || '0';
+  carousel.querySelector('[data-life-prev]')?.addEventListener('click', () => {
+    setActiveIndex(Number(carousel.dataset.activeIndex || 0) - 1);
+  });
+  carousel.querySelector('[data-life-next]')?.addEventListener('click', () => {
+    setActiveIndex(Number(carousel.dataset.activeIndex || 0) + 1);
+  });
+
   carousel.addEventListener('pointerdown', (event) => {
     isDragging = true;
     startX = event.clientX;
-    startScrollLeft = carousel.scrollLeft;
     carousel.classList.add('is-dragging');
     carousel.setPointerCapture?.(event.pointerId);
   });
 
   carousel.addEventListener('pointermove', (event) => {
-    if (!isDragging) {
-      return;
-    }
-
-    event.preventDefault();
-    carousel.scrollLeft = startScrollLeft - (event.clientX - startX);
-    scheduleUpdate();
+    if (isDragging) event.preventDefault();
   });
 
   const stopDragging = (event) => {
@@ -622,11 +623,23 @@ function attachAiLifeCarousel(carousel) {
     isDragging = false;
     carousel.classList.remove('is-dragging');
     carousel.releasePointerCapture?.(event.pointerId);
+    const deltaX = event.clientX - startX;
+    if (Math.abs(deltaX) > 34) {
+      setActiveIndex(Number(carousel.dataset.activeIndex || 0) + (deltaX < 0 ? 1 : -1));
+    }
   };
 
   carousel.addEventListener('pointerup', stopDragging);
   carousel.addEventListener('pointercancel', stopDragging);
   carousel.addEventListener('pointerleave', stopDragging);
+  carousel.addEventListener('wheel', (event) => {
+    if (Math.abs(event.deltaX) < 10 && Math.abs(event.deltaY) < 10) {
+      return;
+    }
+
+    event.preventDefault();
+    setActiveIndex(Number(carousel.dataset.activeIndex || 0) + (event.deltaX + event.deltaY > 0 ? 1 : -1));
+  }, { passive: false });
 
   requestAnimationFrame(() => updateAiLifeCarousel(carousel));
 }
@@ -672,6 +685,10 @@ function renderAiFeedbackCard(card) {
     const carousel = document.createElement('div');
     carousel.className = 'ai-chat-life-carousel';
     carousel.setAttribute('aria-label', card.title || '生活中的我');
+    carousel.dataset.activeIndex = '0';
+
+    const track = document.createElement('div');
+    track.className = 'ai-chat-life-track';
 
     (card.items || []).forEach((item, index) => {
       const lifeCard = document.createElement('article');
@@ -689,9 +706,17 @@ function renderAiFeedbackCard(card) {
       description.textContent = item.description || '';
 
       lifeCard.append(marker, title, description);
-      carousel.appendChild(lifeCard);
+      track.appendChild(lifeCard);
     });
 
+    const controls = document.createElement('div');
+    controls.className = 'ai-chat-life-controls';
+    controls.innerHTML = `
+      <button type="button" data-life-prev aria-label="上一张生活卡片">‹</button>
+      <button type="button" data-life-next aria-label="下一张生活卡片">›</button>
+    `;
+
+    carousel.append(track, controls);
     cardEl.appendChild(carousel);
     attachAiLifeCarousel(carousel);
     return cardEl;
