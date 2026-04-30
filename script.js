@@ -554,6 +554,83 @@ function getAiProjectGallery(item) {
   return Object.entries(galleryMap).find(([key]) => title.includes(key))?.[1] || '';
 }
 
+function updateAiLifeCarousel(carousel) {
+  if (!carousel) {
+    return;
+  }
+
+  const cards = [...carousel.querySelectorAll('.ai-chat-life-card')];
+  const carouselRect = carousel.getBoundingClientRect();
+  const center = carousel.scrollLeft + carouselRect.width / 2;
+
+  cards.forEach((card) => {
+    const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+    const distance = Math.abs(center - cardCenter);
+    const ratio = Math.min(distance / Math.max(carouselRect.width, 1), 1);
+    const scale = 1 - ratio * 0.18;
+    const opacity = 1 - ratio * 0.38;
+    card.style.setProperty('--life-card-scale', scale.toFixed(3));
+    card.style.setProperty('--life-card-opacity', opacity.toFixed(3));
+  });
+}
+
+function attachAiLifeCarousel(carousel) {
+  if (!carousel) {
+    return;
+  }
+
+  let isDragging = false;
+  let startX = 0;
+  let startScrollLeft = 0;
+  let rafId = 0;
+
+  const scheduleUpdate = () => {
+    if (rafId) {
+      return;
+    }
+
+    rafId = requestAnimationFrame(() => {
+      rafId = 0;
+      updateAiLifeCarousel(carousel);
+    });
+  };
+
+  carousel.addEventListener('scroll', scheduleUpdate, { passive: true });
+  carousel.addEventListener('pointerdown', (event) => {
+    isDragging = true;
+    startX = event.clientX;
+    startScrollLeft = carousel.scrollLeft;
+    carousel.classList.add('is-dragging');
+    carousel.setPointerCapture?.(event.pointerId);
+  });
+
+  carousel.addEventListener('pointermove', (event) => {
+    if (!isDragging) {
+      return;
+    }
+
+    event.preventDefault();
+    carousel.scrollLeft = startScrollLeft - (event.clientX - startX);
+    scheduleUpdate();
+  });
+
+  const stopDragging = (event) => {
+    if (!isDragging) {
+      return;
+    }
+
+    isDragging = false;
+    carousel.classList.remove('is-dragging');
+    carousel.releasePointerCapture?.(event.pointerId);
+  };
+
+  carousel.addEventListener('pointerup', stopDragging);
+  carousel.addEventListener('pointercancel', stopDragging);
+  carousel.addEventListener('pointerleave', stopDragging);
+
+  requestAnimationFrame(() => updateAiLifeCarousel(carousel));
+}
+
 function renderAiFeedbackCard(card) {
   const cardEl = document.createElement('div');
   cardEl.className = 'ai-chat-feedback-card';
@@ -588,6 +665,35 @@ function renderAiFeedbackCard(card) {
     });
 
     cardEl.appendChild(grid);
+    return cardEl;
+  }
+
+  if (card.type === 'life') {
+    const carousel = document.createElement('div');
+    carousel.className = 'ai-chat-life-carousel';
+    carousel.setAttribute('aria-label', card.title || '生活中的我');
+
+    (card.items || []).forEach((item, index) => {
+      const lifeCard = document.createElement('article');
+      lifeCard.className = 'ai-chat-life-card';
+      lifeCard.style.setProperty('--life-card-accent', item.accent || ['#D2FD5F', '#74B0FF', '#FF5CA6'][index % 3]);
+
+      const marker = document.createElement('span');
+      marker.className = 'ai-chat-life-marker';
+      marker.textContent = String(index + 1).padStart(2, '0');
+
+      const title = document.createElement('strong');
+      title.textContent = item.title || '';
+
+      const description = document.createElement('span');
+      description.textContent = item.description || '';
+
+      lifeCard.append(marker, title, description);
+      carousel.appendChild(lifeCard);
+    });
+
+    cardEl.appendChild(carousel);
+    attachAiLifeCarousel(carousel);
     return cardEl;
   }
 

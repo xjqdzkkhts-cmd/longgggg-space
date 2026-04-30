@@ -45,6 +45,7 @@ function buildInstructions(personaMarkdown) {
     '- {"type":"contact","title":"联系我","items":[{"label":"Email","value":"Xiangyu-Long@outlook.com","action":"email","icon":"mail"}]}',
     '- {"type":"projects","title":"相关作品","items":[{"title":"AI 溶栓助手","description":"一句话说明","tag":"UX","gallery":"ai-thrombolysis"}]}',
     '- {"type":"profile","title":"我给人的感觉","items":[{"title":"好奇","description":"对设计、AI 产品和新工具保持探索欲。"}]}',
+    '- {"type":"life","title":"生活中的我","items":[{"title":"温柔","description":"朋友常这样描述我。","accent":"#D2FD5F"}]}',
     '- {"type":"tags","title":"关键词","items":["UX 设计","HCI","AI 产品"]}',
     '- {"type":"timeline","title":"学习历程","items":[{"title":"阶段","description":"说明"}]}',
     'suggestions 最多 3 条，每条是访客可能继续追问的问题。',
@@ -54,7 +55,7 @@ function buildInstructions(personaMarkdown) {
     'projects card 的 gallery 必须从这些值选择：ai-thrombolysis、iknow、adhd-ai、etea、marry-christmas。',
     '当用户问技能、工具、擅长什么时，回答不要只列 UX 或软件工具；必须体现我的特殊性：能运用 AI 构建产品、能独立完成前端和后端的轻量搭建、自我驱动性强、能把设计想法推进成可运行原型。',
     '当用户问技能、工具、擅长什么时，优先包含 profile card 或 tags card。',
-    '当用户问生活中的样子、性格时，回答应偏生活状态、兴趣和个人气质。',
+    '当用户问生活中的样子、性格时，回答应偏生活状态、兴趣和个人气质，并优先包含 life card。',
     '当用户问合作体验、一起工作感觉时，回答应偏协作方式、团队角色、沟通偏好和项目推进方式。',
     '生活问题和合作问题不要回答成同一套内容。',
     '',
@@ -245,12 +246,14 @@ function inferCards(message) {
     });
   } else if (/生活|性格|日常|personality/.test(text)) {
     cards.push({
-      type: 'profile',
+      type: 'life',
       title: '生活中的我',
       items: [
-        { title: '温柔', description: '朋友常用温柔来描述我，我也希望用稳定和真诚对待身边的人。' },
-        { title: '有韧性', description: '我很看重在困难中保持乐观进取的能力。' },
-        { title: '喜欢记录', description: '手帐、音乐和旅行会帮我整理生活，也给设计带来灵感。' },
+        { title: '温柔', description: '朋友常用温柔来描述我，我也希望用稳定和真诚对待身边的人。', accent: '#C4A8F5' },
+        { title: '有韧性', description: '我很看重在变化和困难里保持乐观进取，这种生命力会吸引我。', accent: '#D2FD5F' },
+        { title: '喜欢在路上', description: '旅行让我进入别人的生活情境，也让我更能从他人角度看问题。', accent: '#74B0FF' },
+        { title: '用手帐整理自己', description: '手帐像是一种自省和自我鼓励，让我持续感恩生活并向前走。', accent: '#FF5CA6' },
+        { title: '被音乐切换状态', description: 'Kpop、舒缓音乐或活泼的歌，会帮我进入不同的 vibe。', accent: '#0045DD' },
       ],
     });
   } else if (/设计思考|思考设计|思考方式|如何思考|怎么思考|方法|design thinking/.test(text)) {
