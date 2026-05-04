@@ -2879,6 +2879,10 @@ button.ai-chat-project-item:focus-visible {
   display: none;
 }
 
+.work-card.is-project-hidden {
+  display: none;
+}
+
 .work-card-surface {
   height: 100%;
   border-radius: var(--radius-project-card);
@@ -2913,6 +2917,51 @@ button.ai-chat-project-item:focus-visible {
   height: 100%;
   object-fit: cover;
   transform: scale(1.001);
+}
+
+.knowledge-section {
+  margin-top: 76px;
+}
+
+.knowledge-heading {
+  padding-inline: 0;
+}
+
+.knowledge-list {
+  display: grid;
+  border-top: 1px solid rgba(6, 6, 6, 0.1);
+}
+
+.knowledge-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  min-height: 72px;
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(6, 6, 6, 0.1);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.knowledge-item:hover {
+  background: rgba(116, 176, 255, 0.055);
+  border-color: rgba(6, 6, 6, 0.14);
+}
+
+.knowledge-item h3 {
+  margin: 0;
+  color: #111111;
+  font-size: clamp(0.98rem, 1.4vw, 1.14rem);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.knowledge-item time {
+  color: rgba(6, 6, 6, 0.48);
+  font-size: 0.92rem;
+  font-weight: 400;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .work-card-overlay {
@@ -3510,6 +3559,22 @@ button.ai-chat-project-item:focus-visible {
 
   .work-card h3 {
     font-size: clamp(1.22rem, 6vw, 1.64rem);
+  }
+
+  .knowledge-section {
+    margin-top: 52px;
+  }
+
+  .knowledge-item {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 8px;
+    min-height: 68px;
+    padding: 16px 0;
+  }
+
+  .knowledge-item h3 {
+    font-size: 1rem;
   }
 
   .placeholder-section {
