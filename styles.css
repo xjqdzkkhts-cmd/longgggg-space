@@ -2508,9 +2508,12 @@ a,
 }
 
 .placeholder-section {
+  position: relative;
   min-height: 60vh;
   padding: 132px var(--page-gutter);
   background: #0f1012;
+  box-shadow: 0 0 0 100vmax #0f1012;
+  clip-path: inset(0 -100vmax);
 }
 
 .contact-footer {
