@@ -19,6 +19,8 @@ const guestbookList = document.querySelector('[data-guestbook-list]');
 const guestbookPaper = document.querySelector('[data-guestbook-paper]');
 const guestbookSubmitTrigger = document.querySelector('[data-guestbook-submit-trigger]');
 const aiDock = document.querySelector('[data-ai-dock]');
+const aiToolCard = document.querySelector('.about-bento-card-ai');
+const aiToolRows = [...document.querySelectorAll('.about-ai-tools-row')];
 const interestCard = document.querySelector('[data-interest-card]');
 const interestStage = document.querySelector('[data-interest-stage]');
 const interestLabels = [...document.querySelectorAll('[data-interest-label]')];
@@ -63,6 +65,7 @@ const versionUpdate = document.querySelector('[data-version-update]');
 const versionUpdateValue = document.querySelector('[data-version-update-value]');
 const versionUpdateRefresh = document.querySelector('[data-version-update-refresh]');
 const cursorIcon = document.querySelector('.custom-cursor-icon');
+const revealItems = [...document.querySelectorAll('.reveal')];
 const aiChatToggle = document.querySelector('[data-ai-chat-toggle]');
 const aiAgentCard = document.querySelector('[data-agent-chat-card]');
 const aiChatSidebar = document.querySelector('[data-ai-chat-sidebar]');
@@ -180,6 +183,98 @@ const showSiteToast = (message) => {
     siteToast.classList.remove('is-visible');
   }, 1400);
 };
+
+aiToolRows.forEach((row) => {
+  if (row.dataset.marqueeReady === 'true') {
+    return;
+  }
+
+  row.dataset.marqueeReady = 'true';
+  [...row.children].forEach((item) => {
+    const clone = item.cloneNode(true);
+    clone.setAttribute('aria-hidden', 'true');
+    row.append(clone);
+  });
+});
+
+if (aiToolCard && aiToolRows.length) {
+  const marqueeStates = aiToolRows.map((row, index) => ({
+    row,
+    halfWidth: Math.max(1, row.scrollWidth / 2),
+    progress: index === 1 ? Math.max(1, row.scrollWidth / 2) : 0,
+    velocity: 0,
+    targetVelocity: 0,
+    direction: index === 1 ? 1 : -1,
+    baseOffset: index === 1 ? -12 : 0,
+  }));
+  let marqueeFrame = 0;
+  let lastMarqueeTime = 0;
+
+  const wrapMarquee = (value, size) => ((value % size) + size) % size;
+
+  const updateMarqueeWidths = () => {
+    marqueeStates.forEach((state) => {
+      state.halfWidth = Math.max(1, state.row.scrollWidth / 2);
+    });
+  };
+
+  const renderMarquee = (state) => {
+    const wrapped = wrapMarquee(state.progress, state.halfWidth);
+    const x =
+      state.direction < 0
+        ? -wrapped + state.baseOffset
+        : -state.halfWidth + wrapped + state.baseOffset;
+
+    state.row.style.setProperty('--marquee-x', `${x}px`);
+  };
+
+  const tickMarquee = (time) => {
+    const delta = lastMarqueeTime ? Math.min(0.04, (time - lastMarqueeTime) / 1000) : 0;
+    lastMarqueeTime = time;
+    let keepRunning = false;
+
+    marqueeStates.forEach((state) => {
+      state.velocity += (state.targetVelocity - state.velocity) * 0.075;
+
+      if (Math.abs(state.velocity) < 0.08 && state.targetVelocity === 0) {
+        state.velocity = 0;
+      }
+
+      state.progress += state.velocity * delta;
+      renderMarquee(state);
+
+      if (state.velocity !== 0 || state.targetVelocity !== 0) {
+        keepRunning = true;
+      }
+    });
+
+    if (keepRunning) {
+      marqueeFrame = window.requestAnimationFrame(tickMarquee);
+    } else {
+      marqueeFrame = 0;
+      lastMarqueeTime = 0;
+    }
+  };
+
+  const startMarquee = () => {
+    if (!marqueeFrame) {
+      lastMarqueeTime = 0;
+      marqueeFrame = window.requestAnimationFrame(tickMarquee);
+    }
+  };
+
+  const setMarqueeActive = (isActive) => {
+    marqueeStates.forEach((state) => {
+      state.targetVelocity = isActive ? 54 : 0;
+    });
+    startMarquee();
+  };
+
+  marqueeStates.forEach(renderMarquee);
+  aiToolCard.addEventListener('mouseenter', () => setMarqueeActive(true));
+  aiToolCard.addEventListener('mouseleave', () => setMarqueeActive(false));
+  window.addEventListener('resize', updateMarqueeWidths);
+}
 
 const rgbToHsl = (r, g, b) => {
   const rn = r / 255;
@@ -2886,6 +2981,28 @@ if (hero && heroTitle) {
   );
 
   heroObserver.observe(hero);
+}
+
+if (revealItems.length) {
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (prefersReducedMotion) {
+    revealItems.forEach((item) => item.classList.add('show'));
+  } else {
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          entry.target.classList.toggle('show', entry.isIntersecting);
+        });
+      },
+      {
+        rootMargin: '0px 0px 12% 0px',
+        threshold: 0.04,
+      }
+    );
+
+    revealItems.forEach((item) => revealObserver.observe(item));
+  }
 }
 
 updateBounds();

@@ -112,6 +112,17 @@ main {
   transform: translateX(var(--layout-shift-x));
 }
 
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 button,
 a,
 [data-card],
@@ -214,6 +225,14 @@ a,
 
   .custom-cursor {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }
 
@@ -546,7 +565,7 @@ a,
 .hero-divider {
   position: relative;
   width: min(calc(100% - (var(--page-gutter) * 2)), var(--content-width));
-  margin: 12px auto 62px;
+  margin: -42px auto 18px;
   padding-inline: var(--content-inline-pad);
   display: grid;
   place-items: center;
@@ -575,8 +594,8 @@ a,
 
 .about-bento-section {
   --about-bento-gap: 8px;
-  padding: 32px var(--page-gutter) 52px;
-  background: #f0f0f2;
+  padding: 0 var(--page-gutter) 92px;
+  background: #ffffff;
 }
 
 .section-eyebrow {
@@ -614,7 +633,9 @@ a,
   border: 0;
   border-radius: 28px;
   background: #ffffff;
-  box-shadow: none;
+  box-shadow:
+    0 10px 28px rgba(12, 12, 12, 0.04),
+    0 1px 6px rgba(12, 12, 12, 0.034);
   transition: background-color 0.24s ease;
 }
 
@@ -689,11 +710,19 @@ a,
   grid-template-rows: 88px minmax(0, 1fr);
   align-items: start;
   padding: 8px;
-  background: #d3cbff;
+  border-radius: 28.626px;
+  border: 2px solid #e6e1fc;
+  border: 2px solid color(display-p3 0.8968 0.8824 0.9784);
+  background: #d5cbff;
+  background: color(display-p3 0.8276 0.7971 1);
+  box-shadow:
+    -4px -4px 4px 0 #b8adea inset,
+    4px 4px 4px 0 rgba(255, 255, 255, 0.4) inset;
 }
 
 .about-bento-card-time:hover {
-  background: #d3cbff;
+  background: #d5cbff;
+  background: color(display-p3 0.8276 0.7971 1);
 }
 
 .about-time-display {
@@ -1334,10 +1363,12 @@ a,
   align-items: center;
   gap: 6px;
   width: max-content;
+  transform: translateX(var(--marquee-x, 0px));
+  will-change: transform;
 }
 
 .about-ai-tools-row:nth-child(2) {
-  transform: translateX(-12px);
+  --marquee-x: -12px;
 }
 
 .about-ai-icon {
@@ -2035,6 +2066,12 @@ a,
   line-height: 1;
 }
 
+.about-grounded-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .about-app-modal {
   position: fixed;
   inset: 0;
@@ -2670,13 +2707,14 @@ a,
   --ai-button-fill: linear-gradient(#ffffff, #ffffff);
   --ai-gradient-border: conic-gradient(
     from var(--border-angle),
-    transparent 9%,
-    #69B7FF 20%,
-    #72F0DD 34%,
-    #D2FD5F 48%,
-    #FFFFFF 57%,
-    #FF7AB8 72%,
-    #9B7CFF 88%,
+    transparent 8%,
+    #d3cbff 18%,
+    #8b6cff 31%,
+    #ffffff 42%,
+    #d2fd5f 56%,
+    #b7ff2a 70%,
+    #ffffff 80%,
+    #c4a8f5 91%,
     transparent 100%
   );
   background:
