@@ -60,7 +60,7 @@
   --radius-tag: var(--radius-sm);
   --radius-icon: var(--radius-xs);
   --radius-strap: var(--radius-none);
-  --ai-chat-width: clamp(420px, 30vw, 480px);
+  --ai-chat-width: clamp(360px, 26vw, 420px);
   --layout-shift-x: 0px;
 }
 
@@ -88,17 +88,27 @@ body {
 }
 
 body.is-chat-open {
-  --layout-shift-x: calc(var(--ai-chat-width) * -0.68);
+  --layout-shift-x: 0px;
   overflow-x: hidden;
 }
 
-@media (min-width: 1600px) {
+@media (min-width: 1440px) {
   :root {
-    --ai-chat-width: 460px;
+    --ai-chat-width: 400px;
   }
 
   body.is-chat-open {
-    --layout-shift-x: -340px;
+    --layout-shift-x: -220px;
+  }
+}
+
+@media (min-width: 1800px) {
+  :root {
+    --ai-chat-width: 420px;
+  }
+
+  body.is-chat-open {
+    --layout-shift-x: -260px;
   }
 }
 
@@ -2870,11 +2880,31 @@ a,
   width: var(--ai-chat-width);
   height: 100vh;
   z-index: 130;
-  padding: 20px 24px 20px 0;
+  padding: 20px 20px 20px 0;
   pointer-events: none;
   overflow: hidden;
   transform: translateX(calc(100% + 24px));
   transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (min-width: 1101px) and (max-width: 1279px) {
+  :root {
+    --ai-chat-width: min(380px, calc(100vw - 40px));
+  }
+
+  .ai-chat-sidebar {
+    padding: 18px 18px 18px 0;
+  }
+
+  .ai-chat-header {
+    padding: 24px 28px 18px;
+  }
+
+  .ai-chat-messages,
+  .ai-chat-form {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
 }
 
 body.is-chat-open .ai-chat-sidebar {
