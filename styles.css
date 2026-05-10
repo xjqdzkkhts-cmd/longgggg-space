@@ -3978,6 +3978,23 @@ button.ai-chat-project-item:focus-visible {
   padding: 104px 24px 96px;
 }
 
+body.is-site-scaled .knowledge-viewer-scroll {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--site-design-width);
+  height: calc(100vh / var(--site-scale));
+  transform: translateX(-50%) scale(var(--site-scale));
+  transform-origin: top center;
+}
+
+body.is-site-scaled .knowledge-viewer-close {
+  top: calc(24px * var(--site-scale));
+  right: calc(24px * var(--site-scale));
+  transform: scale(var(--site-scale));
+  transform-origin: top right;
+}
+
 .knowledge-article {
   width: min(100%, 760px);
   margin: 0 auto;
