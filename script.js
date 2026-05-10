@@ -111,7 +111,7 @@ const AI_CHAT_COPY = {
 const DEFAULT_AI_CHAT_STARTERS = ['生活中的你是什么样？', '和你合作是什么感觉？', '你如何思考设计？'];
 const knowledgeArticles = {
   '001': {
-    title: '标题 001',
+    title: '如何实现卡片 UI 的渐变模糊效果',
     date: '2026.05',
     datetime: '2026-05',
     category: 'Design Notes',
@@ -124,7 +124,7 @@ const knowledgeArticles = {
     ],
   },
   '002': {
-    title: '标题 002',
+    title: '使用 Three.js 来实现 UI 元素掉落堆积效果',
     date: '2026.05',
     datetime: '2026-05',
     category: 'Process',
@@ -135,7 +135,7 @@ const knowledgeArticles = {
     ],
   },
   '003': {
-    title: '标题 003',
+    title: '更高效通过 Vibe Coding 来实现动画效果',
     date: '2026.05',
     datetime: '2026-05',
     category: 'Fragments',
@@ -146,7 +146,7 @@ const knowledgeArticles = {
     ],
   },
   '004': {
-    title: '标题 004',
+    title: '视差卡片效果如何实现',
     date: '2026.05',
     datetime: '2026-05',
     category: 'Portfolio',
