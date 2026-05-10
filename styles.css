@@ -91,7 +91,7 @@ body {
 }
 
 body.is-chat-open {
-  --layout-shift-x: 0px;
+  --layout-shift-x: calc(var(--ai-chat-width) * -0.32);
   overflow-x: hidden;
 }
 
@@ -101,7 +101,7 @@ body.is-chat-open {
   }
 
   body.is-chat-open {
-    --layout-shift-x: -180px;
+    --layout-shift-x: calc(var(--ai-chat-width) * -0.42);
   }
 }
 
@@ -111,7 +111,7 @@ body.is-chat-open {
   }
 
   body.is-chat-open {
-    --layout-shift-x: -220px;
+    --layout-shift-x: calc(var(--ai-chat-width) * -0.48);
   }
 }
 
