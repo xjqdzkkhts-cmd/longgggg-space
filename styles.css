@@ -60,8 +60,11 @@
   --radius-tag: var(--radius-sm);
   --radius-icon: var(--radius-xs);
   --radius-strap: var(--radius-none);
-  --ai-chat-width: clamp(360px, 26vw, 420px);
+  --ai-chat-width: min(560px, 42vw);
   --layout-shift-x: 0px;
+  --site-design-width: 1440px;
+  --site-scale: 1;
+  --site-canvas-height: auto;
 }
 
 @property --border-angle {
@@ -94,21 +97,21 @@ body.is-chat-open {
 
 @media (min-width: 1440px) {
   :root {
-    --ai-chat-width: 400px;
+    --ai-chat-width: 560px;
   }
 
   body.is-chat-open {
-    --layout-shift-x: -220px;
+    --layout-shift-x: -180px;
   }
 }
 
 @media (min-width: 1800px) {
   :root {
-    --ai-chat-width: 420px;
+    --ai-chat-width: 560px;
   }
 
   body.is-chat-open {
-    --layout-shift-x: -260px;
+    --layout-shift-x: -220px;
   }
 }
 
@@ -127,9 +130,28 @@ img {
   max-width: 100%;
 }
 
+.site-scale-shell {
+  position: relative;
+  width: 100%;
+}
+
 main {
   transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
   transform: translateX(var(--layout-shift-x));
+}
+
+body.is-site-scaled .site-scale-shell {
+  height: var(--site-canvas-height);
+}
+
+body.is-site-scaled main {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--site-design-width);
+  max-width: none;
+  transform: translateX(calc(-50% + var(--layout-shift-x))) scale(var(--site-scale));
+  transform-origin: top center;
 }
 
 .reveal {
@@ -2892,7 +2914,7 @@ a,
 
 @media (min-width: 1101px) and (max-width: 1279px) {
   :root {
-    --ai-chat-width: min(380px, calc(100vw - 40px));
+    --ai-chat-width: min(560px, 42vw);
   }
 
   .ai-chat-sidebar {

@@ -64,6 +64,8 @@ const siteToast = document.querySelector('[data-site-toast]');
 const versionUpdate = document.querySelector('[data-version-update]');
 const versionUpdateValue = document.querySelector('[data-version-update-value]');
 const versionUpdateRefresh = document.querySelector('[data-version-update-refresh]');
+const siteScaleShell = document.querySelector('[data-site-scale-shell]');
+const siteCanvas = document.querySelector('[data-site-canvas]');
 const cursorIcon = document.querySelector('.custom-cursor-icon');
 const revealItems = [...document.querySelectorAll('.reveal')];
 const aiChatToggle = document.querySelector('[data-ai-chat-toggle]');
@@ -88,6 +90,42 @@ const aiChatApiBaseUrl = (window.LONG_AI_CONFIG?.apiBaseUrl || '').replace(/\/$/
 const aiChatEndpoint = `${aiChatApiBaseUrl}/api/chat`;
 const spotifyRecentEndpoint = `${aiChatApiBaseUrl}/api/spotify-recent`;
 let openProjectViewerByGallery = null;
+
+const SITE_DESIGN_WIDTH = 1440;
+const SITE_SCALE_MIN_WIDTH = 1101;
+
+const updateSiteScale = () => {
+  if (!siteScaleShell || !siteCanvas) return;
+
+  const viewportWidth = window.innerWidth;
+  const shouldScale = viewportWidth >= SITE_SCALE_MIN_WIDTH && viewportWidth < SITE_DESIGN_WIDTH;
+  const scale = shouldScale ? viewportWidth / SITE_DESIGN_WIDTH : 1;
+
+  document.documentElement.style.setProperty('--site-scale', scale.toFixed(4));
+  document.body.classList.toggle('is-site-scaled', shouldScale);
+
+  if (shouldScale) {
+    const scaledHeight = Math.ceil(siteCanvas.scrollHeight * scale);
+    document.documentElement.style.setProperty('--site-canvas-height', `${scaledHeight}px`);
+  } else {
+    document.documentElement.style.setProperty('--site-canvas-height', 'auto');
+  }
+};
+
+let siteScaleFrame = 0;
+const requestSiteScaleUpdate = () => {
+  window.cancelAnimationFrame(siteScaleFrame);
+  siteScaleFrame = window.requestAnimationFrame(updateSiteScale);
+};
+
+updateSiteScale();
+window.addEventListener('resize', requestSiteScaleUpdate);
+window.addEventListener('load', requestSiteScaleUpdate);
+
+if (window.ResizeObserver && siteCanvas) {
+  const siteScaleObserver = new ResizeObserver(requestSiteScaleUpdate);
+  siteScaleObserver.observe(siteCanvas);
+}
 let attachCursorBehavior = () => {};
 const aiChatState = {
   isOpen: false,
