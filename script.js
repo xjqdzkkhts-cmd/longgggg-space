@@ -1971,6 +1971,11 @@ if (learningDrop && window.Matter) {
 
   engine.gravity.y = 0.72;
 
+  const getLearningDropSize = () => ({
+    width: learningDrop.clientWidth,
+    height: learningDrop.clientHeight,
+  });
+
   const clearLearningPhysics = ({ keepTransforms = false } = {}) => {
     window.clearTimeout(cycleTimer);
     window.cancelAnimationFrame(animationFrameId);
@@ -1989,7 +1994,7 @@ if (learningDrop && window.Matter) {
   };
 
   const addLearningBoundaries = () => {
-    const rect = learningDrop.getBoundingClientRect();
+    const rect = getLearningDropSize();
     const wall = 72;
     const innerInset = 0;
     const options = {
@@ -2033,7 +2038,7 @@ if (learningDrop && window.Matter) {
   };
 
   const addLearningWord = (word, index) => {
-    const rect = learningDrop.getBoundingClientRect();
+    const rect = getLearningDropSize();
     const isCircle = word.classList.contains('learning-shape-circle');
     const isTriangle = word.classList.contains('learning-shape-triangle');
     const visualWidth = word.offsetWidth;
