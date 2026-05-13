@@ -91,6 +91,25 @@ const aiChatEndpoint = `${aiChatApiBaseUrl}/api/chat`;
 const spotifyRecentEndpoint = `${aiChatApiBaseUrl}/api/spotify-recent`;
 let openProjectViewerByGallery = null;
 
+const cleanLandingUrl = () => {
+  if (!window.history?.replaceState) {
+    return;
+  }
+
+  const cleanPath = window.location.pathname.replace(/\/index\.html$/, '/');
+  if (cleanPath === window.location.pathname && !window.location.hash) {
+    return;
+  }
+
+  try {
+    window.history.replaceState(null, '', `${cleanPath}${window.location.search || ''}`);
+  } catch (_error) {
+    // Some local file previews do not allow history rewrites.
+  }
+};
+
+cleanLandingUrl();
+
 const SITE_DESIGN_WIDTH = 1440;
 const SITE_SCALE_MIN_WIDTH = 1101;
 
