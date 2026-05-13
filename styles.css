@@ -2911,26 +2911,19 @@ a,
   position: fixed;
 }
 
-.article-floating-dock::before,
 .article-floating-dock::after {
   content: "";
   position: absolute;
   left: 10px;
-  right: 10px;
   bottom: 0;
   height: 2px;
   border-radius: 999px;
   pointer-events: none;
 }
 
-.article-floating-dock::before {
-  background: rgba(6, 6, 6, 0.06);
-}
-
 .article-floating-dock::after {
-  right: auto;
   width: calc((100% - 20px) * var(--article-scroll-progress));
-  background: linear-gradient(90deg, #d3cbff 0%, #8b6cff 42%, #d2fd5f 100%);
+  background: #333333;
   transition: width 0.12s linear;
 }
 
