@@ -96,6 +96,7 @@ const articleTitle = document.querySelector('[data-article-title]');
 const articleDate = document.querySelector('[data-article-date]');
 const articleCategory = document.querySelector('[data-article-category]');
 const articleContent = document.querySelector('[data-article-content]');
+const articlePageIndicator = document.querySelector('[data-page-indicator]');
 
 const escapeArticleHtml = (value) =>
   String(value)
@@ -254,15 +255,22 @@ const setArticleError = () => {
   articleDate.textContent = '';
   articleCategory.textContent = 'Not Found';
   articleContent.innerHTML = '<p>没有找到这篇文章。你可以返回个人知识库重新选择。</p>';
+  if (articlePageIndicator) {
+    articlePageIndicator.textContent = '文章暂时不可用';
+  }
 };
 
 const renderArticle = ({ meta, body }) => {
-  articleTitle.textContent = meta.title || '未命名文章';
+  const title = meta.title || '未命名文章';
+  articleTitle.textContent = title;
   articleDate.textContent = meta.date || '';
   articleDate.setAttribute('datetime', meta.datetime || meta.date || '');
   articleCategory.textContent = meta.category || 'Notes';
   articleContent.innerHTML = markdownToArticleHtml(body);
-  document.title = `${meta.title || '个人知识库'}｜龙湘玉 Portfolio`;
+  if (articlePageIndicator) {
+    articlePageIndicator.textContent = title;
+  }
+  document.title = `${title}｜龙湘玉 Portfolio`;
 };
 
 const loadArticlePage = async () => {

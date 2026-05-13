@@ -2900,6 +2900,18 @@ a,
   white-space: nowrap;
 }
 
+.article-floating-dock {
+  width: min(calc(100% - 48px), 540px);
+  grid-template-columns: minmax(88px, 116px) minmax(0, 1fr);
+}
+
+.article-floating-dock .floating-dock-location-current {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: clamp(0.58rem, 0.72vw, 0.78rem);
+}
+
 .ai-chat-sidebar {
   position: fixed;
   top: 0;

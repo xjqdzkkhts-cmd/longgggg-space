@@ -22,6 +22,59 @@
       </article>
     </main>
 
+    <div class="floating-dock article-floating-dock" aria-label="AI 对话和当前文章">
+      <button class="floating-dock-ai" type="button" aria-controls="ai-chat-sidebar" aria-expanded="false" data-ai-chat-toggle>
+        <svg class="floating-dock-ai-spark" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2.4 14.8 9.2 21.6 12 14.8 14.8 12 21.6 9.2 14.8 2.4 12 9.2 9.2 12 2.4Z" />
+        </svg>
+        <img class="floating-dock-ai-logo" src="./assets/Longgggg.png" alt="Longgggg" />
+      </button>
+      <div class="floating-dock-location" aria-live="polite">
+        <span class="floating-dock-location-current" data-page-indicator>正在加载文章...</span>
+      </div>
+    </div>
+
+    <aside class="ai-chat-sidebar" id="ai-chat-sidebar" aria-hidden="true" data-ai-chat-sidebar>
+      <div class="ai-chat-shell">
+        <div class="ai-chat-header">
+          <div>
+            <h2>Ask Long</h2>
+          </div>
+          <button class="ai-chat-close" type="button" aria-label="关闭 AI 对话窗口" data-ai-chat-close>
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="ai-chat-messages" aria-live="polite" data-ai-chat-messages></div>
+
+        <div class="ai-chat-starters" data-ai-chat-starters aria-label="推荐问题">
+          <button type="button" data-ai-chat-starter="生活中的你是什么样的人？">生活中的你是什么样？</button>
+          <button type="button" data-ai-chat-starter="和你一起工作会是什么感觉？">和你合作是什么感觉？</button>
+          <button type="button" data-ai-chat-starter="你的设计思考方式是什么？">你如何思考设计？</button>
+        </div>
+
+        <form class="ai-chat-form" data-ai-chat-form>
+          <label class="sr-only" for="article-ai-chat-input">输入你想问龙湘玉 AI 分身的问题</label>
+          <textarea
+            class="ai-chat-input"
+            id="article-ai-chat-input"
+            name="message"
+            rows="1"
+            maxlength="800"
+            placeholder="你想了解我的哪些项目？"
+            data-ai-chat-input
+          ></textarea>
+          <div class="ai-chat-actions">
+            <button class="ai-chat-send" type="submit" data-ai-chat-send>发送</button>
+          </div>
+        </form>
+      </div>
+    </aside>
+
+    <script src="./script.js"></script>
     <script src="./article.js"></script>
   </body>
 </html>

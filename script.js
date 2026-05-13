@@ -3303,5 +3303,7 @@ if (revealItems.length) {
   }
 }
 
-updateBounds();
-animate();
+if (scene && states.length) {
+  updateBounds();
+  animate();
+}
