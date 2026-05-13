@@ -149,19 +149,31 @@ const AI_CHAT_COPY = {
 const DEFAULT_AI_CHAT_STARTERS = ['生活中的你是什么样？', '和你合作是什么感觉？', '你如何思考设计？'];
 const knowledgeArticles = {
   '001': {
+    source: './articles/001-card-blur.md',
     title: '如何实现卡片 UI 的渐变模糊效果',
     date: '2026.05',
     datetime: '2026-05',
     category: 'Design Notes',
     content: [
-      { type: 'p', text: '这里会是一篇更接近 Astro Blog 阅读体验的知识库文章。它不需要迁移到 Astro，也不需要引入构建流程，只是在当前静态网站中保留清晰的文章结构。' },
-      { type: 'h2', text: '为什么这样记录' },
-      { type: 'p', text: '我希望把设计观察、AI 工具实践、项目复盘和日常灵感沉淀在同一个地方。首页展示短列表，点进来后再进入更安静的阅读界面。' },
-      { type: 'h2', text: '后续可以替换成什么' },
-      { type: 'p', text: '之后这里可以替换为真实文章，比如一次产品拆解、一段用户研究记录、一个前端实现笔记，或者某个 AI 工作流的复盘。' },
+      { type: 'p', text: '卡片 UI 里的渐变模糊，本质上不是为了“做一个很炫的效果”，而是为了让信息层级更清楚。图片、文字、标签同时出现在一张卡片里时，如果只是直接叠放，文字很容易被背景干扰。渐变模糊可以把复杂背景慢慢压低，让内容自然浮出来。' },
+      { type: 'h2', text: '先确定模糊服务于什么' },
+      { type: 'p', text: '我通常会先判断这张卡片最重要的信息是什么。比如作品卡片里，图片负责建立第一印象，标题和标签负责帮助用户快速判断项目类型。渐变模糊应该服务于后者，而不是盖住前者。所以模糊区域一般只放在文字附近，从底部或边缘逐渐出现。' },
+      { type: 'h2', text: '用多层叠加，而不是一层大模糊' },
+      { type: 'p', text: '比较稳定的做法是把卡片拆成三层：底层是图片，中间是渐变遮罩，上层是文字内容。遮罩层可以由几段不同强度的 blur 组成，从轻到重逐层过渡。这样视觉会更柔和，不会出现一块突然变糊的生硬边界。' },
+      { type: 'h2', text: '颜色要从图片里来' },
+      { type: 'p', text: '如果遮罩只是固定黑色或白色，很多卡片会显得很模板化。更好的方式是根据图片主色动态生成一层轻微的 tint，让模糊区域和图片本身有关系。比如蓝色项目图可以带一点冷色遮罩，绿色项目图可以带一点低饱和绿色。这样每张卡片都有自己的气质，但整体仍然统一。' },
+      { type: 'h2', text: '控制文字可读性' },
+      { type: 'p', text: '渐变模糊最终还是要回到可读性。标题区域需要足够的对比度，标签不能被图片细节淹没。如果图片本身很亮，就需要更强的暗色遮罩；如果图片偏暗，可以减少遮罩强度，避免卡片变脏。实现时可以给卡片设置一个 contrast boost，根据图片亮度微调遮罩透明度。' },
+      { type: 'h2', text: '实现思路' },
+      { type: 'p', text: '在前端里，可以用绝对定位把 overlay 放在图片上方，再用多个 span 或伪元素分别设置不同的 backdrop-filter: blur()。每一层用 mask 或 linear-gradient 控制作用范围，让模糊从下往上逐渐减弱。文字内容放在最上层，并保持独立的 padding 和 z-index。' },
+      { type: 'h2', text: '需要注意的细节' },
+      { type: 'p', text: '第一，模糊不要铺满整张图，否则图片会失去展示价值。第二，模糊层不要太重，否则卡片会显得灰。第三，圆角、裁切和 hover 状态要一起处理，尤其是图片容器需要 overflow hidden 或 clip-path，否则模糊层可能溢出圆角。' },
+      { type: 'h2', text: '总结' },
+      { type: 'p', text: '好的渐变模糊不是单纯的视觉装饰，而是一种信息组织方式。它让图片保持情绪，让文字保持清晰，也让卡片在统一的系统里保留差异。实现时重点不是把 blur 调大，而是控制它出现的位置、范围、颜色和层级。' },
     ],
   },
   '002': {
+    source: './articles/002-threejs-drop.md',
     title: '使用 Three.js 来实现 UI 元素掉落堆积效果',
     date: '2026.05',
     datetime: '2026-05',
@@ -173,6 +185,7 @@ const knowledgeArticles = {
     ],
   },
   '003': {
+    source: './articles/003-vibe-coding-animation.md',
     title: '更高效通过 Vibe Coding 来实现动画效果',
     date: '2026.05',
     datetime: '2026-05',
@@ -184,6 +197,7 @@ const knowledgeArticles = {
     ],
   },
   '004': {
+    source: './articles/004-parallax-card.md',
     title: '视差卡片效果如何实现',
     date: '2026.05',
     datetime: '2026-05',
@@ -195,6 +209,7 @@ const knowledgeArticles = {
     ],
   },
 };
+const knowledgeArticleCache = new Map();
 const escapeHtml = (value) =>
   String(value)
     .replace(/&/g, '&amp;')
@@ -202,6 +217,124 @@ const escapeHtml = (value) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+const parseMarkdownFrontmatter = (markdown) => {
+  const match = markdown.match(/^---\s*\n([\s\S]*?)\n---\s*\n?/);
+  if (!match) {
+    return { meta: {}, body: markdown };
+  }
+
+  const meta = {};
+  match[1].split(/\r?\n/).forEach((line) => {
+    const separatorIndex = line.indexOf(':');
+    if (separatorIndex === -1) return;
+    const key = line.slice(0, separatorIndex).trim();
+    const value = line.slice(separatorIndex + 1).trim().replace(/^['"]|['"]$/g, '');
+    if (key) {
+      meta[key] = value;
+    }
+  });
+
+  return {
+    meta,
+    body: markdown.slice(match[0].length),
+  };
+};
+const renderMarkdownInline = (value) => {
+  let html = escapeHtml(value);
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+  return html;
+};
+const markdownToBlocks = (markdown) => {
+  const lines = markdown.replace(/\r\n/g, '\n').split('\n');
+  const blocks = [];
+  let paragraph = [];
+  let list = [];
+
+  const flushParagraph = () => {
+    if (!paragraph.length) return;
+    blocks.push({ type: 'p', html: renderMarkdownInline(paragraph.join(' ').trim()) });
+    paragraph = [];
+  };
+
+  const flushList = () => {
+    if (!list.length) return;
+    blocks.push({ type: 'ul', items: list.map((item) => renderMarkdownInline(item)) });
+    list = [];
+  };
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      flushParagraph();
+      flushList();
+      return;
+    }
+
+    if (trimmed.startsWith('## ')) {
+      flushParagraph();
+      flushList();
+      blocks.push({ type: 'h2', html: renderMarkdownInline(trimmed.replace(/^##\s+/, '')) });
+      return;
+    }
+
+    if (/^[-*]\s+/.test(trimmed)) {
+      flushParagraph();
+      list.push(trimmed.replace(/^[-*]\s+/, ''));
+      return;
+    }
+
+    flushList();
+    paragraph.push(trimmed);
+  });
+
+  flushParagraph();
+  flushList();
+  return blocks;
+};
+const parseMarkdownArticle = (markdown, fallbackArticle) => {
+  const { meta, body } = parseMarkdownFrontmatter(markdown);
+  return {
+    ...fallbackArticle,
+    title: meta.title || fallbackArticle.title,
+    date: meta.date || fallbackArticle.date,
+    datetime: meta.datetime || meta.date || fallbackArticle.datetime,
+    category: meta.category || fallbackArticle.category,
+    content: markdownToBlocks(body),
+  };
+};
+const loadKnowledgeArticle = async (articleId) => {
+  const fallbackArticle = knowledgeArticles[articleId];
+  if (!fallbackArticle) {
+    return null;
+  }
+
+  if (knowledgeArticleCache.has(articleId)) {
+    return knowledgeArticleCache.get(articleId);
+  }
+
+  if (!fallbackArticle.source) {
+    knowledgeArticleCache.set(articleId, fallbackArticle);
+    return fallbackArticle;
+  }
+
+  try {
+    const response = await fetch(encodeURI(fallbackArticle.source), { cache: 'no-cache' });
+    if (!response.ok) {
+      throw new Error(`Unable to load ${fallbackArticle.source}`);
+    }
+    const markdown = await response.text();
+    const article = parseMarkdownArticle(markdown, fallbackArticle);
+    knowledgeArticleCache.set(articleId, article);
+    return article;
+  } catch (error) {
+    console.warn(error);
+    knowledgeArticleCache.set(articleId, fallbackArticle);
+    return fallbackArticle;
+  }
+};
 const AI_CHAT_TYPE_SPEED_MS = 24;
 const AI_SPOTIFY_CACHE_KEY = 'long-ai-spotify-tracks';
 const VERSION_CHECK_INTERVAL_MS = 60000;
@@ -2705,16 +2838,33 @@ if (knowledgeEntries.length && knowledgeViewer && knowledgeViewerClose && knowle
   const renderKnowledgeContent = (article) =>
     article.content
       .map((block) => {
-        const text = escapeHtml(block.text || '');
+        const html = block.html || escapeHtml(block.text || '');
         if (block.type === 'h2') {
-          return `<h2>${text}</h2>`;
+          return `<h2>${html}</h2>`;
         }
-        return `<p>${text}</p>`;
+        if (block.type === 'ul') {
+          return `<ul>${(block.items || []).map((item) => `<li>${item}</li>`).join('')}</ul>`;
+        }
+        return `<p>${html}</p>`;
       })
       .join('');
 
-  const openKnowledgeArticle = (articleId) => {
-    const article = knowledgeArticles[articleId];
+  const openKnowledgeArticle = async (articleId) => {
+    const fallbackArticle = knowledgeArticles[articleId];
+    if (!fallbackArticle) {
+      return;
+    }
+
+    knowledgeTitle.textContent = fallbackArticle.title;
+    knowledgeDate.textContent = fallbackArticle.date;
+    knowledgeDate.setAttribute('datetime', fallbackArticle.datetime);
+    knowledgeCategory.textContent = fallbackArticle.category;
+    knowledgeContent.innerHTML = '<p>正在加载文章...</p>';
+    knowledgeViewer.classList.add('is-open');
+    knowledgeViewer.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    const article = await loadKnowledgeArticle(articleId);
     if (!article) {
       return;
     }
@@ -2724,9 +2874,6 @@ if (knowledgeEntries.length && knowledgeViewer && knowledgeViewerClose && knowle
     knowledgeDate.setAttribute('datetime', article.datetime);
     knowledgeCategory.textContent = article.category;
     knowledgeContent.innerHTML = renderKnowledgeContent(article);
-    knowledgeViewer.classList.add('is-open');
-    knowledgeViewer.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
   };
 
   const closeKnowledgeArticle = () => {
@@ -2736,9 +2883,28 @@ if (knowledgeEntries.length && knowledgeViewer && knowledgeViewerClose && knowle
   };
 
   knowledgeEntries.forEach((entry) => {
+    if (entry.matches('a[href]')) {
+      return;
+    }
+
     entry.addEventListener('click', () => {
       openKnowledgeArticle(entry.dataset.knowledgeEntry);
     });
+  });
+
+  knowledgeEntries.forEach(async (entry) => {
+    const article = await loadKnowledgeArticle(entry.dataset.knowledgeEntry);
+    if (!article) return;
+
+    const title = entry.querySelector('.knowledge-item-title');
+    const time = entry.querySelector('time');
+    if (title) {
+      title.textContent = article.title;
+    }
+    if (time) {
+      time.textContent = article.date;
+      time.setAttribute('datetime', article.datetime);
+    }
   });
 
   knowledgeViewerClose.addEventListener('click', closeKnowledgeArticle);
