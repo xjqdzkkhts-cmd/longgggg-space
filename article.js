@@ -97,6 +97,7 @@ const articleDate = document.querySelector('[data-article-date]');
 const articleCategory = document.querySelector('[data-article-category]');
 const articleContent = document.querySelector('[data-article-content]');
 const articlePageIndicator = document.querySelector('[data-page-indicator]');
+const articleFloatingDock = document.querySelector('.article-floating-dock');
 let articleCurrentTitle = '正在加载文章...';
 
 const escapeArticleHtml = (value) =>
@@ -290,7 +291,23 @@ const updateArticleDockIndicator = () => {
   articlePageIndicator.textContent = activeHeading?.textContent?.trim() || articleCurrentTitle;
 };
 
-window.addEventListener('scroll', updateArticleDockIndicator, { passive: true });
+const updateArticleDockProgress = () => {
+  if (!articleFloatingDock) {
+    return;
+  }
+
+  const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+  const progress = Math.min(1, Math.max(0, window.scrollY / maxScroll));
+  articleFloatingDock.style.setProperty('--article-scroll-progress', progress.toFixed(4));
+};
+
+const updateArticleDock = () => {
+  updateArticleDockIndicator();
+  updateArticleDockProgress();
+};
+
+window.addEventListener('scroll', updateArticleDock, { passive: true });
+window.addEventListener('resize', updateArticleDock);
 
 const loadArticlePage = async () => {
   const params = new URLSearchParams(window.location.search);
