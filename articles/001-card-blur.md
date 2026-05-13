@@ -6,7 +6,7 @@ category: Design Notes
 ---
 
 
-# 什么是图片颜色渐变模糊效果
+## 什么是图片颜色渐变模糊效果
 主要分为四步骤
 1. 从图片中提取主色
 2. 使用这些颜色生成背景渐变
@@ -15,7 +15,7 @@ category: Design Notes
 
 最终效果通常会呈现出一种柔和且具有氛围感的背景。
 
-# 实现方法
+## 实现方法
 常用工具：
 - Color Thief
 - Vibrant.js
@@ -31,7 +31,7 @@ const color = colorThief.getColor(img)
 background: radial-gradient(...)
 ```
 
-# 简短的结构示例
+## 简短的结构示例
 
 ```HTML
 <div class="bg"></div>
