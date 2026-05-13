@@ -97,6 +97,7 @@ const articleDate = document.querySelector('[data-article-date]');
 const articleCategory = document.querySelector('[data-article-category]');
 const articleContent = document.querySelector('[data-article-content]');
 const articlePageIndicator = document.querySelector('[data-page-indicator]');
+let articleCurrentTitle = '正在加载文章...';
 
 const escapeArticleHtml = (value) =>
   String(value)
@@ -251,6 +252,7 @@ const markdownToArticleHtml = (markdown) => {
 };
 
 const setArticleError = () => {
+  articleCurrentTitle = '文章暂时不可用';
   articleTitle.textContent = '文章暂时不可用';
   articleDate.textContent = '';
   articleCategory.textContent = 'Not Found';
@@ -262,6 +264,7 @@ const setArticleError = () => {
 
 const renderArticle = ({ meta, body }) => {
   const title = meta.title || '未命名文章';
+  articleCurrentTitle = title;
   articleTitle.textContent = title;
   articleDate.textContent = meta.date || '';
   articleDate.setAttribute('datetime', meta.datetime || meta.date || '');
@@ -270,8 +273,24 @@ const renderArticle = ({ meta, body }) => {
   if (articlePageIndicator) {
     articlePageIndicator.textContent = title;
   }
+  updateArticleDockIndicator();
   document.title = `${title}｜龙湘玉 Portfolio`;
 };
+
+const updateArticleDockIndicator = () => {
+  if (!articlePageIndicator || !articleContent) {
+    return;
+  }
+
+  const headings = [...articleContent.querySelectorAll('h2')];
+  const activeHeading = headings
+    .filter((heading) => heading.getBoundingClientRect().top <= window.innerHeight * 0.38)
+    .at(-1);
+
+  articlePageIndicator.textContent = activeHeading?.textContent?.trim() || articleCurrentTitle;
+};
+
+window.addEventListener('scroll', updateArticleDockIndicator, { passive: true });
 
 const loadArticlePage = async () => {
   const params = new URLSearchParams(window.location.search);
