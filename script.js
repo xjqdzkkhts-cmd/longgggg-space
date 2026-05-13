@@ -270,6 +270,7 @@ const markdownToBlocks = (markdown) => {
   const blocks = [];
   let paragraph = [];
   let list = [];
+  let codeBlock = null;
 
   const flushParagraph = () => {
     if (!paragraph.length) return;
@@ -283,8 +284,37 @@ const markdownToBlocks = (markdown) => {
     list = [];
   };
 
+  const flushCodeBlock = () => {
+    if (!codeBlock) return;
+    blocks.push({
+      type: 'code',
+      language: codeBlock.language,
+      code: codeBlock.lines.join('\n'),
+    });
+    codeBlock = null;
+  };
+
   lines.forEach((line) => {
     const trimmed = line.trim();
+
+    if (trimmed.startsWith('```')) {
+      if (codeBlock) {
+        flushCodeBlock();
+      } else {
+        flushParagraph();
+        flushList();
+        codeBlock = {
+          language: trimmed.replace(/^```/, '').trim(),
+          lines: [],
+        };
+      }
+      return;
+    }
+
+    if (codeBlock) {
+      codeBlock.lines.push(line);
+      return;
+    }
 
     if (!trimmed) {
       flushParagraph();
@@ -311,6 +341,7 @@ const markdownToBlocks = (markdown) => {
 
   flushParagraph();
   flushList();
+  flushCodeBlock();
   return blocks;
 };
 const parseMarkdownArticle = (markdown, fallbackArticle) => {
@@ -2863,6 +2894,12 @@ if (knowledgeEntries.length && knowledgeViewer && knowledgeViewerClose && knowle
         }
         if (block.type === 'ul') {
           return `<ul>${(block.items || []).map((item) => `<li>${item}</li>`).join('')}</ul>`;
+        }
+        if (block.type === 'code') {
+          const language = block.language ? escapeHtml(block.language.toUpperCase()) : 'CODE';
+          return `<figure class="knowledge-code-block"><figcaption>${language}</figcaption><pre><code>${escapeHtml(
+            block.code || ''
+          )}</code></pre></figure>`;
         }
         return `<p>${html}</p>`;
       })

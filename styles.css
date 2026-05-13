@@ -4073,6 +4073,46 @@ body.is-site-scaled .knowledge-viewer-close {
   font-size: 0.88em;
 }
 
+.knowledge-code-block {
+  margin: 6px 0;
+  overflow: hidden;
+  border: 1px solid rgba(6, 6, 6, 0.08);
+  border-radius: 14px;
+  background: rgba(6, 6, 6, 0.045);
+}
+
+.knowledge-code-block figcaption {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(6, 6, 6, 0.06);
+  color: rgba(6, 6, 6, 0.48);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.knowledge-code-block pre {
+  margin: 0;
+  overflow-x: auto;
+  padding: 16px;
+  color: rgba(6, 6, 6, 0.78);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.88rem;
+  line-height: 1.72;
+  white-space: pre;
+}
+
+.knowledge-code-block pre code {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
 .knowledge-article-prose h2 {
   margin: 26px 0 0;
   color: #111111;

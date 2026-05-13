@@ -78,7 +78,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "1d1940483d4ea01a",
@@ -185,10 +186,10 @@
   },
   "active": "00de48dc0a9c5952",
   "lastOpenFiles": [
-    "003-vibe-coding-animation.md",
-    "002-threejs-drop.md",
-    "004-parallax-card.md",
     "001-card-blur.md",
+    "002-threejs-drop.md",
+    "003-vibe-coding-animation.md",
+    "004-parallax-card.md",
     "002-使用 Matter.js 来实现 UI 元素掉落堆积效果.md",
     "001-如何实现卡片 UI 的渐变模糊效果.md",
     "004-视差卡片效果如何实现.md",

@@ -141,6 +141,7 @@ const markdownToArticleHtml = (markdown) => {
   const blocks = [];
   let paragraph = [];
   let list = [];
+  let codeBlock = null;
 
   const flushParagraph = () => {
     if (!paragraph.length) return;
@@ -154,8 +155,38 @@ const markdownToArticleHtml = (markdown) => {
     list = [];
   };
 
+  const flushCodeBlock = () => {
+    if (!codeBlock) return;
+    const language = codeBlock.language ? escapeArticleHtml(codeBlock.language.toUpperCase()) : 'CODE';
+    blocks.push(
+      `<figure class="knowledge-code-block"><figcaption>${language}</figcaption><pre><code>${escapeArticleHtml(
+        codeBlock.lines.join('\n')
+      )}</code></pre></figure>`
+    );
+    codeBlock = null;
+  };
+
   lines.forEach((line) => {
     const trimmed = line.trim();
+
+    if (trimmed.startsWith('```')) {
+      if (codeBlock) {
+        flushCodeBlock();
+      } else {
+        flushParagraph();
+        flushList();
+        codeBlock = {
+          language: trimmed.replace(/^```/, '').trim(),
+          lines: [],
+        };
+      }
+      return;
+    }
+
+    if (codeBlock) {
+      codeBlock.lines.push(line);
+      return;
+    }
 
     if (!trimmed) {
       flushParagraph();
@@ -182,6 +213,7 @@ const markdownToArticleHtml = (markdown) => {
 
   flushParagraph();
   flushList();
+  flushCodeBlock();
   return blocks.join('');
 };
 
