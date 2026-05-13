@@ -4113,6 +4113,32 @@ body.is-site-scaled .knowledge-viewer-close {
   font: inherit;
 }
 
+.code-token-comment {
+  color: rgba(6, 6, 6, 0.38);
+  font-style: italic;
+}
+
+.code-token-string {
+  color: #27714d;
+}
+
+.code-token-keyword {
+  color: #6d48d8;
+}
+
+.code-token-property {
+  color: #0045dd;
+}
+
+.code-token-number,
+.code-token-color {
+  color: #d83f87;
+}
+
+.code-token-function {
+  color: #7a5c00;
+}
+
 .knowledge-article-prose h2 {
   margin: 26px 0 0;
   color: #111111;

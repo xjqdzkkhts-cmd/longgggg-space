@@ -265,6 +265,38 @@ const renderMarkdownInline = (value) => {
   html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
   return html;
 };
+const highlightCode = (code, language = '') => {
+  const normalizedLanguage = language.trim().toLowerCase();
+  let html = escapeHtml(code);
+  const tokens = [];
+  const stash = (className, value) => {
+    const key = `@@CODE_TOKEN_${tokens.length}@@`;
+    tokens.push(`<span class="${className}">${value}</span>`);
+    return key;
+  };
+
+  html = html.replace(/(\/\*[\s\S]*?\*\/|\/\/.*$|&lt;!--[\s\S]*?--&gt;)/gm, (match) => stash('code-token-comment', match));
+  html = html.replace(/(&quot;.*?&quot;|&#39;.*?&#39;|`.*?`)/g, (match) => stash('code-token-string', match));
+
+  if (normalizedLanguage === 'css') {
+    html = html.replace(/(#(?:[0-9a-fA-F]{3,8})\b)/g, '<span class="code-token-color">$1</span>');
+    html = html.replace(/\b([a-z-]+)(\s*:)/gi, '<span class="code-token-property">$1</span>$2');
+    html = html.replace(/(@[a-z-]+)/gi, '<span class="code-token-keyword">$1</span>');
+    html = html.replace(/\b(-?\d*\.?\d+(?:px|rem|em|%|vh|vw|s|ms)?)\b/g, '<span class="code-token-number">$1</span>');
+  } else if (normalizedLanguage === 'html') {
+    html = html.replace(/(&lt;\/?)([a-z0-9-]+)/gi, '$1<span class="code-token-keyword">$2</span>');
+    html = html.replace(/\s([a-z-:]+)(=)/gi, ' <span class="code-token-property">$1</span>$2');
+  } else {
+    html = html.replace(
+      /\b(const|let|var|function|return|if|else|for|while|class|new|import|from|export|async|await|try|catch|throw|true|false|null|undefined)\b/g,
+      '<span class="code-token-keyword">$1</span>'
+    );
+    html = html.replace(/\b([A-Za-z_$][\w$]*)(?=\s*\()/g, '<span class="code-token-function">$1</span>');
+    html = html.replace(/\b(-?\d*\.?\d+)\b/g, '<span class="code-token-number">$1</span>');
+  }
+
+  return html.replace(/@@CODE_TOKEN_(\d+)@@/g, (_match, index) => tokens[Number(index)] || '');
+};
 const markdownToBlocks = (markdown) => {
   const lines = markdown.replace(/\r\n/g, '\n').split('\n');
   const blocks = [];
@@ -2897,8 +2929,9 @@ if (knowledgeEntries.length && knowledgeViewer && knowledgeViewerClose && knowle
         }
         if (block.type === 'code') {
           const language = block.language ? escapeHtml(block.language.toUpperCase()) : 'CODE';
-          return `<figure class="knowledge-code-block"><figcaption>${language}</figcaption><pre><code>${escapeHtml(
-            block.code || ''
+          return `<figure class="knowledge-code-block"><figcaption>${language}</figcaption><pre><code>${highlightCode(
+            block.code || '',
+            block.language || ''
           )}</code></pre></figure>`;
         }
         return `<p>${html}</p>`;
