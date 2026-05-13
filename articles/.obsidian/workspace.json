@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "002-threejs-drop.md",
+                "file": "001-card-blur.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "002-threejs-drop"
+              "title": "001-card-blur"
             }
           }
         ]
@@ -186,8 +186,8 @@
   },
   "active": "00de48dc0a9c5952",
   "lastOpenFiles": [
-    "001-card-blur.md",
     "002-threejs-drop.md",
+    "001-card-blur.md",
     "003-vibe-coding-animation.md",
     "004-parallax-card.md",
     "002-使用 Matter.js 来实现 UI 元素掉落堆积效果.md",
