@@ -6,23 +6,35 @@
     <title>个人知识库｜龙湘玉 Portfolio</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body class="article-page">
-    <main class="article-page-main">
+  <body class="knowledge-page">
+    <main class="knowledge-page-main">
       <a class="article-back-link" href="./index.html#knowledge" aria-label="返回首页">返回</a>
-      <article class="article-page-shell">
+
+      <section class="knowledge-page-hero" aria-label="个人知识库介绍">
         <p class="knowledge-article-eyebrow">个人知识库</p>
-        <h1 data-article-title>正在加载文章...</h1>
-        <div class="knowledge-article-meta">
-          <time data-article-date datetime=""></time>
-          <span data-article-category></span>
+        <h1>个人知识库</h1>
+        <p>记录设计、前端、AI 与个人创作过程中的一些思考。</p>
+      </section>
+
+      <section class="knowledge-page-panel" aria-label="文章筛选和排序">
+        <div class="knowledge-page-toolbar">
+          <div class="knowledge-filter-group" data-knowledge-filters aria-label="文章分类筛选"></div>
+          <label class="knowledge-sort-control">
+            <span>排序</span>
+            <select data-knowledge-sort>
+              <option value="newest">最新优先</option>
+              <option value="oldest">最早优先</option>
+              <option value="title">标题 A-Z</option>
+            </select>
+          </label>
         </div>
-        <div class="knowledge-article-prose" data-article-content>
-          <p>正在加载文章...</p>
-        </div>
-      </article>
+
+        <div class="knowledge-page-count" data-knowledge-count>正在加载文章...</div>
+        <div class="knowledge-page-list" data-knowledge-list></div>
+      </section>
     </main>
 
-    <div class="floating-dock article-floating-dock" aria-label="AI 对话和当前文章">
+    <div class="floating-dock article-floating-dock" aria-label="AI 对话和当前页面">
       <button class="floating-dock-ai" type="button" aria-controls="ai-chat-sidebar" aria-expanded="false" data-ai-chat-toggle>
         <svg class="floating-dock-ai-spark" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 2.4 14.8 9.2 21.6 12 14.8 14.8 12 21.6 9.2 14.8 2.4 12 9.2 9.2 12 2.4Z" />
@@ -30,7 +42,7 @@
         <img class="floating-dock-ai-logo" src="./assets/Longgggg.png" alt="Longgggg" />
       </button>
       <div class="floating-dock-location" aria-live="polite">
-        <span class="floating-dock-location-current" data-page-indicator>正在加载文章...</span>
+        <span class="floating-dock-location-current" data-page-indicator>个人知识库</span>
       </div>
     </div>
 
@@ -57,10 +69,10 @@
         </div>
 
         <form class="ai-chat-form" data-ai-chat-form>
-          <label class="sr-only" for="article-ai-chat-input">输入你想问龙湘玉 AI 分身的问题</label>
+          <label class="sr-only" for="knowledge-ai-chat-input">输入你想问龙湘玉 AI 分身的问题</label>
           <textarea
             class="ai-chat-input"
-            id="article-ai-chat-input"
+            id="knowledge-ai-chat-input"
             name="message"
             rows="1"
             maxlength="800"
@@ -75,6 +87,6 @@
     </aside>
 
     <script src="./script.js"></script>
-    <script src="./article.js"></script>
+    <script src="./knowledge.js"></script>
   </body>
 </html>

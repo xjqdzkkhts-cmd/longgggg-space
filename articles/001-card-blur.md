@@ -1,8 +1,8 @@
 ---
 title: 基于图片颜色的卡片渐变模糊效果
-date: 2026.05
-datetime: 2026-05
-category: Design Notes
+date: 2026.04
+datetime: 2026-04
+category: 前端
 ---
 
 

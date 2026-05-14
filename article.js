@@ -5,6 +5,22 @@ const ARTICLE_SOURCES = {
   '004': './articles/004-parallax-card.md',
 };
 
+const normalizeLocalArticleHistory = () => {
+  if (window.location.protocol !== 'file:' || !window.history?.replaceState || !window.history?.pushState) {
+    return;
+  }
+
+  if (window.history.state?.articleHistoryNormalized) {
+    return;
+  }
+
+  const currentArticleUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  window.history.replaceState({ articleHomeFallback: true }, '', './index.html#knowledge');
+  window.history.pushState({ articleHistoryNormalized: true }, '', currentArticleUrl);
+};
+
+normalizeLocalArticleHistory();
+
 const ARTICLE_FALLBACKS = {
   '001': {
     meta: {

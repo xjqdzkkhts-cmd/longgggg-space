@@ -2166,7 +2166,7 @@ if (worksTabs.length && workCards.length) {
     });
   });
 
-  applyWorkFilter('all');
+  applyWorkFilter('ux');
 }
 
 if (learningDrop && window.Matter) {
