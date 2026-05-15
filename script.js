@@ -86,13 +86,23 @@ const heroCardSources = {
 };
 const workCardTintCache = new Map();
 const workCardTintInflight = new Map();
+let workCardColorSamplerPromise = null;
 const aiChatApiBaseUrl = (window.LONG_AI_CONFIG?.apiBaseUrl || '').replace(/\/$/, '');
 const aiChatEndpoint = `${aiChatApiBaseUrl}/api/chat`;
 const spotifyRecentEndpoint = `${aiChatApiBaseUrl}/api/spotify-recent`;
 let openProjectViewerByGallery = null;
 
 const cleanLandingUrl = () => {
-  if (!window.history?.replaceState) {
+  const isLocalPreview =
+    window.location.protocol === 'file:' ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === '0.0.0.0' ||
+    window.location.hostname === '::1' ||
+    window.location.hostname === '[::1]' ||
+    window.location.pathname.includes('/Users/');
+
+  if (isLocalPreview || !window.history?.replaceState) {
     return;
   }
 
@@ -529,72 +539,35 @@ if (aiToolCard && aiToolRows.length) {
   window.addEventListener('resize', updateMarqueeWidths);
 }
 
-const rgbToHsl = (r, g, b) => {
-  const rn = r / 255;
-  const gn = g / 255;
-  const bn = b / 255;
-  const max = Math.max(rn, gn, bn);
-  const min = Math.min(rn, gn, bn);
-  const lightness = (max + min) / 2;
-  const delta = max - min;
-
-  if (delta === 0) {
-    return { h: 0, s: 0, l: lightness };
-  }
-
-  const saturation = lightness > 0.5 ? delta / (2 - max - min) : delta / (max + min);
-  let hue = 0;
-
-  switch (max) {
-    case rn:
-      hue = (gn - bn) / delta + (gn < bn ? 6 : 0);
-      break;
-    case gn:
-      hue = (bn - rn) / delta + 2;
-      break;
-    default:
-      hue = (rn - gn) / delta + 4;
-  }
-
-  return { h: hue / 6, s: saturation, l: lightness };
-};
-
-const hslToRgb = (h, s, l) => {
-  if (s === 0) {
-    const value = Math.round(l * 255);
-    return [value, value, value];
-  }
-
-  const hueToRgb = (p, q, t) => {
-    let nextT = t;
-
-    if (nextT < 0) nextT += 1;
-    if (nextT > 1) nextT -= 1;
-    if (nextT < 1 / 6) return p + (q - p) * 6 * nextT;
-    if (nextT < 1 / 2) return q;
-    if (nextT < 2 / 3) return p + (q - p) * (2 / 3 - nextT) * 6;
-    return p;
-  };
-
-  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-  const p = 2 * l - q;
-
-  return [
-    Math.round(hueToRgb(p, q, h + 1 / 3) * 255),
-    Math.round(hueToRgb(p, q, h) * 255),
-    Math.round(hueToRgb(p, q, h - 1 / 3) * 255),
-  ];
-};
-
 const mixRgb = (source, target, amount) =>
-  source.map((channel, index) => Math.round(channel + (target[index] - channel) * amount));
+  source.map((channel, index) => Math.round(channel + (target[index] - channel) * clamp(amount, 0, 1)));
 
-const extractDominantWorkCardTint = (imageUrl) => {
+const getRgbLuminance = ([red, green, blue]) => (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
+
+const fallbackWorkCardTint = {
+  tintRgb: [24, 24, 24],
+  accentRgb: [24, 24, 24],
+  contrastBoost: 0.45,
+};
+
+const loadWorkCardColorSampler = () => {
+  if (!workCardColorSamplerPromise) {
+    workCardColorSamplerPromise = import('https://cdn.jsdelivr.net/npm/fast-average-color@9.5.0/dist/index.esm.js')
+      .then((module) => {
+        const FastAverageColor = module.FastAverageColor || module.default;
+        return typeof FastAverageColor === 'function' ? new FastAverageColor() : null;
+      })
+      .catch(() => null);
+  }
+
+  return workCardColorSamplerPromise;
+};
+
+const extractDominantWorkCardTint = async (imageElement) => {
+  const imageUrl = imageElement?.currentSrc || imageElement?.src;
+
   if (!imageUrl) {
-    return Promise.resolve({
-      tintRgb: [24, 24, 24],
-      contrastBoost: 0.45,
-    });
+    return Promise.resolve(fallbackWorkCardTint);
   }
 
   if (workCardTintCache.has(imageUrl)) {
@@ -605,122 +578,43 @@ const extractDominantWorkCardTint = (imageUrl) => {
     return workCardTintInflight.get(imageUrl);
   }
 
-  const extractionPromise = new Promise((resolve) => {
-    const image = new Image();
-    image.decoding = 'async';
-
-    image.onload = () => {
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d', { willReadFrequently: true });
-
-      if (!context) {
-        const fallbackTint = {
-          tintRgb: [24, 24, 24],
-          contrastBoost: 0.45,
-        };
-        workCardTintCache.set(imageUrl, fallbackTint);
-        resolve(fallbackTint);
-        return;
+  const extractionPromise = loadWorkCardColorSampler()
+    .then((workCardColorSampler) => {
+      if (!workCardColorSampler) {
+        return fallbackWorkCardTint;
       }
 
-      const sampleWidth = 48;
-      const sampleHeight = 28;
-      const sourceHeight = Math.max(1, Math.floor(image.naturalHeight * 0.35));
-      const sourceY = Math.max(0, image.naturalHeight - sourceHeight);
-      canvas.width = sampleWidth;
-      canvas.height = sampleHeight;
-      context.drawImage(
-        image,
-        0,
-        sourceY,
-        image.naturalWidth,
-        sourceHeight,
-        0,
-        0,
-        sampleWidth,
-        sampleHeight
-      );
-
-      const pixels = context.getImageData(0, 0, sampleWidth, sampleHeight).data;
-      const clusters = new Map();
-      let luminanceTotal = 0;
-      let sampledPixels = 0;
-
-      for (let index = 0; index < pixels.length; index += 4) {
-        const alpha = pixels[index + 3];
-
-        if (alpha < 120) {
-          continue;
-        }
-
-        const red = pixels[index];
-        const green = pixels[index + 1];
-        const blue = pixels[index + 2];
-        const quantizedRed = Math.round(red / 24) * 24;
-        const quantizedGreen = Math.round(green / 24) * 24;
-        const quantizedBlue = Math.round(blue / 24) * 24;
-        const key = `${quantizedRed}-${quantizedGreen}-${quantizedBlue}`;
-        const { s } = rgbToHsl(red, green, blue);
-        const nextCluster = clusters.get(key) || { count: 0, red: 0, green: 0, blue: 0, saturation: 0 };
-        const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
-
-        nextCluster.count += 1;
-        nextCluster.red += red;
-        nextCluster.green += green;
-        nextCluster.blue += blue;
-        nextCluster.saturation += s;
-        clusters.set(key, nextCluster);
-        luminanceTotal += luminance;
-        sampledPixels += 1;
+      return workCardColorSampler.getColorAsync(imageElement, {
+        algorithm: 'dominant',
+        mode: 'speed',
+        ignoredColor: [
+          [255, 255, 255, 255, 32],
+          [0, 0, 0, 0, 0],
+        ],
+      });
+    })
+    .then((color) => {
+      if (!color?.value) {
+        return fallbackWorkCardTint;
       }
 
-      if (!clusters.size) {
-        const fallbackTint = {
-          tintRgb: [24, 24, 24],
-          contrastBoost: 0.45,
-        };
-        workCardTintCache.set(imageUrl, fallbackTint);
-        resolve(fallbackTint);
-        return;
-      }
-
-      const winner = [...clusters.values()].sort((clusterA, clusterB) => {
-        const scoreA = (clusterA.saturation / clusterA.count) * clusterA.count;
-        const scoreB = (clusterB.saturation / clusterB.count) * clusterB.count;
-        return scoreB - scoreA;
-      })[0];
-
-      const averageRed = Math.round(winner.red / winner.count);
-      const averageGreen = Math.round(winner.green / winner.count);
-      const averageBlue = Math.round(winner.blue / winner.count);
-      const tintHsl = rgbToHsl(averageRed, averageGreen, averageBlue);
-      const clampedTint = hslToRgb(tintHsl.h, tintHsl.s, Math.min(tintHsl.l, 0.2));
-      const sampleLuminance = sampledPixels ? luminanceTotal / sampledPixels : tintHsl.l;
-      const saturationPenalty = clamp((0.22 - tintHsl.s) / 0.22, 0, 1) * 0.28;
-      const lightnessBoost = clamp((sampleLuminance - 0.52) / 0.28, 0, 1) * 0.72;
-      const contrastBoost = clamp(lightnessBoost + saturationPenalty, 0, 1);
+      const sampledRgb = color.value
+        .slice(0, 3)
+        .map((channel) => clamp(Math.round(channel), 0, 255));
+      const luminance = getRgbLuminance(sampledRgb);
       const tintData = {
-        tintRgb: clampedTint,
-        contrastBoost,
+        tintRgb: mixRgb(sampledRgb, [0, 0, 0], luminance > 0.56 ? 0.7 : 0.58),
+        accentRgb: luminance < 0.18 ? mixRgb(sampledRgb, [255, 255, 255], 0.24) : sampledRgb,
+        contrastBoost: clamp((luminance - 0.44) / 0.38, 0, 1),
       };
 
       workCardTintCache.set(imageUrl, tintData);
-      resolve(tintData);
-    };
-
-    image.onerror = () => {
-      const fallbackTint = {
-        tintRgb: [24, 24, 24],
-        contrastBoost: 0.45,
-      };
-      workCardTintCache.set(imageUrl, fallbackTint);
-      resolve(fallbackTint);
-    };
-
-    image.src = imageUrl;
-  }).finally(() => {
-    workCardTintInflight.delete(imageUrl);
-  });
+      return tintData;
+    })
+    .catch(() => fallbackWorkCardTint)
+    .finally(() => {
+      workCardTintInflight.delete(imageUrl);
+    });
 
   workCardTintInflight.set(imageUrl, extractionPromise);
   return extractionPromise;
@@ -733,10 +627,11 @@ const applyWorkCardTint = async (mediaElement) => {
     return;
   }
 
-  const { tintRgb, contrastBoost } = await extractDominantWorkCardTint(imageElement.currentSrc || imageElement.src);
+  const { tintRgb, accentRgb, contrastBoost } = await extractDominantWorkCardTint(imageElement);
   const glassRgb = mixRgb(tintRgb, [255, 255, 255], 0.58 - contrastBoost * 0.16);
 
   mediaElement.style.setProperty('--work-card-tint-rgb', tintRgb.join(' '));
+  mediaElement.style.setProperty('--work-card-accent-rgb', (accentRgb || tintRgb).join(' '));
   mediaElement.style.setProperty('--work-card-glass-rgb', glassRgb.join(' '));
   mediaElement.style.setProperty('--work-card-contrast-boost', contrastBoost.toFixed(3));
   mediaElement.classList.add('is-tinted');
@@ -982,6 +877,9 @@ function getAiProjectGallery(item) {
     'ai-thrombolysis': 'ai-thrombolysis',
     'ai 溶栓': 'ai-thrombolysis',
     溶栓: 'ai-thrombolysis',
+    'search-focus': 'search-focus',
+    search: 'search-focus',
+    focus: 'search-focus',
     iknow: 'iknow',
     ikonw: 'iknow',
     'adhd-ai': 'adhd-ai',
@@ -2146,7 +2044,15 @@ if (scrollTrigger) {
 }
 
 if (worksTabs.length && workCards.length) {
-  const applyWorkFilter = (filter) => {
+  const workCardHideTimers = new WeakMap();
+
+  const applyWorkFilter = (filter, isInitial = false) => {
+    const activeTabIndex = Math.max(
+      0,
+      worksTabs.findIndex((tab) => tab.dataset.workFilter === filter)
+    );
+    worksTabs[0].parentElement?.style.setProperty('--works-segment-index', String(activeTabIndex));
+
     worksTabs.forEach((tab) => {
       const active = tab.dataset.workFilter === filter;
       tab.classList.toggle('is-active', active);
@@ -2156,7 +2062,27 @@ if (worksTabs.length && workCards.length) {
     workCards.forEach((card) => {
       const categories = card.dataset.workCategory.split(' ');
       const visible = filter === 'all' || categories.includes(filter);
-      card.classList.toggle('is-hidden', !visible);
+
+      window.clearTimeout(workCardHideTimers.get(card));
+
+      if (visible) {
+        card.classList.remove('is-hidden');
+        window.requestAnimationFrame(() => {
+          card.classList.remove('is-filtered-out');
+        });
+        return;
+      }
+
+      if (isInitial) {
+        card.classList.add('is-filtered-out', 'is-hidden');
+        return;
+      }
+
+      card.classList.add('is-filtered-out');
+      const hideTimer = window.setTimeout(() => {
+        card.classList.add('is-hidden');
+      }, 340);
+      workCardHideTimers.set(card, hideTimer);
     });
   };
 
@@ -2166,7 +2092,7 @@ if (worksTabs.length && workCards.length) {
     });
   });
 
-  applyWorkFilter('ux');
+  applyWorkFilter('ux', true);
 }
 
 if (learningDrop && window.Matter) {
@@ -2775,6 +2701,10 @@ if (
     'marry-christmas': [
       './assets/project-marry-christmas-pages/01.jpg',
       './assets/project-marry-christmas-pages/02.jpg',
+    ],
+    'search-focus': [
+      './assets/project-search-focus-pages/01.jpg',
+      './assets/project-search-focus-pages/02.jpg',
     ],
   };
 

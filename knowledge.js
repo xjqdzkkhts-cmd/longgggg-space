@@ -5,20 +5,50 @@ const KNOWLEDGE_ARTICLE_SOURCES = [
   { id: '004', source: './articles/004-parallax-card.md' },
 ];
 
+const isLocalKnowledgePreview = () =>
+  window.location.protocol === 'file:' ||
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname === '0.0.0.0' ||
+  window.location.hostname === '::1' ||
+  window.location.hostname === '[::1]' ||
+  window.location.pathname.includes('/Users/');
+
+const redirectLocalKnowledgeBackHome = (event) => {
+  if (isLocalKnowledgePreview() && event.state?.knowledgeHomeFallback) {
+    window.location.replace('./index.html');
+  }
+};
+
 const normalizeLocalKnowledgeHistory = () => {
-  if (window.location.protocol !== 'file:' || !window.history?.replaceState || !window.history?.pushState) {
+  if (!isLocalKnowledgePreview() || !window.history?.replaceState || !window.history?.pushState) {
     return;
   }
+
+  window.addEventListener('popstate', redirectLocalKnowledgeBackHome);
 
   if (window.history.state?.knowledgeHistoryNormalized) {
     return;
   }
 
-  window.history.replaceState({ knowledgeHomeFallback: true }, '', './index.html#knowledge');
-  window.history.pushState({ knowledgeHistoryNormalized: true }, '', './knowledge.html');
+  try {
+    window.history.replaceState({ knowledgeHomeFallback: true }, '', './index.html');
+    window.history.pushState({ knowledgeHistoryNormalized: true }, '', './knowledge.html');
+  } catch (_error) {
+    // Some local preview environments restrict history rewrites.
+  }
 };
 
 normalizeLocalKnowledgeHistory();
+
+document.querySelector('.article-back-link')?.addEventListener('click', (event) => {
+  if (!isLocalKnowledgePreview()) {
+    return;
+  }
+
+  event.preventDefault();
+  window.location.href = './index.html';
+});
 
 const knowledgeList = document.querySelector('[data-knowledge-list]');
 const knowledgeFilters = document.querySelector('[data-knowledge-filters]');
