@@ -2081,7 +2081,7 @@ if (worksTabs.length && workCards.length) {
       card.classList.add('is-filtered-out');
       const hideTimer = window.setTimeout(() => {
         card.classList.add('is-hidden');
-      }, 340);
+      }, 280);
       workCardHideTimers.set(card, hideTimer);
     });
   };
@@ -2705,6 +2705,9 @@ if (
     'search-focus': [
       './assets/project-search-focus-pages/01.jpg',
       './assets/project-search-focus-pages/02.jpg',
+    ],
+    'mark-code': [
+      './assets/project-mark-code-pages/01.jpg',
     ],
   };
 

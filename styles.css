@@ -3976,7 +3976,7 @@ button.ai-chat-project-item:focus-visible {
 }
 
 .work-card {
-  transition: opacity 0.34s ease, transform 0.34s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.34s ease;
+  transition: opacity 0.28s ease, visibility 0.28s ease;
 }
 
 .work-card-project {
@@ -3994,7 +3994,6 @@ button.ai-chat-project-item:focus-visible {
 
 .work-card.is-filtered-out {
   opacity: 0;
-  transform: translateY(10px) scale(0.985);
   pointer-events: none;
   visibility: hidden;
 }
