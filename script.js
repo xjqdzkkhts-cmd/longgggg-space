@@ -2836,6 +2836,13 @@ if (
       } else if (event.key === 'ArrowRight' || event.key === ' ') {
         event.preventDefault();
         goToProjectSlide(1);
+      } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        projectSlideFrame?.scrollBy({
+          top: event.key === 'ArrowUp' ? -180 : 180,
+          left: 0,
+          behavior: 'smooth',
+        });
       } else if (event.key === 'Escape') {
         event.preventDefault();
         exitPresentationMode();
