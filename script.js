@@ -89,7 +89,7 @@ const workCardTintInflight = new Map();
 let workCardColorSamplerPromise = null;
 const aiChatApiBaseUrl = (window.LONG_AI_CONFIG?.apiBaseUrl || '').replace(/\/$/, '');
 const aiChatEndpoint = `${aiChatApiBaseUrl}/api/chat`;
-const spotifyRecentEndpoint = `${aiChatApiBaseUrl}/api/spotify-recent`;
+const musicRecentEndpoint = `${aiChatApiBaseUrl}/api/lastfm-recent`;
 let openProjectViewerByGallery = null;
 
 const cleanLandingUrl = () => {
@@ -428,7 +428,7 @@ const loadKnowledgeArticle = async (articleId) => {
   }
 };
 const AI_CHAT_TYPE_SPEED_MS = 24;
-const AI_SPOTIFY_CACHE_KEY = 'long-ai-spotify-tracks';
+const AI_MUSIC_CACHE_KEY = 'long-ai-music-tracks';
 const VERSION_CHECK_INTERVAL_MS = 60000;
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -938,7 +938,7 @@ function getDefaultAiMusicTracks() {
   ];
 }
 
-function normalizeSpotifyTracksPayload(payload) {
+function normalizeMusicTracksPayload(payload) {
   const sourceTracks = Array.isArray(payload?.pool) ? payload.pool : payload?.tracks;
   if (!Array.isArray(sourceTracks)) {
     return [];
@@ -968,36 +968,36 @@ function shuffleTracks(tracks = []) {
   return nextTracks;
 }
 
-function readSavedSpotifyTracks() {
+function readSavedMusicTracks() {
   try {
-    const parsed = JSON.parse(window.localStorage?.getItem(AI_SPOTIFY_CACHE_KEY) || '[]');
+    const parsed = JSON.parse(window.localStorage?.getItem(AI_MUSIC_CACHE_KEY) || '[]');
     return Array.isArray(parsed) ? parsed : [];
   } catch (_error) {
     return [];
   }
 }
 
-function saveSpotifyTracks(tracks = []) {
+function saveMusicTracks(tracks = []) {
   if (!tracks.length) {
     return;
   }
 
   try {
-    window.localStorage?.setItem(AI_SPOTIFY_CACHE_KEY, JSON.stringify(tracks.slice(0, 20)));
+    window.localStorage?.setItem(AI_MUSIC_CACHE_KEY, JSON.stringify(tracks.slice(0, 20)));
   } catch (_error) {
-    // Local storage may be unavailable in private browsing; live Spotify data still works.
+    // Local storage may be unavailable in private browsing; live music data still works.
   }
 }
 
 function getAiMusicTracks(fallbackTracks = []) {
-  const spotifyTracks = Array.isArray(aiChatState.spotifyTracks) ? aiChatState.spotifyTracks : [];
-  return (spotifyTracks.length ? spotifyTracks : fallbackTracks).slice(0, 4);
+  const musicTracks = Array.isArray(aiChatState.spotifyTracks) ? aiChatState.spotifyTracks : [];
+  return (musicTracks.length ? musicTracks : fallbackTracks).slice(0, 4);
 }
 
 function renderAiMusicLoading() {
   const loading = document.createElement('div');
   loading.className = 'ai-chat-music-loading';
-  loading.textContent = '正在读取 Spotify';
+  loading.textContent = '正在读取最近在听';
   return loading;
 }
 
@@ -1016,7 +1016,7 @@ function renderAiMusicRefreshButton() {
   button.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();
-    loadAiSpotifyTracks({ force: true });
+    loadAiMusicTracks({ force: true });
   });
   button.addEventListener('pointerdown', (event) => {
     event.preventDefault();
@@ -1042,7 +1042,7 @@ function renderAiMusicCover(track) {
     cover.href = track.url;
     cover.target = '_blank';
     cover.rel = 'noopener noreferrer';
-    cover.setAttribute('aria-label', `在 Spotify 打开 ${track.title}`);
+    cover.setAttribute('aria-label', `打开 ${track.title}`);
   }
 
   return cover;
@@ -1082,7 +1082,7 @@ function updateAiMusicCards() {
   });
 }
 
-function loadAiSpotifyTracks(options = {}) {
+function loadAiMusicTracks(options = {}) {
   const force = Boolean(options.force);
   if (!force && (aiChatState.spotifyTracks || aiChatState.spotifyTracksPromise)) {
     return aiChatState.spotifyTracksPromise;
@@ -1094,20 +1094,20 @@ function loadAiSpotifyTracks(options = {}) {
     updateAiMusicCards();
   }
 
-  const endpoint = force ? `${spotifyRecentEndpoint}?t=${Date.now()}` : spotifyRecentEndpoint;
+  const endpoint = force ? `${musicRecentEndpoint}?t=${Date.now()}` : musicRecentEndpoint;
   aiChatState.spotifyTracksPromise = fetch(endpoint, {
     method: 'GET',
     headers: { Accept: 'application/json' },
   })
     .then((response) => {
       if (!response.ok) {
-        throw new Error('Spotify request failed.');
+        throw new Error('Music request failed.');
       }
       return response.json();
     })
     .then((payload) => {
-      const tracks = normalizeSpotifyTracksPayload(payload);
-      const savedTracks = readSavedSpotifyTracks();
+      const tracks = normalizeMusicTracksPayload(payload);
+      const savedTracks = readSavedMusicTracks();
       const hasSamePool =
         force &&
         tracks.length &&
@@ -1117,7 +1117,7 @@ function loadAiSpotifyTracks(options = {}) {
       if (tracks.length) {
         aiChatState.spotifyTrackPool = tracks;
         aiChatState.spotifyTracks = hasSamePool ? shuffleTracks(savedTracks).slice(0, 4) : tracks.slice(0, 4);
-        saveSpotifyTracks(tracks);
+        saveMusicTracks(tracks);
         updateAiMusicCards();
       } else {
         aiChatState.spotifyTrackPool = savedTracks;
@@ -1127,7 +1127,7 @@ function loadAiSpotifyTracks(options = {}) {
       return tracks;
     })
     .catch(() => {
-      const savedTracks = readSavedSpotifyTracks();
+      const savedTracks = readSavedMusicTracks();
       aiChatState.spotifyTrackPool = savedTracks;
       aiChatState.spotifyTracks = savedTracks.length ? shuffleTracks(savedTracks).slice(0, 4) : [];
       updateAiMusicCards();
@@ -1164,7 +1164,7 @@ function renderAiMusicCardContent(lifeCard, item = {}, options = {}) {
   }
 
   lifeCard.append(header, grid);
-  loadAiSpotifyTracks();
+  loadAiMusicTracks();
 }
 
 function updateAiLifeCarousel(carousel) {
