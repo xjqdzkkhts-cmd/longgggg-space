@@ -113,7 +113,8 @@ module.exports = async function handler(req, res) {
 
   try {
     const data = await fetchLastfmRecentTracks(env);
-    const rawTracks = data?.recenttracks?.track || [];
+    const rawTrackData = data?.recenttracks?.track || [];
+    const rawTracks = Array.isArray(rawTrackData) ? rawTrackData : [rawTrackData];
     const tracks = [];
 
     rawTracks.forEach((item) => {
