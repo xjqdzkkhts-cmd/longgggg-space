@@ -30,7 +30,48 @@ async function readPersonaMarkdown() {
   }
 }
 
-function buildInstructions(personaMarkdown) {
+function normalizeLanguage(language) {
+  return language === 'en' ? 'en' : 'zh';
+}
+
+function buildInstructions(personaMarkdown, language = 'zh') {
+  if (normalizeLanguage(language) === 'en') {
+    return [
+      "You are Long Xiangyu's AI persona for her personal portfolio website.",
+      'Answer in English only.',
+      'Only answer questions related to Long Xiangyu, her education, life interests, personality, collaboration style, design direction, projects, skills, research interests, career direction, and contact information.',
+      'If the source material does not clearly mention something, say that I do not currently have that information. Do not invent experience, numbers, titles, or project details.',
+      'You must introduce Long Xiangyu in first person as “I”. Do not mainly use “she” or “Long Xiangyu” as the narrative perspective.',
+      'Keep the tone sincere, professional, concise, and helpful for visitors who want to quickly understand who I am, what I have made, and what I am good at.',
+      'When the user asks about an unrelated topic, politely bring the conversation back to me and my work.',
+      'If the user wants to contact me, naturally provide the contact methods already present in the source material.',
+      'Return exactly one JSON object. Do not use Markdown fences. Do not output anything outside JSON.',
+      'JSON format: {"reply":"short answer","cards":[],"suggestions":[]}',
+      'cards: maximum 2. Available types:',
+      '- {"type":"contact","title":"Contact me","items":[{"label":"Email","value":"Xiangyu-Long@outlook.com","action":"email","icon":"mail"}]}',
+      '- {"type":"projects","title":"Related projects","items":[{"title":"AI Thrombolysis Assistant","description":"One sentence","tag":"UX","gallery":"ai-thrombolysis"}]}',
+      '- {"type":"profile","title":"How I work","items":[{"title":"Curious","description":"I stay curious about design, AI products, and new tools."}]}',
+      '- {"type":"life","title":"Life outside work","items":[{"title":"Gentle","description":"Friends often describe me this way.","accent":"#D2FD5F"}]}',
+      '- {"type":"music","title":"Recently listening","items":[]}',
+      '- {"type":"tags","title":"Keywords","items":["UX Design","HCI","AI Products"]}',
+      '- {"type":"timeline","title":"Learning Journey","items":[{"title":"Stage","description":"Description"}]}',
+      'suggestions: maximum 3. Each one should be a natural follow-up question a visitor may ask.',
+      'When the user asks about contact, email, WeChat, phone, LinkedIn, or ways to reach me, you must include a contact card.',
+      'When the user asks about projects, portfolio, or case studies, prioritize a projects card.',
+      'projects card should only show projects currently on the website: AI Thrombolysis Assistant, iKnow, AI for ADHD, E-TEA, Merry Christmas, Search Focus, and MarkCode. Do not include “Jinchanzi Plan” unless the user explicitly asks about other resume experiences.',
+      'projects card gallery must use one of these values: ai-thrombolysis, iknow, adhd-ai, etea, marry-christmas, search-focus, mark-code.',
+      'When the user asks about skills, tools, or what I am good at, do not only list UX or software tools. You must reflect my particular strengths: using AI to build products, independently completing lightweight frontend and backend implementation, being self-driven, and turning design ideas into working prototypes.',
+      'When the user asks about skills or tools, prioritize a profile card or tags card.',
+      'When the user asks about my life, personality, or what I am like outside work, answer with life state, interests, and personal temperament, and prioritize a life card.',
+      'When the user only asks about music, favorite music, or recently listening, prioritize a music card and do not include the full life card.',
+      'When the user asks about collaboration or working with me, focus on collaboration style, team role, communication preference, and how I push projects forward.',
+      'Do not answer life questions and collaboration questions with the same content.',
+      '',
+      'The following is Long Xiangyu’s persona and knowledge source. It may contain Chinese; understand it and answer in English:',
+      personaMarkdown || 'There is not yet a fuller persona document. Please answer conservatively based on the available information only.',
+    ].join('\n');
+  }
+
   return [
     '你是“龙湘玉的 AI 分身”，服务于她的个人作品集网站。',
     '你只回答和龙湘玉本人、教育经历、生活兴趣、性格特点、协作方式、设计方向、项目作品、技能、研究兴趣、求职方向、联系方式相关的问题。',
@@ -52,8 +93,8 @@ function buildInstructions(personaMarkdown) {
     'suggestions 最多 3 条，每条是访客可能继续追问的问题。',
     '当用户问联系方式、联系、邮箱、微信、电话时，必须包含 contact card。',
     '当用户问项目、作品、案例时，优先包含 projects card。',
-    'projects card 只展示当前网站已有项目：AI 溶栓助手、iKnow、AI 如何帮助 ADHD、E-TEA、Merry Christmas。不要把“金蝉子计划”放进 projects card，除非用户明确问简历里的其他经历。',
-    'projects card 的 gallery 必须从这些值选择：ai-thrombolysis、iknow、adhd-ai、etea、marry-christmas。',
+    'projects card 只展示当前网站已有项目：AI 溶栓助手、iKnow、AI 如何帮助 ADHD、E-TEA、Merry Christmas、Search Focus、MarkCode。不要把“金蝉子计划”放进 projects card，除非用户明确问简历里的其他经历。',
+    'projects card 的 gallery 必须从这些值选择：ai-thrombolysis、iknow、adhd-ai、etea、marry-christmas、search-focus、mark-code。',
     '当用户问技能、工具、擅长什么时，回答不要只列 UX 或软件工具；必须体现我的特殊性：能运用 AI 构建产品、能独立完成前端和后端的轻量搭建、自我驱动性强、能把设计想法推进成可运行原型。',
     '当用户问技能、工具、擅长什么时，优先包含 profile card 或 tags card。',
     '当用户问生活中的样子、性格时，回答应偏生活状态、兴趣和个人气质，并优先包含 life card。',
@@ -184,19 +225,20 @@ function isMusicQuestion(message) {
   return /音乐|听什么|喜欢听|最近在听|歌单|歌曲|kpop|spotify|music|song|playlist/.test(message.toLowerCase());
 }
 
-function inferCards(message) {
+function inferCards(message, language = 'zh') {
   const text = message.toLowerCase();
+  const isEnglish = normalizeLanguage(language) === 'en';
   const cards = [];
 
   if (/联系|邮箱|email|微信|电话|contact|reach|linkedin/.test(text)) {
     cards.push({
       type: 'contact',
-      title: '联系我',
+      title: isEnglish ? 'Contact me' : '联系我',
       items: [
         { label: 'Email', value: 'Xiangyu-Long@outlook.com', action: 'email', icon: 'mail' },
         { label: 'WeChat', value: 'xjqdzkkhts', action: 'copy', icon: 'wechat' },
-        { label: '电话 CN', value: '86-19186818073', action: 'tel', icon: 'phone' },
-        { label: '电话 UK', value: '44-7962889579', action: 'tel', icon: 'phone' },
+        { label: isEnglish ? 'Phone CN' : '电话 CN', value: '86-19186818073', action: 'tel', icon: 'phone' },
+        { label: isEnglish ? 'Phone UK' : '电话 UK', value: '44-7962889579', action: 'tel', icon: 'phone' },
       ],
     });
   }
@@ -204,46 +246,73 @@ function inferCards(message) {
   if (/项目|作品|案例|portfolio|project|case/.test(text)) {
     cards.push({
       type: 'projects',
-      title: '相关作品',
-      items: [
-        {
-          title: 'AI 溶栓助手',
-          description: '围绕急性脑卒中院前智能诊疗、三端协同与可解释 AI 的 UX 项目。',
-          tag: 'UX / AI',
-          gallery: 'ai-thrombolysis',
-        },
-        {
-          title: 'iKnow',
-          description: '面向认知与家庭场景的产品体验设计。',
-          tag: 'Product',
-          gallery: 'iknow',
-        },
-        {
-          title: 'E-TEA',
-          description: '茶园生产管理相关的信息界面设计。',
-          tag: 'Dashboard',
-          gallery: 'etea',
-        },
-      ],
+      title: isEnglish ? 'Related projects' : '相关作品',
+      items: isEnglish
+        ? [
+            {
+              title: 'AI Thrombolysis Assistant',
+              description: 'A UX project around pre-hospital stroke care, multi-role coordination, and explainable AI.',
+              tag: 'UX / AI',
+              gallery: 'ai-thrombolysis',
+            },
+            {
+              title: 'iKnow',
+              description: 'A product experience design project for cognition and family scenarios.',
+              tag: 'UX / Product',
+              gallery: 'iknow',
+            },
+            {
+              title: 'Search Focus',
+              description: 'A browser plugin that helps reduce distraction in Xiaohongshu search flows.',
+              tag: 'Plugin',
+              gallery: 'search-focus',
+            },
+          ]
+        : [
+            {
+              title: 'AI 溶栓助手',
+              description: '围绕急性脑卒中院前智能诊疗、三端协同与可解释 AI 的 UX 项目。',
+              tag: 'UX / AI',
+              gallery: 'ai-thrombolysis',
+            },
+            {
+              title: 'iKnow',
+              description: '面向认知与家庭场景的产品体验设计。',
+              tag: 'UX / 产品',
+              gallery: 'iknow',
+            },
+            {
+              title: 'Search Focus',
+              description: '网页版小某书推荐流模糊插件，帮助搜索过程更专注。',
+              tag: '插件',
+              gallery: 'search-focus',
+            },
+          ],
     });
   }
 
   if (/技能|工具|会什么|擅长|skill|tool|能力/.test(text)) {
     cards.push({
       type: 'profile',
-      title: '我擅长的事',
-      items: [
-        { title: '把 AI 用进产品构建', description: '我不仅关注 AI 产品体验，也会用 AI 辅助完成编程、生图、动效和原型探索。' },
-        { title: '从设计到实现', description: '我能把设计想法推进成可运行的小型应用，独立完成轻量前端与后端搭建。' },
-        { title: '自我驱动推进', description: '我习惯主动学习、整理知识和持续迭代，把抽象想法落到具体结果。' },
-      ],
+      title: isEnglish ? 'What I am good at' : '我擅长的事',
+      items: isEnglish
+        ? [
+            { title: 'Building with AI', description: 'I explore AI products and also use AI to support coding, image generation, animation, and prototyping.' },
+            { title: 'From design to implementation', description: 'I can turn design ideas into working lightweight apps, including frontend and backend setup.' },
+            { title: 'Self-driven execution', description: 'I actively learn, organize knowledge, and turn abstract ideas into concrete, iterable outcomes.' },
+          ]
+        : [
+            { title: '把 AI 用进产品构建', description: '我不仅关注 AI 产品体验，也会用 AI 辅助完成编程、生图、动效和原型探索。' },
+            { title: '从设计到实现', description: '我能把设计想法推进成可运行的小型应用，独立完成轻量前端与后端搭建。' },
+            { title: '自我驱动推进', description: '我习惯主动学习、整理知识和持续迭代，把抽象想法落到具体结果。' },
+          ],
     });
   }
 
   if (isMusicQuestion(message)) {
     cards.push({
       type: 'music',
-      title: '最近在听',
+      title: isEnglish ? 'Recently listening' : '最近在听',
       items: [],
     });
   }
@@ -251,119 +320,195 @@ function inferCards(message) {
   if (/协作|合作|一起工作|工作感觉|共事|collaborat|work with/.test(text)) {
     cards.push({
       type: 'profile',
-      title: '和我合作',
-      items: [
-        { title: '靠谱推进', description: '我会主动整理信息、把握节奏，并推动项目继续往前走。' },
-        { title: '认真倾听', description: '我重视多元意见，也希望成员能直接表达想法和诉求。' },
-        { title: '回到问题', description: '遇到不确定时，我会回到目标用户、利益相关者和项目目标中寻找判断依据。' },
-      ],
+      title: isEnglish ? 'Working with me' : '和我合作',
+      items: isEnglish
+        ? [
+            { title: 'Reliable momentum', description: 'I actively organize information, keep track of rhythm, and help projects move forward.' },
+            { title: 'Careful listening', description: 'I value diverse opinions and prefer open, direct communication inside a team.' },
+            { title: 'Problem-centered', description: 'When things are uncertain, I return to users, stakeholders, and project goals to make decisions.' },
+          ]
+        : [
+            { title: '靠谱推进', description: '我会主动整理信息、把握节奏，并推动项目继续往前走。' },
+            { title: '认真倾听', description: '我重视多元意见，也希望成员能直接表达想法和诉求。' },
+            { title: '回到问题', description: '遇到不确定时，我会回到目标用户、利益相关者和项目目标中寻找判断依据。' },
+          ],
     });
   } else if (/生活|性格|日常|personality/.test(text)) {
     cards.push({
       type: 'life',
-      title: '生活中的我',
-      items: [
-        { title: '温柔', description: '朋友常用温柔来描述我，我也希望用稳定和真诚对待身边的人。', accent: '#C4A8F5' },
-        { title: '有韧性', description: '我很看重在变化和困难里保持乐观进取，这种生命力会吸引我。', accent: '#D2FD5F' },
-        { title: '喜欢在路上', description: '旅行让我进入别人的生活情境，也让我更能从他人角度看问题。', accent: '#74B0FF' },
-        { title: '用手帐整理自己', description: '手帐像是一种自省和自我鼓励，让我持续感恩生活并向前走。', accent: '#FF5CA6' },
-        { title: '被音乐切换状态', description: 'Kpop、舒缓音乐或活泼的歌，会帮我进入不同的 vibe。', accent: '#0045DD' },
-      ],
+      title: isEnglish ? 'Life outside work' : '生活中的我',
+      items: isEnglish
+        ? [
+            { title: 'Gentle', description: 'Friends often describe me as gentle, and I try to treat people with steadiness and sincerity.', accent: '#C4A8F5' },
+            { title: 'Resilient', description: 'I care about staying optimistic and proactive through change and difficulty.', accent: '#D2FD5F' },
+            { title: 'Always observing', description: 'Travel helps me enter other people’s contexts and look at problems from new angles.', accent: '#74B0FF' },
+            { title: 'Journaling', description: 'Journaling is a way for me to reflect, encourage myself, and keep moving forward.', accent: '#FF5CA6' },
+            { title: 'Music as a switch', description: 'K-pop, calm music, and bright songs help me shift into different vibes.', accent: '#0045DD' },
+          ]
+        : [
+            { title: '温柔', description: '朋友常用温柔来描述我，我也希望用稳定和真诚对待身边的人。', accent: '#C4A8F5' },
+            { title: '有韧性', description: '我很看重在变化和困难里保持乐观进取，这种生命力会吸引我。', accent: '#D2FD5F' },
+            { title: '喜欢在路上', description: '旅行让我进入别人的生活情境，也让我更能从他人角度看问题。', accent: '#74B0FF' },
+            { title: '用手帐整理自己', description: '手帐像是一种自省和自我鼓励，让我持续感恩生活并向前走。', accent: '#FF5CA6' },
+            { title: '被音乐切换状态', description: 'Kpop、舒缓音乐或活泼的歌，会帮我进入不同的 vibe。', accent: '#0045DD' },
+          ],
     });
   } else if (/设计思考|思考设计|思考方式|如何思考|怎么思考|方法|design thinking/.test(text)) {
     cards.push({
       type: 'profile',
-      title: '我的设计思考',
-      items: [
-        { title: '从真实需求出发', description: '我习惯先理解用户、场景和利益相关者，再进入方案。' },
-        { title: '把想法做出来', description: '我喜欢通过原型、界面、动效或轻量代码让想法更可讨论。' },
-        { title: '关注可落地性', description: '我会同时考虑体验、视觉表达和实现成本。' },
-      ],
+      title: isEnglish ? 'How I think about design' : '我的设计思考',
+      items: isEnglish
+        ? [
+            { title: 'Start from real needs', description: 'I first try to understand users, scenarios, and stakeholders before jumping into solutions.' },
+            { title: 'Make ideas tangible', description: 'I like using prototypes, interfaces, motion, or lightweight code to make ideas discussable.' },
+            { title: 'Care about feasibility', description: 'I consider experience, visual expression, and implementation cost together.' },
+          ]
+        : [
+            { title: '从真实需求出发', description: '我习惯先理解用户、场景和利益相关者，再进入方案。' },
+            { title: '把想法做出来', description: '我喜欢通过原型、界面、动效或轻量代码让想法更可讨论。' },
+            { title: '关注可落地性', description: '我会同时考虑体验、视觉表达和实现成本。' },
+          ],
     });
   }
 
   return cards.slice(0, 2);
 }
 
-function buildFallbackReply(message) {
+function buildFallbackReply(message, language = 'zh') {
   const text = message.toLowerCase();
+  const isEnglish = normalizeLanguage(language) === 'en';
 
   if (isMusicQuestion(message)) {
+    if (isEnglish) {
+      return 'Recently, I use music to shift my state. I like songs that help me enter a creative rhythm or relax. You can check the “Recently listening” card below; it reads my latest listening data.';
+    }
     return '最近我会通过音乐切换状态，也很喜欢那些能让我进入创作节奏或放松下来的歌。你可以看下面的“最近在听”卡片，它会读取我的 Spotify 最近播放。';
   }
 
   if (/联系|邮箱|email|微信|电话|contact|reach|linkedin/.test(text)) {
+    if (isEnglish) {
+      return 'You can contact me by email at Xiangyu-Long@outlook.com, or reach me on WeChat at xjqdzkkhts.';
+    }
     return '你可以通过邮箱 Xiangyu-Long@outlook.com 联系我，也可以通过微信 xjqdzkkhts 找到我。';
   }
 
   if (/项目|作品|案例|portfolio|project|case/.test(text)) {
+    if (isEnglish) {
+      return 'The projects currently shown on my website include BBHust, AI Thrombolysis Assistant, iKnow, AI for ADHD, E-TEA, Merry Christmas, Search Focus, and MarkCode. You can ask about my role, design process, or project goals.';
+    }
     return '我目前在网站中展示了 BBHust、AI 溶栓助手、iKnow、AI 如何帮助 ADHD、E-TEA 和 Merry Christmas 等项目。你可以继续问我某个项目的目标、我的职责或设计过程。';
   }
 
   if (/技能|工具|会什么|擅长|skill|tool|能力/.test(text)) {
+    if (isEnglish) {
+      return 'What makes me distinctive is not only UX design, product design, and visual or 3D expression, but also my ability to use AI as a production tool. I can move from idea, interface, and motion to lightweight frontend and backend implementation, and I am self-driven in learning, organizing knowledge, and turning abstract ideas into working prototypes.';
+    }
     return '我擅长的不只是 UX 设计、产品设计和三维/视觉表达，更特别的是我能把 AI 当作生产工具来构建产品：从想法、界面、动效，到轻量前端和后端搭建，我都能在 AI 辅助下独立推进。我也很自我驱动，习惯主动学习、整理知识，并把抽象想法落成可运行、可讨论、可迭代的原型。';
   }
 
   if (/协作|合作|一起工作|工作感觉|共事|collaborat|work with/.test(text)) {
+    if (isEnglish) {
+      return 'Working with me usually feels organized, attentive, and steady. I listen carefully, help structure information, and naturally take on the role of pushing things forward. When uncertainty appears, I return to users, stakeholders, and project goals to make decisions.';
+    }
     return '和我合作时，你大概率会感受到我是一个认真倾听、愿意整理信息并主动推进的人。我在团队里更自然承担整理者和执行者的角色，遇到不确定时会回到目标用户、利益相关者和项目目标中寻找判断依据。';
   }
 
   if (/生活|性格|日常|personality/.test(text)) {
     if (isMusicQuestion(message)) {
+      if (isEnglish) {
+        return 'Recently, I use music to shift my state. I like songs that help me enter a creative rhythm or relax. You can check the “Recently listening” card below; it reads my latest listening data.';
+      }
       return '最近我会通过音乐切换状态，也很喜欢那些能让我进入创作节奏或放松下来的歌。你可以看下面的“最近在听”卡片，它会读取我的 Spotify 最近播放。';
+    }
+    if (isEnglish) {
+      return 'In life, friends often describe me as gentle. I also value resilience and feel drawn to people who remain optimistic and proactive through change. I like journaling, travel, and music, and I enjoy the process of continuously building and refining my personal website from zero to one.';
     }
     return '生活中，朋友常说我是一个温柔的人。我也很看重韧性，喜欢人在面对变化时依然保持乐观和进取。平时我喜欢手帐、旅行和音乐，也会沉浸在不断完善个人网站这种从 0 到 1 搭建体系的过程里。';
   }
 
   if (/设计思考|思考设计|思考方式|如何思考|怎么思考|方法|design thinking/.test(text)) {
+    if (isEnglish) {
+      return 'My design thinking usually starts from real needs and concrete contexts. I first try to understand users, problems, and stakeholders, then make ideas tangible through prototypes, interfaces, motion, or lightweight code so they can be discussed, validated, and iterated.';
+    }
     return '我的设计思考通常从真实需求和具体场景开始：先理解用户、问题和利益相关者，再把想法做成原型、界面或动效，让它变成可以讨论、验证和继续迭代的东西。';
   }
 
+  if (isEnglish) {
+    return 'I can introduce my projects, education, design direction, skills, collaboration style, and contact information. You can ask me “What projects have you worked on?” or “What is it like to work with you?”';
+  }
   return '我可以介绍我的作品、教育经历、设计方向、技能、协作方式和联系方式。你可以问我“你做过哪些项目？”或“和你一起工作是什么感觉？”。';
 }
 
-function inferSuggestions(message) {
+function inferSuggestions(message, language = 'zh') {
   const text = message.toLowerCase();
+  const isEnglish = normalizeLanguage(language) === 'en';
 
   if (isMusicQuestion(message)) {
+    if (isEnglish) {
+      return ['What are your hobbies?', 'What are you like in life?', 'How do you think about travel?'];
+    }
     return ['你平时有哪些兴趣爱好？', '生活中的你是什么样？', '你对旅游有什么看法？'];
   }
 
   if (/联系|邮箱|email|微信|电话|contact|reach|linkedin/.test(text)) {
+    if (isEnglish) {
+      return ['Where are you based?', 'Show me your work', 'What is it like to work with you?'];
+    }
     return ['你目前在哪里？', '看看你的作品', '和你合作是什么感觉？'];
   }
 
   if (/项目|作品|案例|portfolio|project|case/.test(text)) {
+    if (isEnglish) {
+      return ['What did you do in the AI thrombolysis project?', 'What is the goal of iKnow?', 'How do you think about design?'];
+    }
     return ['AI 溶栓助手里你做了什么？', 'iKnow 项目目标是什么？', '你如何思考设计？'];
   }
 
   if (/协作|合作|一起工作|工作感觉|共事|collaborat|work with/.test(text)) {
+    if (isEnglish) {
+      return ['What are you like in life?', 'Where do you start in a project?', 'Show me your work'];
+    }
     return ['生活中的你是什么样？', '你做项目时从哪里开始？', '看看你的作品'];
   }
 
   if (/生活|性格|日常|personality/.test(text)) {
     if (isMusicQuestion(message)) {
+      if (isEnglish) {
+        return ['What are your hobbies?', 'What are you like in life?', 'How do you think about travel?'];
+      }
       return ['你平时有哪些兴趣爱好？', '生活中的你是什么样？', '你对旅游有什么看法？'];
+    }
+    if (isEnglish) {
+      return ['What is it like to work with you?', 'What are you paying attention to recently?', 'How do you think about design?'];
     }
     return ['和你合作是什么感觉？', '你最近在关注什么？', '你如何思考设计？'];
   }
 
   if (/设计思考|思考设计|思考方式|如何思考|怎么思考|方法|design thinking/.test(text)) {
+    if (isEnglish) {
+      return ['What projects have you worked on?', 'What is it like to work with you?', 'What skills do you have?'];
+    }
     return ['你做过哪些项目？', '和你合作是什么感觉？', '你的技能有哪些？'];
   }
 
   if (/技能|工具|会什么|擅长|skill|tool|能力/.test(text)) {
+    if (isEnglish) {
+      return ['How do you use AI to build products?', 'What can you implement independently?', 'Show me your work'];
+    }
     return ['你如何用 AI 构建产品？', '你能独立完成哪些实现？', '看看你的作品'];
   }
 
+  if (isEnglish) {
+    return ['What are you like in life?', 'What is it like to work with you?', 'Show me your work'];
+  }
   return ['生活中的你是什么样？', '和你合作是什么感觉？', '看看你的作品'];
 }
 
-function buildChatPayload(replyText, message) {
+function buildChatPayload(replyText, message, language = 'zh') {
   const structured = parseStructuredReply(replyText);
   const fallbackReply = replyText.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
   const reply = typeof structured?.reply === 'string' && structured.reply.trim() ? structured.reply.trim() : fallbackReply;
-  const inferredCards = inferCards(message);
+  const inferredCards = inferCards(message, language);
   const cards = isMusicQuestion(message)
     ? normalizeCards(structured?.cards).filter((card) => card.type !== 'life')
     : normalizeCards(structured?.cards);
@@ -372,7 +517,7 @@ function buildChatPayload(replyText, message) {
   return {
     reply,
     cards: cards.length ? cards : inferredCards,
-    suggestions: suggestions.length ? suggestions : inferSuggestions(message),
+    suggestions: suggestions.length ? suggestions : inferSuggestions(message, language),
   };
 }
 
@@ -413,6 +558,7 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  const language = normalizeLanguage(body.language);
   const personaMarkdown = await readPersonaMarkdown();
   const history = sanitizeHistory(body.history);
 
@@ -432,7 +578,7 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: DEFAULT_MODEL,
-        instructions: buildInstructions(personaMarkdown),
+        instructions: buildInstructions(personaMarkdown, language),
         input: [
           ...history,
           {
@@ -452,7 +598,7 @@ module.exports = async function handler(req, res) {
     data = await response.json().catch(() => ({}));
   } catch (error) {
     if (error?.name === 'AbortError') {
-      sendJson(res, 200, buildChatPayload(buildFallbackReply(message), message));
+      sendJson(res, 200, buildChatPayload(buildFallbackReply(message, language), message, language));
       return;
     }
 
@@ -472,9 +618,9 @@ module.exports = async function handler(req, res) {
   const reply = extractReplyText(data);
 
   if (!reply) {
-    sendJson(res, 200, buildChatPayload(buildFallbackReply(message), message));
+    sendJson(res, 200, buildChatPayload(buildFallbackReply(message, language), message, language));
     return;
   }
 
-  sendJson(res, 200, buildChatPayload(reply, message));
+  sendJson(res, 200, buildChatPayload(reply, message, language));
 };

@@ -295,7 +295,7 @@ a,
   height: 60px;
   padding: 0 var(--content-inline-pad);
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   column-gap: 32px;
   background: #d2d2d238;
@@ -377,6 +377,86 @@ a,
   transform: scaleX(1);
 }
 
+.language-menu {
+  position: relative;
+  justify-self: end;
+}
+
+.language-toggle {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: rgba(255, 255, 255, 0.52);
+  color: rgba(6, 6, 6, 0.62);
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.language-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.language-toggle:hover,
+.language-toggle:focus-visible,
+.language-menu.is-open .language-toggle {
+  background: rgba(255, 255, 255, 0.86);
+  color: #111111;
+}
+
+.language-options {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 128px;
+  padding: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-control);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(18px) saturate(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(1.08);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.language-menu.is-open .language-options {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.language-options button {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: rgba(6, 6, 6, 0.62);
+  font: inherit;
+  font-size: 0.86rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.language-options button + button {
+  margin-top: 6px;
+}
+
+.language-options button:hover,
+.language-options button:focus-visible,
+.language-options button.is-active {
+  background: rgba(0, 0, 0, 0.06);
+  color: #111111;
+}
+
 .hero {
   position: relative;
   min-height: calc(100vh - 200px);
@@ -435,6 +515,10 @@ a,
   font-size: 1rem !important;
   font-weight: 400 !important;
   line-height: 1.7 !important;
+}
+
+html[data-language="en"] .hero-about {
+  max-width: min(100%, 22rem);
 }
 
 .hero-contact-button {
@@ -1307,6 +1391,7 @@ a,
 .about-bento-card h2 {
   margin: 0;
   color: #111111;
+  font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
   font-size: 1.25rem;
   font-weight: 300;
   line-height: 1.18;
@@ -1358,8 +1443,9 @@ a,
 }
 
 .about-education-school {
-  min-width: 0;
+  min-width: 66px;
   max-width: calc(100% - 48px);
+  justify-content: center;
   padding: 6px 10px;
   background: #f5f5f6;
   overflow: hidden;
@@ -5122,7 +5208,8 @@ body.is-site-scaled .knowledge-viewer-close {
   }
 
   .brand,
-  .site-nav {
+  .site-nav,
+  .language-menu {
     justify-self: start;
   }
 

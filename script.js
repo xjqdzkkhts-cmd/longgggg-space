@@ -37,6 +37,9 @@ const contactWrapper = document.querySelector('#contact');
 const contactSection = document.querySelector('#contact .contact-footer');
 const siteHeader = document.querySelector('.site-header');
 const navLinks = [...document.querySelectorAll('[data-nav-section]')];
+const languageMenu = document.querySelector('[data-language-menu]');
+const languageToggle = document.querySelector('[data-language-toggle]');
+const languageOptions = [...document.querySelectorAll('[data-language-option]')];
 const pageIndicator = document.querySelector('[data-page-indicator]');
 const worksTabs = [...document.querySelectorAll('[data-work-filter]')];
 const workCards = [...document.querySelectorAll('[data-work-category]')];
@@ -77,12 +80,18 @@ const aiChatStarters = document.querySelector('[data-ai-chat-starters]');
 const aiChatForm = document.querySelector('[data-ai-chat-form]');
 const aiChatInput = document.querySelector('[data-ai-chat-input]');
 const aiChatSend = document.querySelector('[data-ai-chat-send]');
-const heroRoles = ['UX设计师', 'Vibe Coder', 'HCI 爱好者', 'UI 设计师'];
+const heroRoleMap = {
+  zh: ['UX设计师', 'Vibe Coder', 'HCI 爱好者', 'UI 设计师'],
+  en: ['UX Designer', 'Vibe Coder', 'HCI Enthusiast', 'UI Designer'],
+};
 const heroCardSources = {
   UX设计师: './assets/user-card.png',
+  'UX Designer': './assets/user-card.png',
   'Vibe Coder': './assets/hero-card-vibe-coder.png',
   'HCI 爱好者': './assets/hero-card-hci-lover.png',
+  'HCI Enthusiast': './assets/hero-card-hci-lover.png',
   'UI 设计师': './assets/hero-card-ui-designer.png',
+  'UI Designer': './assets/hero-card-ui-designer.png',
 };
 const workCardTintCache = new Map();
 const workCardTintInflight = new Map();
@@ -170,12 +179,296 @@ const aiChatState = {
   messages: [],
 };
 const AI_CHAT_COPY = {
-  welcome:
-    '你好呀！我是龙湘玉的 AI分身，你可以询问我的过往经历、作品、生活风格等等。',
-  serviceUnavailable: 'AI 服务暂时不可用，请稍后再试。',
-  notConfigured: 'AI 服务还没有接通，请先部署 Vercel 后端并填写前端 API 地址。',
+  zh: {
+    welcome: '你好呀！我是龙湘玉的 AI分身，你可以询问我的过往经历、作品、生活风格等等。',
+    serviceUnavailable: 'AI 服务暂时不可用，请稍后再试。',
+    notConfigured: 'AI 服务还没有接通，请先部署 Vercel 后端并填写前端 API 地址。',
+  },
+  en: {
+    welcome:
+      "Hi! I'm Long Xiangyu's AI persona. You can ask me about my background, projects, life style, and more.",
+    serviceUnavailable: 'The AI service is temporarily unavailable. Please try again later.',
+    notConfigured: 'The AI service is not connected yet. Please deploy the Vercel backend and set the frontend API address.',
+  },
 };
 const DEFAULT_AI_CHAT_STARTERS = ['生活中的你是什么样？', '和你合作是什么感觉？', '你如何思考设计？'];
+const defaultAiStarterLabelMap = new Map([
+  ['生活中的你是什么样？', 'starterLife'],
+  ['生活中的你是什么样的人？', 'starterLife'],
+  ['和你合作是什么感觉？', 'starterWork'],
+  ['和你一起工作会是什么感觉？', 'starterWork'],
+  ['你如何思考设计？', 'starterDesign'],
+  ['你的设计思考方式是什么？', 'starterDesign'],
+]);
+const SITE_LANGUAGE_STORAGE_KEY = 'long-portfolio-language';
+const siteTranslations = {
+  zh: {
+    brandHome: '返回首页',
+    navHome: '首页',
+    navAbout: '关于',
+    navWorks: '作品',
+    navKnowledge: '个人知识库',
+    navContact: '联系方式',
+    languageToggle: '设置',
+    heroGreeting: 'Hi,',
+    heroName: '我是龙湘玉，',
+    heroRolePrefix: '是一名',
+    heroAbout: '热爱设计，也对 AI 产品充满好奇。希望创造<br />更自然、易用、有价值的体验。',
+    heroContact: '联系',
+    copyEmail: '复制邮箱',
+    aboutTitleCn: '关于我',
+    aboutTitleEn: 'About',
+    aboutLearning: '学习历程',
+    degreeMaster: '硕士',
+    degreeBachelor: '学士',
+    schoolUcl: 'UCL (QS9)',
+    schoolHust: 'HUST (985)',
+    schoolUclFull: '伦敦大学学院（QS9）',
+    schoolHustFull: '华中科技大学（985）',
+    aboutExplore: '热衷探索',
+    aboutGithub: 'Github',
+    githubContribution: 'Contribution',
+    aboutInterests: '兴趣广泛',
+    switchInterest: '切换兴趣动画',
+    aboutGrounded: '落地项目',
+    viewBbhust: '查看 BBHust 项目详情',
+    bbhustSubtitle: 'Hust 校园论坛',
+    socialTag: '社交',
+    switchTime: '切换为北京时间',
+    switchTimeToBeijing: '切换为北京时间',
+    switchTimeToLondon: '切换为伦敦时间',
+    guestbookInput: '留言',
+    guestbookSubmit: '提交留言',
+    guestbookEmptyToast: '写点什么吧～',
+    openAgent: '打开个人 AI Agent 对话窗口',
+    worksTitleCn: '项目',
+    worksTitleEn: 'Works',
+    worksFilterLabel: '项目分类',
+    filterPlugin: '插件',
+    filterProduct: '产品',
+    filterVisual: '平面',
+    knowledgeTitleCn: '文章',
+    knowledgeTitleEn: 'Knowledge',
+    viewMore: '查看更多',
+    contactEyebrow: '欢迎联系我',
+    contactHeadline: '相信改变正在发生',
+    contactEmail: '邮箱',
+    contactPhone: '电话',
+    contactWechat: '微信',
+    copyPhoneCn: '复制电话 86-19186818073',
+    copyPhoneUk: '复制电话 44-7962889579',
+    copyWechat: '复制微信',
+    floatingDockLabel: '快捷操作和当前位置',
+    aiTitle: 'Ask Long',
+    closeAiChat: '关闭 AI 对话窗口',
+    starterLabel: '推荐问题',
+    starterLife: '生活中的你是什么样？',
+    starterWork: '和你合作是什么感觉？',
+    starterDesign: '你如何思考设计？',
+    aiInputLabel: '输入你想问龙湘玉 AI 分身的问题',
+    aiInputPlaceholder: '你想了解我的哪些项目？',
+    aiSend: '发送',
+    aiThinking: '思考中…',
+    aiMusicTitle: '最近在听',
+    aiMusicLoading: '正在读取最近在听',
+    aiMusicRefresh: '刷新最近在听',
+  },
+  en: {
+    brandHome: 'Back to home',
+    navHome: 'Home',
+    navAbout: 'About',
+    navWorks: 'Works',
+    navKnowledge: 'Knowledge',
+    navContact: 'Contact',
+    languageToggle: 'Setting',
+    heroGreeting: 'Hi,',
+    heroName: 'I am Long Xiangyu,',
+    heroRolePrefix: 'a',
+    heroAbout: 'I love design and stay curious about AI products.<br />I hope to create experiences that feel natural, usable, and valuable.',
+    heroContact: 'Contact',
+    copyEmail: 'Copy Email',
+    aboutTitleCn: 'About Me',
+    aboutTitleEn: 'About',
+    aboutLearning: 'Learning Journey',
+    degreeMaster: 'Master',
+    degreeBachelor: 'Bachelor',
+    schoolUcl: 'UCL (QS9)',
+    schoolHust: 'HUST (985)',
+    schoolUclFull: 'University College London (QS9)',
+    schoolHustFull: 'Huazhong University of Science and Technology (985)',
+    aboutExplore: 'Tool Explorer',
+    aboutGithub: 'Github',
+    githubContribution: 'Contribution',
+    aboutInterests: 'Wide Interests',
+    switchInterest: 'Switch interest animation',
+    aboutGrounded: 'Shipped Project',
+    viewBbhust: 'View BBHust project detail',
+    bbhustSubtitle: 'HUST campus forum',
+    socialTag: 'Social',
+    switchTime: 'Switch to Beijing time',
+    switchTimeToBeijing: 'Switch to Beijing time',
+    switchTimeToLondon: 'Switch to London time',
+    guestbookInput: 'Message',
+    guestbookSubmit: 'Submit message',
+    guestbookEmptyToast: 'Write something first.',
+    openAgent: 'Open personal AI Agent chat',
+    worksTitleCn: 'Projects',
+    worksTitleEn: 'Works',
+    worksFilterLabel: 'Project categories',
+    filterPlugin: 'Plugin',
+    filterProduct: 'Product',
+    filterVisual: 'Visual',
+    knowledgeTitleCn: 'Articles',
+    knowledgeTitleEn: 'Knowledge',
+    viewMore: 'View more',
+    contactEyebrow: 'Get in touch',
+    contactHeadline: 'Change is already<br />happening',
+    contactEmail: 'Email',
+    contactPhone: 'Phone',
+    contactWechat: 'WeChat',
+    copyPhoneCn: 'Copy phone number 86-19186818073',
+    copyPhoneUk: 'Copy phone number 44-7962889579',
+    copyWechat: 'Copy WeChat ID',
+    floatingDockLabel: 'Quick actions and current section',
+    aiTitle: 'Ask Long',
+    closeAiChat: 'Close AI chat',
+    starterLabel: 'Suggested questions',
+    starterLife: 'What are you like in life?',
+    starterWork: 'What is it like to work with you?',
+    starterDesign: 'How do you think about design?',
+    aiInputLabel: 'Ask Long Xiangyu’s AI persona a question',
+    aiInputPlaceholder: 'Which projects do you want to know about?',
+    aiSend: 'Send',
+    aiThinking: 'Thinking…',
+    aiMusicTitle: 'Recently listening',
+    aiMusicLoading: 'Loading recent music',
+    aiMusicRefresh: 'Refresh recent music',
+  },
+};
+const supportedSiteLanguages = Object.keys(siteTranslations);
+const getSavedSiteLanguage = () => {
+  try {
+    const savedLanguage = window.localStorage?.getItem(SITE_LANGUAGE_STORAGE_KEY);
+    return supportedSiteLanguages.includes(savedLanguage) ? savedLanguage : 'zh';
+  } catch (_error) {
+    return 'zh';
+  }
+};
+let currentSiteLanguage = getSavedSiteLanguage();
+const getSiteText = (key, language = currentSiteLanguage) =>
+  siteTranslations[language]?.[key] ?? siteTranslations.zh[key] ?? '';
+const getAiChatCopy = (key) => AI_CHAT_COPY[currentSiteLanguage]?.[key] ?? AI_CHAT_COPY.zh[key] ?? '';
+const getHeroRoles = () => heroRoleMap[currentSiteLanguage] || heroRoleMap.zh;
+const getAiStarterLabel = (suggestion) => {
+  const key = defaultAiStarterLabelMap.get(suggestion);
+  return key ? getSiteText(key) : suggestion;
+};
+const setTextContentForKey = (element, key) => {
+  const value = getSiteText(key);
+  if (value) {
+    element.textContent = value;
+  }
+};
+const applySiteLanguage = (language, options = {}) => {
+  const nextLanguage = supportedSiteLanguages.includes(language) ? language : 'zh';
+  currentSiteLanguage = nextLanguage;
+  document.documentElement.lang = nextLanguage === 'en' ? 'en' : 'zh-CN';
+  document.documentElement.dataset.language = nextLanguage;
+
+  document.querySelectorAll('[data-i18n]').forEach((element) => {
+    setTextContentForKey(element, element.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach((element) => {
+    const value = getSiteText(element.dataset.i18nHtml);
+    if (value) {
+      element.innerHTML = value;
+    }
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((element) => {
+    const value = getSiteText(element.dataset.i18nPlaceholder);
+    if (value) {
+      element.setAttribute('placeholder', value);
+    }
+  });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach((element) => {
+    const value = getSiteText(element.dataset.i18nAriaLabel);
+    if (value) {
+      element.setAttribute('aria-label', value);
+    }
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach((element) => {
+    const value = getSiteText(element.dataset.i18nTitle);
+    if (value) {
+      element.setAttribute('title', value);
+    }
+  });
+  document.querySelectorAll('[data-i18n-cursor-label]').forEach((element) => {
+    const value = getSiteText(element.dataset.i18nCursorLabel);
+    if (value) {
+      element.dataset.cursorLabel = value;
+    }
+  });
+
+  languageOptions.forEach((option) => {
+    const isActive = option.dataset.languageOption === nextLanguage;
+    option.classList.toggle('is-active', isActive);
+    option.setAttribute('aria-checked', String(isActive));
+  });
+
+  if (languageToggle) {
+    languageToggle.setAttribute('aria-expanded', 'false');
+  }
+  languageMenu?.classList.remove('is-open');
+
+  if (!options.skipStorage) {
+    try {
+      window.localStorage?.setItem(SITE_LANGUAGE_STORAGE_KEY, nextLanguage);
+    } catch (_error) {
+      // Local storage may be unavailable; language still changes for this session.
+    }
+  }
+
+  if (currentRoleLayer && nextRoleLayer) {
+    const firstRole = getHeroRoles()[0];
+    if (typeof roleSwapState !== 'undefined') {
+      window.clearTimeout(roleSwapState.timeoutId);
+      roleSwapState.roleIndex = 0;
+    }
+    setDisplayedRole(firstRole);
+    setHeroCardForRole(firstRole);
+    if (hero?.classList.contains('is-active') && typeof roleSwapState !== 'undefined') {
+      roleSwapState.timeoutId = window.setTimeout(scheduleRoleSwap, ROLE_SWAP.hold);
+    }
+  }
+
+  if (aiChatSend && !aiChatState.isSending) {
+    aiChatSend.textContent = getSiteText('aiSend');
+  }
+
+  aiChatStarters?.querySelectorAll('[data-ai-chat-starter]').forEach((button) => {
+    button.textContent = getAiStarterLabel(button.dataset.aiChatStarter || button.textContent || '');
+  });
+
+  const welcomeMessage = aiChatState.messages.find((message) => message.isWelcome);
+  if (welcomeMessage) {
+    welcomeMessage.text = getAiChatCopy('welcome');
+    renderAiChatMessages();
+  }
+
+  const activeNavLink = navLinks.find((link) => link.classList.contains('is-active'));
+  if (pageIndicator && activeNavLink?.dataset.navSection) {
+    const sectionKey = {
+      home: 'navHome',
+      about: 'navAbout',
+      works: 'navWorks',
+      knowledge: 'navKnowledge',
+      contact: 'navContact',
+    }[activeNavLink.dataset.navSection];
+    if (sectionKey) {
+      pageIndicator.textContent = getSiteText(sectionKey);
+    }
+  }
+};
 const knowledgeArticles = {
   '001': {
     source: './articles/001-card-blur.md',
@@ -735,7 +1028,7 @@ states.forEach((state) => {
 });
 
 if (currentRoleLayer && nextRoleLayer) {
-  setDisplayedRole(heroRoles[0]);
+  setDisplayedRole(getHeroRoles()[0]);
 }
 
 function buildRoleMarkup(roleName) {
@@ -769,6 +1062,7 @@ function scheduleRoleSwap() {
   window.clearTimeout(roleSwapState.timeoutId);
   cancelAnimationFrame(roleSwapState.animationFrameId);
 
+  const heroRoles = getHeroRoles();
   const nextIndex = (roleSwapState.roleIndex + 1) % heroRoles.length;
   const nextRole = heroRoles[nextIndex];
 
@@ -798,8 +1092,8 @@ function resetHeroTextAnimations() {
   roleSwapState.timeoutId = 0;
   roleSwapState.animationFrameId = 0;
   roleSwapState.roleIndex = 0;
-  setDisplayedRole(heroRoles[0]);
-  setHeroCardForRole(heroRoles[0]);
+  setDisplayedRole(getHeroRoles()[0]);
+  setHeroCardForRole(getHeroRoles()[0]);
   void hero.offsetWidth;
 }
 
@@ -816,14 +1110,46 @@ function activateHeroIntro() {
   window.clearTimeout(roleSwapState.timeoutId);
   cancelAnimationFrame(roleSwapState.animationFrameId);
   roleSwapState.roleIndex = 0;
-  setDisplayedRole(heroRoles[0]);
-  setHeroCardForRole(heroRoles[0]);
+  setDisplayedRole(getHeroRoles()[0]);
+  setHeroCardForRole(getHeroRoles()[0]);
   roleSwapState.timeoutId = window.setTimeout(scheduleRoleSwap, ROLE_SWAP.initialDelay);
   states.forEach((state) => {
     triggerCardIntro(state);
   });
   heroIntroHasPlayed = true;
 }
+
+if (languageToggle && languageMenu) {
+  languageToggle.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const nextOpen = !languageMenu.classList.contains('is-open');
+    languageMenu.classList.toggle('is-open', nextOpen);
+    languageToggle.setAttribute('aria-expanded', String(nextOpen));
+  });
+
+  languageOptions.forEach((option) => {
+    option.addEventListener('click', (event) => {
+      event.stopPropagation();
+      applySiteLanguage(option.dataset.languageOption);
+    });
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!languageMenu.contains(event.target)) {
+      languageMenu.classList.remove('is-open');
+      languageToggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      languageMenu.classList.remove('is-open');
+      languageToggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
+applySiteLanguage(currentSiteLanguage, { skipStorage: true });
 
 function autoResizeAiChatInput() {
   if (!aiChatInput) {
@@ -899,6 +1225,37 @@ function getAiProjectGallery(item) {
 }
 
 function getDefaultAiLifeItems() {
+  if (currentSiteLanguage === 'en') {
+    return [
+      {
+        type: 'music',
+        title: getSiteText('aiMusicTitle'),
+        description: 'I often use music to shift into a creative or relaxed state.',
+        accent: '#74B0FF',
+        tracks: [],
+      },
+      {
+        type: 'dogs',
+        title: 'I am a dog person',
+        accent: '#C4A8F5',
+        images: [
+          { src: './assets/life-cards/dog-husky.png', label: 'Husky' },
+          { src: './assets/life-cards/dog-beagle.jpg', label: 'Beagle' },
+          { src: './assets/life-cards/dog-border-collie.png', label: 'Border Collie' },
+        ],
+      },
+      { type: 'quote', title: '“It is never too late to begin.”', description: 'A sentence I recently saved.', accent: '#D2FD5F' },
+      {
+        type: 'book',
+        title: 'The Submarine at Night',
+        description: 'I am reading this highly imaginative novel by Chen Chuncheng. Recommended.',
+        image: './assets/life-cards/book-night-submarine.jpg',
+        accent: '#74B0FF',
+      },
+      { type: 'friend', title: 'Gentle', description: 'Friends often describe me this way.', accent: '#0045DD' },
+    ];
+  }
+
   return [
     {
       type: 'music',
@@ -997,7 +1354,7 @@ function getAiMusicTracks(fallbackTracks = []) {
 function renderAiMusicLoading() {
   const loading = document.createElement('div');
   loading.className = 'ai-chat-music-loading';
-  loading.textContent = '正在读取最近在听';
+  loading.textContent = getSiteText('aiMusicLoading');
   return loading;
 }
 
@@ -1005,7 +1362,7 @@ function renderAiMusicRefreshButton() {
   const button = document.createElement('button');
   button.className = 'ai-chat-music-refresh';
   button.type = 'button';
-  button.setAttribute('aria-label', '刷新最近在听');
+  button.setAttribute('aria-label', getSiteText('aiMusicRefresh'));
   button.innerHTML = `
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M21 12a9 9 0 0 1-15.32 6.36M3 12A9 9 0 0 1 18.32 5.64" />
@@ -1042,7 +1399,7 @@ function renderAiMusicCover(track) {
     cover.href = track.url;
     cover.target = '_blank';
     cover.rel = 'noopener noreferrer';
-    cover.setAttribute('aria-label', `打开 ${track.title}`);
+    cover.setAttribute('aria-label', currentSiteLanguage === 'en' ? `Open ${track.title}` : `打开 ${track.title}`);
   }
 
   return cover;
@@ -1143,7 +1500,7 @@ function renderAiMusicCardContent(lifeCard, item = {}, options = {}) {
 
   const title = document.createElement('strong');
   title.className = 'ai-chat-music-title';
-  title.textContent = item.title || '最近在听';
+  title.textContent = item.title || getSiteText('aiMusicTitle');
 
   header.append(title, renderAiMusicRefreshButton());
   if (options.compactHeader) {
@@ -1307,7 +1664,7 @@ function renderAiFeedbackCard(card) {
   if (card.type === 'life') {
     const carousel = document.createElement('div');
     carousel.className = 'ai-chat-life-carousel';
-    carousel.setAttribute('aria-label', card.title || '生活中的我');
+    carousel.setAttribute('aria-label', card.title || (currentSiteLanguage === 'en' ? 'Life outside work' : '生活中的我'));
     carousel.dataset.activeIndex = '0';
 
     const track = document.createElement('div');
@@ -1351,7 +1708,7 @@ function renderAiFeedbackCard(card) {
         description.textContent = item.description || '';
 
         lifeCard.append(title, description);
-      } else if (item.type === 'book') {
+        } else if (item.type === 'book') {
         const copy = document.createElement('div');
         copy.className = 'ai-chat-book-copy';
 
@@ -1368,7 +1725,7 @@ function renderAiFeedbackCard(card) {
         const cover = document.createElement('img');
         cover.className = 'ai-chat-book-cover';
         cover.src = item.image || '';
-        cover.alt = item.title || '书籍封面';
+        cover.alt = item.title || (currentSiteLanguage === 'en' ? 'Book cover' : '书籍封面');
 
         lifeCard.append(copy, cover);
       } else if (item.type === 'friend') {
@@ -1400,8 +1757,8 @@ function renderAiFeedbackCard(card) {
     const controls = document.createElement('div');
     controls.className = 'ai-chat-life-controls';
     controls.innerHTML = `
-      <button type="button" data-life-prev aria-label="上一张生活卡片">‹</button>
-      <button type="button" data-life-next aria-label="下一张生活卡片">›</button>
+      <button type="button" data-life-prev aria-label="${currentSiteLanguage === 'en' ? 'Previous life card' : '上一张生活卡片'}">‹</button>
+      <button type="button" data-life-next aria-label="${currentSiteLanguage === 'en' ? 'Next life card' : '下一张生活卡片'}">›</button>
     `;
 
     carousel.append(track, controls);
@@ -1419,7 +1776,7 @@ function renderAiFeedbackCard(card) {
     musicCard.style.setProperty('--life-card-accent', '#74B0FF');
     musicCard.style.setProperty('--life-card-offset', 0);
     musicCard.style.setProperty('--life-card-abs-offset', 0);
-    renderAiMusicCardContent(musicCard, { title: card.title || '最近在听', tracks: [] }, { compactHeader: true });
+    renderAiMusicCardContent(musicCard, { title: card.title || getSiteText('aiMusicTitle'), tracks: [] }, { compactHeader: true });
     musicWrap.appendChild(musicCard);
     cardEl.appendChild(musicWrap);
     return cardEl;
@@ -1553,7 +1910,7 @@ function setAiChatStarterOptions(suggestions = DEFAULT_AI_CHAT_STARTERS) {
     const button = document.createElement('button');
     button.type = 'button';
     button.dataset.aiChatStarter = suggestion;
-    button.textContent = suggestion;
+    button.textContent = getAiStarterLabel(suggestion);
     aiChatStarters.appendChild(button);
   });
 }
@@ -1622,8 +1979,9 @@ function ensureAiChatBooted() {
   setAiChatStarterOptions();
   aiChatState.messages.push({
     role: 'assistant',
-    text: AI_CHAT_COPY.welcome,
+    text: getAiChatCopy('welcome'),
     includeInHistory: false,
+    isWelcome: true,
   });
   renderAiChatMessages();
 }
@@ -1655,7 +2013,7 @@ function setAiChatSending(nextSending) {
 
   if (aiChatSend) {
     aiChatSend.disabled = nextSending;
-    aiChatSend.textContent = nextSending ? '思考中…' : '发送';
+    aiChatSend.textContent = nextSending ? getSiteText('aiThinking') : getSiteText('aiSend');
   }
 }
 
@@ -1681,7 +2039,7 @@ function removeAiChatStatusMessages() {
 
 function typeAiChatAssistantMessage({ text, cards }) {
   return new Promise((resolve) => {
-    const fullText = text || AI_CHAT_COPY.serviceUnavailable;
+    const fullText = text || getAiChatCopy('serviceUnavailable');
     const chars = Array.from(fullText);
     const message = {
       role: 'assistant',
@@ -1742,7 +2100,7 @@ async function sendAiChatMessage(rawText) {
 
   pushAiChatMessage({
     role: 'status',
-    text: 'Long AI 正在思考...',
+    text: currentSiteLanguage === 'en' ? 'Long AI is thinking...' : 'Long AI 正在思考...',
     includeInHistory: false,
   });
 
@@ -1757,6 +2115,7 @@ async function sendAiChatMessage(rawText) {
       body: JSON.stringify({
         message: messageText,
         history: buildAiChatHistoryPayload(),
+        language: currentSiteLanguage === 'en' ? 'en' : 'zh',
       }),
     });
 
@@ -1766,7 +2125,7 @@ async function sendAiChatMessage(rawText) {
 
     if (!response.ok) {
       const fallbackMessage =
-        response.status === 404 ? AI_CHAT_COPY.notConfigured : data.error || AI_CHAT_COPY.serviceUnavailable;
+        response.status === 404 ? getAiChatCopy('notConfigured') : data.error || getAiChatCopy('serviceUnavailable');
       setAiChatStarterOptions();
       await typeAiChatAssistantMessage({
         text: fallbackMessage,
@@ -1776,14 +2135,14 @@ async function sendAiChatMessage(rawText) {
 
     setAiChatStarterOptions(data.suggestions);
     await typeAiChatAssistantMessage({
-      text: data.reply || AI_CHAT_COPY.serviceUnavailable,
+      text: data.reply || getAiChatCopy('serviceUnavailable'),
       cards: data.cards,
     });
   } catch (_error) {
     removeAiChatStatusMessages();
     setAiChatStarterOptions();
     await typeAiChatAssistantMessage({
-      text: AI_CHAT_COPY.serviceUnavailable,
+      text: getAiChatCopy('serviceUnavailable'),
     });
   } finally {
     setAiChatSending(false);
@@ -2023,7 +2382,7 @@ if (cursor) {
     });
   };
 
-  const hoverTargets = [...document.querySelectorAll('a, button, [data-card], [data-cursor-icon]')];
+  const hoverTargets = [...document.querySelectorAll('a, button, [data-card], [data-cursor-icon], [data-cursor-label]')];
   hoverTargets.forEach(attachCursorBehavior);
 }
 
@@ -2329,12 +2688,12 @@ if (timePixelGroups.length) {
     london: {
       zone: 'Europe/London',
       location: 'LONDON',
-      label: '切换为北京时间',
+      labelKey: 'switchTimeToBeijing',
     },
     beijing: {
       zone: 'Asia/Shanghai',
       location: 'BEIJING',
-      label: '切换为伦敦时间',
+      labelKey: 'switchTimeToLondon',
     },
   };
   let activeTimeMode = 'london';
@@ -2373,7 +2732,7 @@ if (timePixelGroups.length) {
       const isBeijing = activeTimeMode === 'beijing';
       timeToggle.classList.toggle('is-active', isBeijing);
       timeToggle.setAttribute('aria-pressed', String(isBeijing));
-      timeToggle.setAttribute('aria-label', mode.label);
+      timeToggle.setAttribute('aria-label', getSiteText(mode.labelKey));
     }
   };
 
@@ -2434,7 +2793,7 @@ if (guestbookForm && guestbookInput && guestbookCount && guestbookList) {
     const text = guestbookInput.value.trim().replace(/\s+/g, ' ');
 
     if (!text) {
-      showSiteToast('写点什么吧～');
+      showSiteToast(getSiteText('guestbookEmptyToast'));
       guestbookInput.focus();
       return;
     }
@@ -3077,12 +3436,12 @@ if (aiChatToggle && aiChatSidebar && aiChatForm && aiChatInput) {
 }
 
 if (navLinks.length && hero && aboutSection && worksSection && portfolioSection && knowledgeSection && contactWrapper && contactSection) {
-  const sectionLabelMap = {
-    home: '首页',
-    about: '关于',
-    works: '作品',
-    knowledge: '个人知识库',
-    contact: '联系方式',
+  const sectionLabelKeyMap = {
+    home: 'navHome',
+    about: 'navAbout',
+    works: 'navWorks',
+    knowledge: 'navKnowledge',
+    contact: 'navContact',
   };
 
   const sectionMap = {
@@ -3125,7 +3484,7 @@ if (navLinks.length && hero && aboutSection && worksSection && portfolioSection 
     });
 
     if (pageIndicator) {
-      pageIndicator.textContent = sectionLabelMap[sectionName] || sectionLabelMap.home;
+      pageIndicator.textContent = getSiteText(sectionLabelKeyMap[sectionName] || sectionLabelKeyMap.home);
     }
   };
 

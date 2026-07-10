@@ -25,16 +25,35 @@
       <span class="custom-cursor-icon"></span>
     </div>
     <header class="site-header">
-      <a class="brand" href="#home" aria-label="返回首页">
+      <a class="brand" href="#home" aria-label="返回首页" data-i18n-aria-label="brandHome">
         <img class="brand-logo" src="./assets/brand-logo.png" alt="龙湘玉个人 Logo" />
       </a>
       <nav class="site-nav" aria-label="Primary navigation">
-        <a href="#home" data-nav-section="home">首页</a>
-        <a href="#about" data-nav-section="about">关于</a>
-        <a href="#works" data-nav-section="works">作品</a>
-        <a href="#knowledge" data-nav-section="knowledge">个人知识库</a>
-        <a href="#contact" data-nav-section="contact">联系方式</a>
+        <a href="#home" data-nav-section="home" data-i18n="navHome">首页</a>
+        <a href="#about" data-nav-section="about" data-i18n="navAbout">关于</a>
+        <a href="#works" data-nav-section="works" data-i18n="navWorks">作品</a>
+        <a href="#knowledge" data-nav-section="knowledge" data-i18n="navKnowledge">个人知识库</a>
+        <a href="#contact" data-nav-section="contact" data-i18n="navContact">联系方式</a>
       </nav>
+      <div class="language-menu" data-language-menu>
+        <button
+          class="language-toggle"
+          type="button"
+          aria-label="设置"
+          aria-haspopup="true"
+          aria-expanded="false"
+          data-language-toggle
+          data-i18n-aria-label="languageToggle"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10.92 2.4h2.16c.48 0 .88.35.96.82l.29 1.74c.48.16.94.35 1.37.59l1.43-1.03c.39-.28.93-.24 1.27.1l1.53 1.53c.34.34.38.88.1 1.27L19 8.85c.24.43.43.89.59 1.37l1.74.29c.47.08.82.48.82.96v2.16c0 .48-.35.88-.82.96l-1.74.29c-.16.48-.35.94-.59 1.37l1.03 1.43c.28.39.24.93-.1 1.27l-1.53 1.53c-.34.34-.88.38-1.27.1l-1.43-1.03c-.43.24-.89.43-1.37.59l-.29 1.74c-.08.47-.48.82-.96.82h-2.16c-.48 0-.88-.35-.96-.82l-.29-1.74c-.48-.16-.94-.35-1.37-.59l-1.43 1.03c-.39.28-.93.24-1.27-.1l-1.53-1.53c-.34-.34-.38-.88-.1-1.27l1.03-1.43c-.24-.43-.43-.89-.59-1.37l-1.74-.29c-.47-.08-.82-.48-.82-.96v-2.16c0-.48.35-.88.82-.96l1.74-.29c.16-.48.35-.94.59-1.37L3.97 7.42c-.28-.39-.24-.93.1-1.27L5.6 4.62c.34-.34.88-.38 1.27-.1L8.3 5.55c.43-.24.89-.43 1.37-.59l.29-1.74c.08-.47.48-.82.96-.82Zm1.08 6.1a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" fill="currentColor"/>
+          </svg>
+        </button>
+        <div class="language-options" role="menu">
+          <button type="button" role="menuitem" data-language-option="zh">中文</button>
+          <button type="button" role="menuitem" data-language-option="en">English</button>
+        </div>
+      </div>
     </header>
 
     <div class="site-scale-shell" data-site-scale-shell>
@@ -43,11 +62,11 @@
         <div class="hero-copy">
           <div class="hero-intro">
             <div class="hero-heading-row">
-              <h1 class="hero-title">Hi,</h1>
-              <p class="hero-name-line">我是龙湘玉，</p>
+              <h1 class="hero-title" data-i18n="heroGreeting">Hi,</h1>
+              <p class="hero-name-line" data-i18n="heroName">我是龙湘玉，</p>
             </div>
             <p class="hero-role-line">
-              是一名
+              <span data-i18n="heroRolePrefix">是一名</span>
               <span class="hero-role-wrap">
                 <span class="hero-role-stack" data-role-stack>
                   <span class="hero-role-layer hero-role-current" data-role-current></span>
@@ -55,19 +74,21 @@
                 </span>
               </span>
             </p>
-            <p class="hero-about">热爱设计，也对 AI 产品充满好奇。希望创造<br />更自然、易用、有价值的体验。</p>
+            <p class="hero-about" data-i18n-html="heroAbout">热爱设计，也对 AI 产品充满好奇。希望创造<br />更自然、易用、有价值的体验。</p>
             <button
               class="hero-contact-button"
               type="button"
               data-copy-value="Xiangyu-Long@outlook.com"
               data-cursor-label="复制邮箱"
               aria-label="复制邮箱"
+              data-i18n-cursor-label="copyEmail"
+              data-i18n-aria-label="copyEmail"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" />
                 <rect x="2" y="4" width="20" height="16" rx="2" />
               </svg>
-              <span>联系</span>
+              <span data-i18n="heroContact">联系</span>
             </button>
           </div>
         </div>
@@ -98,22 +119,22 @@
           <svg class="section-title-icon" xmlns="http://www.w3.org/2000/svg" width="31" height="33" viewBox="0 0 31 33" fill="none" aria-hidden="true">
             <path d="M12.8178 0.0153755C14.3472 -0.00494481 15.8776 -0.00494259 17.4081 0.0143082C17.4177 4.13184 17.3899 8.24938 17.4231 12.3669C21.0005 10.337 24.5416 8.24189 28.1244 6.22163C28.5094 6.89541 28.9158 7.55849 29.289 8.23975C29.6227 8.83439 30.0217 9.39801 30.2815 10.0322C29.2185 10.5723 28.2153 11.2204 27.1747 11.8001C25.5426 12.7316 23.9191 13.676 22.2903 14.6128C21.3737 15.1615 20.4251 15.6567 19.5267 16.2331C21.455 17.3807 23.4079 18.4876 25.3501 19.6106C27.0046 20.5464 28.6302 21.5356 30.3008 22.4415C29.6174 23.7003 28.8837 24.9313 28.1672 26.1708C27.8164 26.127 27.5287 25.912 27.2335 25.7387C23.9587 23.8661 20.7064 21.9517 17.4209 20.0983C17.3985 24.2137 17.4081 28.3291 17.4156 32.4444C17.2241 32.4958 17.0273 32.53 16.8306 32.5247C15.8306 32.5215 14.8306 32.5225 13.8317 32.5236C13.4905 32.5268 13.1419 32.5514 12.8146 32.4444C12.82 28.3312 12.8414 24.2169 12.8039 20.1036C9.33879 22.0672 5.90251 24.0842 2.44592 26.0617C2.32186 26.1163 2.19352 26.1516 2.05984 26.1676C1.44595 25.0714 0.794636 23.9955 0.178609 22.9014C0.0941198 22.7517 0.052405 22.5848 0 22.4244C3.58065 20.3699 7.1613 18.3143 10.7238 16.231C7.17735 14.1476 3.60204 12.1145 0.0406411 10.0547C0.0684479 9.88677 0.0748679 9.70816 0.177539 9.56592C0.801051 8.4868 1.41173 7.4002 2.0577 6.33499C2.19352 6.30077 2.32294 6.32002 2.44486 6.39274C5.89717 8.38199 9.34413 10.383 12.8018 12.3626C12.8446 8.24724 12.8146 4.13077 12.8178 0.0153755Z" fill="black"/>
           </svg>
-          <span class="section-title-cn">关于我</span>
-          <span class="section-title-en">About</span>
+          <span class="section-title-cn" data-i18n="aboutTitleCn">关于我</span>
+          <span class="section-title-en" data-i18n="aboutTitleEn">About</span>
         </div>
         <div class="about-bento-inner">
           <article class="about-bento-card about-bento-card-tall about-bento-card-method">
             <div class="about-bento-copy">
-              <h2>学习历程</h2>
+              <h2 data-i18n="aboutLearning">学习历程</h2>
             </div>
             <div class="about-education-list" aria-label="教育经历">
               <div class="about-education-row">
-                <span class="about-education-degree about-education-degree-master">硕士</span>
-                <span class="about-education-school">伦敦大学学院（QS9）</span>
+                <span class="about-education-degree about-education-degree-master" data-i18n="degreeMaster">硕士</span>
+                <span class="about-education-school" data-i18n="schoolUcl" data-i18n-title="schoolUclFull" data-i18n-cursor-label="schoolUclFull">UCL (QS9)</span>
               </div>
               <div class="about-education-row">
-                <span class="about-education-degree about-education-degree-bachelor">学士</span>
-                <span class="about-education-school">华中科技大学（985）</span>
+                <span class="about-education-degree about-education-degree-bachelor" data-i18n="degreeBachelor">学士</span>
+                <span class="about-education-school" data-i18n="schoolHust" data-i18n-title="schoolHustFull" data-i18n-cursor-label="schoolHustFull">HUST (985)</span>
               </div>
             </div>
             <div class="about-bento-learning-drop" aria-hidden="true">
@@ -134,7 +155,7 @@
 
           <article class="about-bento-card about-bento-card-ai">
             <div class="about-bento-copy">
-              <h2>热衷探索</h2>
+              <h2 data-i18n="aboutExplore">热衷探索</h2>
             </div>
             <div class="about-ai-dock" data-ai-dock aria-hidden="true">
               <div class="about-ai-tools-grid">
@@ -168,11 +189,11 @@
 
           <article class="about-bento-card about-bento-card-hci" data-about-app-bento>
             <div class="about-bento-copy">
-              <h2>Github</h2>
+              <h2 data-i18n="aboutGithub">Github</h2>
             </div>
             <div class="github-heatmap" aria-label="Github contribution heatmap placeholder">
               <div class="github-heatmap-meta">
-                <span>Contribution</span>
+                <span data-i18n="githubContribution">Contribution</span>
                 <strong>128</strong>
               </div>
               <div class="github-heatmap-grid" aria-hidden="true">
@@ -187,9 +208,9 @@
 
           <article class="about-bento-card about-bento-card-toolkit" data-interest-card>
             <div class="about-bento-copy">
-              <h2>兴趣广泛</h2>
+              <h2 data-i18n="aboutInterests">兴趣广泛</h2>
             </div>
-            <div class="about-interest-stage" data-interest-stage data-cursor-icon="click" role="button" tabindex="0" aria-label="切换兴趣动画">
+            <div class="about-interest-stage" data-interest-stage data-cursor-icon="click" role="button" tabindex="0" aria-label="切换兴趣动画" data-i18n-aria-label="switchInterest">
               <svg aria-hidden="true" class="interest-world-defs" version="1.1" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <symbol id="interest-icon-world" viewBox="0 0 216 100">
@@ -238,18 +259,18 @@
 
           <article class="about-bento-card about-bento-card-grounded">
             <div class="about-bento-copy">
-              <h2>落地项目</h2>
+              <h2 data-i18n="aboutGrounded">落地项目</h2>
             </div>
-            <div class="about-grounded-preview" role="button" tabindex="0" aria-label="查看 BBHust 项目详情" data-about-app-open data-cursor-icon="view">
+            <div class="about-grounded-preview" role="button" tabindex="0" aria-label="查看 BBHust 项目详情" data-about-app-open data-cursor-icon="view" data-i18n-aria-label="viewBbhust">
               <div class="about-grounded-icon-frame">
                 <img class="about-grounded-icon" src="./assets/bbhust-icon.png" alt="" loading="lazy" />
               </div>
               <div class="about-grounded-copy">
                 <strong>BBHust</strong>
-                <span>Hust 校园论坛</span>
+                <span data-i18n="bbhustSubtitle">Hust 校园论坛</span>
                 <div class="about-grounded-tags">
                   <small class="about-grounded-rating">4.0 <svg width="11" height="11" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4.28205 0.655613C4.8291 -0.218532 6.10239 -0.218532 6.64944 0.655613L7.49026 1.99918C7.6819 2.30541 7.98476 2.52545 8.33522 2.61308L9.87286 2.99756C10.8733 3.24771 11.2667 4.45869 10.6044 5.24909L9.58644 6.46394C9.35442 6.74083 9.23874 7.09687 9.2637 7.45725L9.37319 9.03844C9.44442 10.0672 8.41431 10.8156 7.45793 10.43L5.98796 9.83722C5.65292 9.70212 5.27857 9.70212 4.94353 9.83722L3.47356 10.43C2.51718 10.8156 1.48707 10.0672 1.5583 9.03844L1.66779 7.45725C1.69275 7.09687 1.57706 6.74083 1.34505 6.46394L0.327066 5.24909C-0.335247 4.45869 0.058221 3.24771 1.05863 2.99756L2.59626 2.61308C2.94672 2.52545 3.24959 2.30541 3.44123 1.99918L4.28205 0.655613Z" fill="#3A3A3A"/></svg></small>
-                  <small>社交</small>
+                  <small data-i18n="socialTag">社交</small>
                 </div>
               </div>
             </div>
@@ -274,7 +295,7 @@
                 <span class="about-time-pixel-group"></span>
               </div>
             </div>
-            <button class="about-time-toggle" type="button" data-time-toggle data-cursor-icon="click" aria-label="切换为北京时间" aria-pressed="false">
+            <button class="about-time-toggle" type="button" data-time-toggle data-cursor-icon="click" aria-label="切换为北京时间" data-i18n-aria-label="switchTime" aria-pressed="false">
               <span>
                 <i></i>
                 <i></i>
@@ -287,15 +308,15 @@
             <form class="guestbook-widget" data-guestbook-form>
               <div class="guestbook-paper" data-guestbook-paper>
                 <div class="guestbook-title" role="button" tabindex="0" data-guestbook-submit-trigger data-cursor-icon="click">Post-it</div>
-                <textarea id="guestbook-message" name="message" maxlength="80" rows="3" aria-label="留言" data-guestbook-input data-cursor-icon="type"></textarea>
+                <textarea id="guestbook-message" name="message" maxlength="80" rows="3" aria-label="留言" data-guestbook-input data-cursor-icon="type" data-i18n-aria-label="guestbookInput"></textarea>
                 <span class="guestbook-count" data-guestbook-count aria-hidden="true"></span>
-                <button class="guestbook-submit-area" type="submit" data-cursor-icon="click" aria-label="提交留言"></button>
+                <button class="guestbook-submit-area" type="submit" data-cursor-icon="click" aria-label="提交留言" data-i18n-aria-label="guestbookSubmit"></button>
               </div>
             </form>
             <div class="guestbook-list" data-guestbook-list aria-live="polite"></div>
           </article>
 
-          <article class="about-bento-card about-bento-card-agent" role="button" tabindex="0" aria-label="打开个人 AI Agent 对话窗口" data-agent-chat-card data-cursor-icon="click">
+          <article class="about-bento-card about-bento-card-agent" role="button" tabindex="0" aria-label="打开个人 AI Agent 对话窗口" data-agent-chat-card data-cursor-icon="click" data-i18n-aria-label="openAgent">
             <div class="about-agent-heading" aria-hidden="true">
               <span class="about-agent-heading-long">Longgggg's</span>
               <span class="about-agent-heading-agent">Agent</span>
@@ -318,14 +339,14 @@
               <svg class="section-title-icon" xmlns="http://www.w3.org/2000/svg" width="31" height="33" viewBox="0 0 31 33" fill="none" aria-hidden="true">
                 <path d="M12.8178 0.0153755C14.3472 -0.00494481 15.8776 -0.00494259 17.4081 0.0143082C17.4177 4.13184 17.3899 8.24938 17.4231 12.3669C21.0005 10.337 24.5416 8.24189 28.1244 6.22163C28.5094 6.89541 28.9158 7.55849 29.289 8.23975C29.6227 8.83439 30.0217 9.39801 30.2815 10.0322C29.2185 10.5723 28.2153 11.2204 27.1747 11.8001C25.5426 12.7316 23.9191 13.676 22.2903 14.6128C21.3737 15.1615 20.4251 15.6567 19.5267 16.2331C21.455 17.3807 23.4079 18.4876 25.3501 19.6106C27.0046 20.5464 28.6302 21.5356 30.3008 22.4415C29.6174 23.7003 28.8837 24.9313 28.1672 26.1708C27.8164 26.127 27.5287 25.912 27.2335 25.7387C23.9587 23.8661 20.7064 21.9517 17.4209 20.0983C17.3985 24.2137 17.4081 28.3291 17.4156 32.4444C17.2241 32.4958 17.0273 32.53 16.8306 32.5247C15.8306 32.5215 14.8306 32.5225 13.8317 32.5236C13.4905 32.5268 13.1419 32.5514 12.8146 32.4444C12.82 28.3312 12.8414 24.2169 12.8039 20.1036C9.33879 22.0672 5.90251 24.0842 2.44592 26.0617C2.32186 26.1163 2.19352 26.1516 2.05984 26.1676C1.44595 25.0714 0.794636 23.9955 0.178609 22.9014C0.0941198 22.7517 0.052405 22.5848 0 22.4244C3.58065 20.3699 7.1613 18.3143 10.7238 16.231C7.17735 14.1476 3.60204 12.1145 0.0406411 10.0547C0.0684479 9.88677 0.0748679 9.70816 0.177539 9.56592C0.801051 8.4868 1.41173 7.4002 2.0577 6.33499C2.19352 6.30077 2.32294 6.32002 2.44486 6.39274C5.89717 8.38199 9.34413 10.383 12.8018 12.3626C12.8446 8.24724 12.8146 4.13077 12.8178 0.0153755Z" fill="black"/>
               </svg>
-              <span class="section-title-cn">项目</span>
-              <span class="section-title-en">Works</span>
-            </div>
-            <div class="works-segment" role="tablist" aria-label="项目分类">
+                <span class="section-title-cn" data-i18n="worksTitleCn">项目</span>
+                <span class="section-title-en" data-i18n="worksTitleEn">Works</span>
+              </div>
+            <div class="works-segment" role="tablist" aria-label="项目分类" data-i18n-aria-label="worksFilterLabel">
               <button class="works-segment-button is-active" type="button" role="tab" aria-selected="true" data-work-filter="ux">UX</button>
-              <button class="works-segment-button" type="button" role="tab" aria-selected="false" data-work-filter="plugin">插件</button>
-              <button class="works-segment-button" type="button" role="tab" aria-selected="false" data-work-filter="product">产品</button>
-              <button class="works-segment-button" type="button" role="tab" aria-selected="false" data-work-filter="visual">平面</button>
+              <button class="works-segment-button" type="button" role="tab" aria-selected="false" data-work-filter="plugin" data-i18n="filterPlugin">插件</button>
+              <button class="works-segment-button" type="button" role="tab" aria-selected="false" data-work-filter="product" data-i18n="filterProduct">产品</button>
+              <button class="works-segment-button" type="button" role="tab" aria-selected="false" data-work-filter="visual" data-i18n="filterVisual">平面</button>
             </div>
           </div>
           <div class="works-grid">
@@ -509,10 +530,10 @@
                 <svg class="section-title-icon" xmlns="http://www.w3.org/2000/svg" width="31" height="33" viewBox="0 0 31 33" fill="none" aria-hidden="true">
                   <path d="M12.8178 0.0153755C14.3472 -0.00494481 15.8776 -0.00494259 17.4081 0.0143082C17.4177 4.13184 17.3899 8.24938 17.4231 12.3669C21.0005 10.337 24.5416 8.24189 28.1244 6.22163C28.5094 6.89541 28.9158 7.55849 29.289 8.23975C29.6227 8.83439 30.0217 9.39801 30.2815 10.0322C29.2185 10.5723 28.2153 11.2204 27.1747 11.8001C25.5426 12.7316 23.9191 13.676 22.2903 14.6128C21.3737 15.1615 20.4251 15.6567 19.5267 16.2331C21.455 17.3807 23.4079 18.4876 25.3501 19.6106C27.0046 20.5464 28.6302 21.5356 30.3008 22.4415C29.6174 23.7003 28.8837 24.9313 28.1672 26.1708C27.8164 26.127 27.5287 25.912 27.2335 25.7387C23.9587 23.8661 20.7064 21.9517 17.4209 20.0983C17.3985 24.2137 17.4081 28.3291 17.4156 32.4444C17.2241 32.4958 17.0273 32.53 16.8306 32.5247C15.8306 32.5215 14.8306 32.5225 13.8317 32.5236C13.4905 32.5268 13.1419 32.5514 12.8146 32.4444C12.82 28.3312 12.8414 24.2169 12.8039 20.1036C9.33879 22.0672 5.90251 24.0842 2.44592 26.0617C2.32186 26.1163 2.19352 26.1516 2.05984 26.1676C1.44595 25.0714 0.794636 23.9955 0.178609 22.9014C0.0941198 22.7517 0.052405 22.5848 0 22.4244C3.58065 20.3699 7.1613 18.3143 10.7238 16.231C7.17735 14.1476 3.60204 12.1145 0.0406411 10.0547C0.0684479 9.88677 0.0748679 9.70816 0.177539 9.56592C0.801051 8.4868 1.41173 7.4002 2.0577 6.33499C2.19352 6.30077 2.32294 6.32002 2.44486 6.39274C5.89717 8.38199 9.34413 10.383 12.8018 12.3626C12.8446 8.24724 12.8146 4.13077 12.8178 0.0153755Z" fill="black"/>
                 </svg>
-                <span class="section-title-cn">文章</span>
-                <span class="section-title-en">Knowledge</span>
+                <span class="section-title-cn" data-i18n="knowledgeTitleCn">文章</span>
+                <span class="section-title-en" data-i18n="knowledgeTitleEn">Knowledge</span>
               </div>
-              <a class="section-more-link knowledge-more-link" href="./knowledge.html" data-cursor-icon="view">查看更多</a>
+              <a class="section-more-link knowledge-more-link" href="./knowledge.html" data-cursor-icon="view" data-i18n="viewMore">查看更多</a>
             </div>
             <div class="knowledge-list">
               <a class="knowledge-item" href="./article.html?id=001" data-knowledge-entry="001" data-cursor-icon="view">
@@ -554,15 +575,15 @@
 
       <section class="placeholder-section reveal" id="contact">
         <div class="contact-footer">
-          <p class="contact-footer-eyebrow">欢迎联系我</p>
+          <p class="contact-footer-eyebrow" data-i18n="contactEyebrow">欢迎联系我</p>
           <div class="contact-footer-layout">
-            <h2>相信改变正在发生</h2>
+            <h2 data-i18n-html="contactHeadline">相信改变正在发生</h2>
             <div class="contact-footer-grid">
               <p>
-                <span class="contact-card-label">邮箱</span>
+                <span class="contact-card-label" data-i18n="contactEmail">邮箱</span>
                 <span class="contact-footer-value">
                   <a href="mailto:Xiangyu-Long@outlook.com">Xiangyu-Long@outlook.com</a>
-                  <button class="copy-button" type="button" data-copy-value="Xiangyu-Long@outlook.com" aria-label="复制邮箱">
+                  <button class="copy-button" type="button" data-copy-value="Xiangyu-Long@outlook.com" aria-label="复制邮箱" data-i18n-aria-label="copyEmail">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
                       <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
@@ -571,11 +592,11 @@
                 </span>
               </p>
               <p>
-                <span class="contact-card-label">电话</span>
+                <span class="contact-card-label" data-i18n="contactPhone">电话</span>
                 <span class="contact-footer-stack">
                   <span class="contact-footer-value">
                     <span>86-19186818073</span>
-                    <button class="copy-button" type="button" data-copy-value="86-19186818073" aria-label="复制电话 86-19186818073">
+                    <button class="copy-button" type="button" data-copy-value="86-19186818073" aria-label="复制电话 86-19186818073" data-i18n-aria-label="copyPhoneCn">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
                         <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
@@ -584,7 +605,7 @@
                   </span>
                   <span class="contact-footer-value">
                     <span>44-7962889579</span>
-                    <button class="copy-button" type="button" data-copy-value="44-7962889579" aria-label="复制电话 44-7962889579">
+                    <button class="copy-button" type="button" data-copy-value="44-7962889579" aria-label="复制电话 44-7962889579" data-i18n-aria-label="copyPhoneUk">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
                         <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
@@ -594,10 +615,10 @@
                 </span>
               </p>
               <p>
-                <span class="contact-card-label">微信</span>
+                <span class="contact-card-label" data-i18n="contactWechat">微信</span>
                 <span class="contact-footer-value">
                   <span>xjqdzkkhts</span>
-                  <button class="copy-button" type="button" data-copy-value="xjqdzkkhts" aria-label="复制微信">
+                  <button class="copy-button" type="button" data-copy-value="xjqdzkkhts" aria-label="复制微信" data-i18n-aria-label="copyWechat">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
                       <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
@@ -612,7 +633,7 @@
     </main>
     </div>
 
-    <div class="floating-dock" aria-label="快捷操作和当前位置">
+    <div class="floating-dock" aria-label="快捷操作和当前位置" data-i18n-aria-label="floatingDockLabel">
       <button class="floating-dock-ai" type="button" aria-controls="ai-chat-sidebar" aria-expanded="false" data-ai-chat-toggle>
         <svg class="floating-dock-ai-spark" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 2.4 14.8 9.2 21.6 12 14.8 14.8 12 21.6 9.2 14.8 2.4 12 9.2 9.2 12 2.4Z" />
@@ -620,7 +641,7 @@
         <img class="floating-dock-ai-logo" src="./assets/Longgggg.png" alt="Longgggg" />
       </button>
       <div class="floating-dock-location" aria-live="polite">
-        <span class="floating-dock-location-current" data-page-indicator>首页</span>
+        <span class="floating-dock-location-current" data-page-indicator data-i18n="navHome">首页</span>
       </div>
     </div>
 
@@ -661,9 +682,9 @@
       <div class="ai-chat-shell">
         <div class="ai-chat-header">
           <div>
-            <h2>Ask Long</h2>
+            <h2 data-i18n="aiTitle">Ask Long</h2>
           </div>
-          <button class="ai-chat-close" type="button" aria-label="关闭 AI 对话窗口" data-ai-chat-close>
+          <button class="ai-chat-close" type="button" aria-label="关闭 AI 对话窗口" data-ai-chat-close data-i18n-aria-label="closeAiChat">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M18 6 6 18" />
               <path d="m6 6 12 12" />
@@ -673,14 +694,14 @@
 
         <div class="ai-chat-messages" aria-live="polite" data-ai-chat-messages></div>
 
-        <div class="ai-chat-starters" data-ai-chat-starters aria-label="推荐问题">
-          <button type="button" data-ai-chat-starter="生活中的你是什么样的人？">生活中的你是什么样？</button>
-          <button type="button" data-ai-chat-starter="和你一起工作会是什么感觉？">和你合作是什么感觉？</button>
-          <button type="button" data-ai-chat-starter="你的设计思考方式是什么？">你如何思考设计？</button>
+        <div class="ai-chat-starters" data-ai-chat-starters aria-label="推荐问题" data-i18n-aria-label="starterLabel">
+          <button type="button" data-ai-chat-starter="生活中的你是什么样的人？" data-i18n="starterLife">生活中的你是什么样？</button>
+          <button type="button" data-ai-chat-starter="和你一起工作会是什么感觉？" data-i18n="starterWork">和你合作是什么感觉？</button>
+          <button type="button" data-ai-chat-starter="你的设计思考方式是什么？" data-i18n="starterDesign">你如何思考设计？</button>
         </div>
 
         <form class="ai-chat-form" data-ai-chat-form>
-          <label class="sr-only" for="ai-chat-input">输入你想问龙湘玉 AI 分身的问题</label>
+          <label class="sr-only" for="ai-chat-input" data-i18n="aiInputLabel">输入你想问龙湘玉 AI 分身的问题</label>
           <textarea
             class="ai-chat-input"
             id="ai-chat-input"
@@ -688,10 +709,11 @@
             rows="1"
             maxlength="800"
             placeholder="你想了解我的哪些项目？"
+            data-i18n-placeholder="aiInputPlaceholder"
             data-ai-chat-input
           ></textarea>
           <div class="ai-chat-actions">
-            <button class="ai-chat-send" type="submit" data-ai-chat-send>发送</button>
+            <button class="ai-chat-send" type="submit" data-ai-chat-send data-i18n="aiSend">发送</button>
           </div>
         </form>
       </div>
