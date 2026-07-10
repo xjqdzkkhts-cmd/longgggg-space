@@ -1492,7 +1492,7 @@ function getDefaultAiLifeItems() {
           { src: './assets/life-cards/dog-border-collie.png', label: 'Border Collie' },
         ],
       },
-      { type: 'quote', title: '“It is never too late to begin.”', description: 'A sentence I recently saved.', accent: '#D2FD5F' },
+      { type: 'quote', title: '“Force it, and it goes astray.”', description: 'Su Shi', accent: '#D2FD5F' },
       {
         type: 'book',
         title: 'The Submarine at Night',
@@ -1522,7 +1522,7 @@ function getDefaultAiLifeItems() {
         { src: './assets/life-cards/dog-border-collie.png', label: 'Border Collie' },
       ],
     },
-    { type: 'quote', title: '“现在开始，虽晚不迟”', description: '最近收藏的一句话', accent: '#D2FD5F' },
+    { type: 'quote', title: '“着力即差”', description: '苏轼', accent: '#D2FD5F' },
     {
       type: 'book',
       title: '《夜晚的潜水艇》',
