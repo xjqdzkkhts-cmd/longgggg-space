@@ -575,9 +575,18 @@ const loadArticlePage = async () => {
   const articleId = params.get('id') || '001';
   const source = ARTICLE_SOURCES[articleId];
   const fallback = ARTICLE_FALLBACKS[articleId];
+  const fallbackPayload = fallback ? getLocalizedArticlePayload(articleId, fallback) : null;
 
   if (!source && !fallback) {
     setArticleError();
+    return;
+  }
+
+  if (fallbackPayload) {
+    renderArticle(fallbackPayload);
+  }
+
+  if (!source || (articleLanguage === 'en' && fallbackPayload)) {
     return;
   }
 
@@ -592,8 +601,7 @@ const loadArticlePage = async () => {
     renderArticle(getLocalizedArticlePayload(articleId, { meta, body }));
   } catch (error) {
     console.warn(error);
-    if (fallback) {
-      renderArticle(getLocalizedArticlePayload(articleId, fallback));
+    if (fallbackPayload) {
       return;
     }
     setArticleError();

@@ -359,8 +359,30 @@ const getSiteText = (key, language = currentSiteLanguage) =>
   siteTranslations[language]?.[key] ?? siteTranslations.zh[key] ?? '';
 const getAiChatCopy = (key) => AI_CHAT_COPY[currentSiteLanguage]?.[key] ?? AI_CHAT_COPY.zh[key] ?? '';
 const getHeroRoles = () => heroRoleMap[currentSiteLanguage] || heroRoleMap.zh;
+const getAiStarterKey = (suggestion) => {
+  const normalizedSuggestion = String(suggestion || '').trim();
+  if (!normalizedSuggestion) {
+    return '';
+  }
+
+  const directKey = defaultAiStarterLabelMap.get(normalizedSuggestion);
+  if (directKey) {
+    return directKey;
+  }
+
+  for (const translations of Object.values(siteTranslations)) {
+    const matchedEntry = Object.entries(translations).find(
+      ([key, value]) => key.startsWith('starter') && value === normalizedSuggestion
+    );
+    if (matchedEntry) {
+      return matchedEntry[0];
+    }
+  }
+
+  return '';
+};
 const getAiStarterLabel = (suggestion) => {
-  const key = defaultAiStarterLabelMap.get(suggestion);
+  const key = getAiStarterKey(suggestion);
   return key ? getSiteText(key) : suggestion;
 };
 const setTextContentForKey = (element, key) => {
@@ -449,7 +471,17 @@ const applySiteLanguage = (language, options = {}) => {
   updateKnowledgeEntriesLanguage();
 
   aiChatStarters?.querySelectorAll('[data-ai-chat-starter]').forEach((button) => {
-    button.textContent = getAiStarterLabel(button.dataset.aiChatStarter || button.textContent || '');
+    const starterKey = getAiStarterKey(
+      button.dataset.aiChatStarterKey || button.dataset.aiChatStarter || button.textContent || ''
+    );
+    if (!starterKey) {
+      return;
+    }
+
+    const localizedStarter = getSiteText(starterKey);
+    button.dataset.aiChatStarterKey = starterKey;
+    button.dataset.aiChatStarter = localizedStarter;
+    button.textContent = localizedStarter;
   });
 
   const welcomeMessage = aiChatState.messages.find((message) => message.isWelcome);
@@ -2123,10 +2155,15 @@ function setAiChatStarterOptions(suggestions = DEFAULT_AI_CHAT_STARTERS) {
 
   aiChatStarters.innerHTML = '';
   visibleOptions.forEach((suggestion) => {
+    const starterKey = getAiStarterKey(suggestion);
+    const starterText = starterKey ? getSiteText(starterKey) : suggestion;
     const button = document.createElement('button');
     button.type = 'button';
-    button.dataset.aiChatStarter = suggestion;
-    button.textContent = getAiStarterLabel(suggestion);
+    if (starterKey) {
+      button.dataset.aiChatStarterKey = starterKey;
+    }
+    button.dataset.aiChatStarter = starterText;
+    button.textContent = starterText;
     aiChatStarters.appendChild(button);
   });
 }
