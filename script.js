@@ -445,6 +445,9 @@ const applySiteLanguage = (language, options = {}) => {
     aiChatSend.textContent = getSiteText('aiSend');
   }
 
+  updateProjectCardsLanguage();
+  updateKnowledgeEntriesLanguage();
+
   aiChatStarters?.querySelectorAll('[data-ai-chat-starter]').forEach((button) => {
     button.textContent = getAiStarterLabel(button.dataset.aiChatStarter || button.textContent || '');
   });
@@ -531,7 +534,211 @@ const knowledgeArticles = {
     ],
   },
 };
+const projectLanguageMap = {
+  'ai-thrombolysis': {
+    zh: { title: 'AI 溶栓助手', tags: ['UX'] },
+    en: { title: 'AI Thrombolysis Assistant', tags: ['UX'] },
+  },
+  'search-focus': {
+    zh: { title: 'Search Focus', tags: ['插件'] },
+    en: { title: 'Search Focus', tags: ['Plugin'] },
+  },
+  'mark-code': {
+    zh: { title: 'MarkCode', tags: ['插件'] },
+    en: { title: 'MarkCode', tags: ['Plugin'] },
+  },
+  iknow: {
+    zh: { title: 'iKnow', tags: ['UX', '产品', '平面'] },
+    en: { title: 'iKnow', tags: ['UX', 'Product', 'Visual'] },
+  },
+  'adhd-ai': {
+    zh: { title: 'AI如何帮助 ADHD？', tags: ['UX', '产品'] },
+    en: { title: 'How AI Helps ADHD?', tags: ['UX', 'Product'] },
+  },
+  etea: {
+    zh: { title: 'E-TEA', tags: ['UX', '产品'] },
+    en: { title: 'E-TEA', tags: ['UX', 'Product'] },
+  },
+  'marry-christmas': {
+    zh: { title: 'Merry Christmas', tags: ['平面'] },
+    en: { title: 'Merry Christmas', tags: ['Visual'] },
+  },
+};
+const knowledgeArticleTranslations = {
+  en: {
+    '001': {
+      title: 'Card Gradient Blur Based on Image Colors',
+      date: '2026.04',
+      datetime: '2026-04',
+      category: 'Frontend',
+      content: [
+        { type: 'h2', text: 'What Is an Image-Based Gradient Blur?' },
+        {
+          type: 'p',
+          text: 'An image-based gradient blur usually has four steps: extract the dominant color from an image, use that color to build a soft gradient, blur the gradient at a large scale, and place the actual content card above it.',
+        },
+        {
+          type: 'p',
+          text: 'The final effect creates a softer and more atmospheric background while keeping the card content readable.',
+        },
+        { type: 'h2', text: 'Implementation Method' },
+        {
+          type: 'p',
+          text: 'Common tools include Color Thief, Vibrant.js, and fast-average-color. These libraries can analyze an image and return representative colors automatically.',
+        },
+        { type: 'code', language: 'JS', code: 'const color = colorThief.getColor(img)' },
+        {
+          type: 'p',
+          text: 'After getting the color, the interface can generate a dynamic radial gradient.',
+        },
+        { type: 'code', language: 'CSS', code: 'background: radial-gradient(...)' },
+        { type: 'h2', text: 'A Simple Structure' },
+        { type: 'code', language: 'HTML', code: '<div class="bg"></div>\n<div class="card"></div>' },
+        {
+          type: 'code',
+          language: 'CSS',
+          code:
+            '.bg {\n  position: absolute;\n  inset: 0;\n  background:\n    radial-gradient(circle, #ff6b6b, transparent),\n    radial-gradient(circle, #4d96ff, transparent);\n  filter: blur(120px);\n  opacity: .6;\n}\n\n.card {\n  position: relative;\n  backdrop-filter: blur(20px);\n}',
+        },
+      ],
+    },
+    '002': {
+      title: 'Using Matter.js to Create Falling and Stacking UI Elements',
+      date: '2026.03',
+      datetime: '2026-03',
+      category: 'Frontend',
+      content: [
+        {
+          type: 'p',
+          text: 'Sometimes UI elements should not simply sit in a static layout. A group of tags can fall from the top, collide with each other, and naturally stack at the bottom of a container.',
+        },
+        { type: 'h2', text: 'Core Principle' },
+        {
+          type: 'p',
+          text: 'The core idea is to let Matter.js calculate position, rotation, gravity, and collision behind the scenes, then synchronize those physical values back to real DOM elements.',
+        },
+        {
+          type: 'p',
+          text: 'The process can be split into four steps: create a physics world, convert each UI tag into a rigid body, add invisible walls around the container, and update each DOM element with the calculated transform on every frame.',
+        },
+        { type: 'h2', text: 'Basic HTML Structure' },
+        {
+          type: 'code',
+          language: 'HTML',
+          code:
+            '<div class="tag-physics-card">\n  <div class="tag green">001</div>\n  <div class="tag purple">002</div>\n  <div class="tag dark">003</div>\n</div>',
+        },
+        { type: 'h2', text: 'Styling the Container and Tags' },
+        {
+          type: 'code',
+          language: 'CSS',
+          code:
+            '.tag-physics-card {\n  position: relative;\n  width: 540px;\n  height: 460px;\n  border-radius: 36px;\n  background: #f4f4f5;\n  overflow: hidden;\n}\n\n.tag {\n  position: absolute;\n  padding: 10px 24px;\n  border-radius: 999px;\n  font-size: 28px;\n  white-space: nowrap;\n  will-change: transform;\n}',
+        },
+        {
+          type: 'p',
+          text: 'The important details are absolute positioning, hidden overflow for the rounded container, and transform-based animation for smoother performance.',
+        },
+      ],
+    },
+    '003': {
+      title: 'Using Vibe Coding to Build Animations More Efficiently',
+      date: '2026.05',
+      datetime: '2026-05',
+      category: 'Vibe Coding',
+      content: [
+        {
+          type: 'p',
+          text: 'Vibe coding can significantly reduce the time needed to build web interactions. For designers who are not fully comfortable with frontend engineering, an efficient workflow is to start from a close reference, then ask AI to explain, adapt, and refine it.',
+        },
+        { type: 'h2', text: 'Clarify the Type of Animation First' },
+        {
+          type: 'p',
+          text: 'Before coding, define the animation category: entrance animation, hover micro-interaction, scroll-triggered motion, looping ambient animation, or direct interactive motion such as dragging, expanding, stacking, and physics-based falling.',
+        },
+        { type: 'h2', text: 'Teach the AI Before Asking It to Build' },
+        {
+          type: 'p',
+          text: 'A vague prompt like “make this animation feel premium” often performs poorly. A better approach is to provide a close open-source example and describe how it should change: colors, speed, content, assets, and responsive behavior.',
+        },
+        { type: 'h2', text: 'Useful Inspiration Sources' },
+        {
+          type: 'p',
+          text: 'CodePen is great for complete HTML, CSS, and JavaScript examples. Animista is useful for adjustable CSS animations. Hover.css works well for button and card micro-interactions. FreeFrontend is helpful for categorized UI references, while GSAP examples are better for advanced motion.',
+        },
+      ],
+    },
+    '004': {
+      title: 'How to Build a Parallax Card Effect',
+      date: '2026.05',
+      datetime: '2026-05',
+      category: 'Portfolio',
+      content: [
+        {
+          type: 'p',
+          text: 'A parallax card effect gives a flat interface a subtle sense of depth. The key is to calculate movement based on pointer position, then let different layers move at different speeds.',
+        },
+        { type: 'h2', text: 'Beyond the Final Visual' },
+        {
+          type: 'p',
+          text: 'Projects show outcomes, while articles show process. Recording how an effect is built helps visitors understand the design judgment behind the final result.',
+        },
+        { type: 'h2', text: 'Implementation Idea' },
+        {
+          type: 'p',
+          text: 'The card can track the pointer position relative to its center, convert that value into small rotation and translation offsets, and apply different multipliers to foreground and background layers. The result should be subtle enough to feel responsive without distracting from the content.',
+        },
+      ],
+    },
+  },
+};
 const knowledgeArticleCache = new Map();
+const getLocalizedKnowledgeArticle = (articleId, article, language = currentSiteLanguage) => {
+  const localizedArticle = knowledgeArticleTranslations[language]?.[articleId];
+  if (!localizedArticle) {
+    return article;
+  }
+
+  return {
+    ...article,
+    ...localizedArticle,
+  };
+};
+const updateProjectCardsLanguage = () => {
+  projectCards.forEach((card) => {
+    const gallery = card.dataset.projectGallery;
+    const copy = projectLanguageMap[gallery]?.[currentSiteLanguage] || projectLanguageMap[gallery]?.zh;
+    if (!copy) {
+      return;
+    }
+
+    const title = card.querySelector('h3');
+    const tags = card.querySelector('.work-card-tags');
+    if (title) {
+      title.textContent = copy.title;
+    }
+    if (tags) {
+      tags.innerHTML = copy.tags.map((tag) => `<span class="work-tag"># ${escapeHtml(tag)}</span>`).join('');
+    }
+    card.setAttribute('aria-label', currentSiteLanguage === 'en' ? `Open project ${copy.title}` : `打开项目 ${copy.title}`);
+  });
+};
+const updateKnowledgeEntriesLanguage = () => {
+  knowledgeEntries.forEach(async (entry) => {
+    const article = await loadKnowledgeArticle(entry.dataset.knowledgeEntry);
+    if (!article) return;
+
+    const title = entry.querySelector('.knowledge-item-title');
+    const time = entry.querySelector('time');
+    if (title) {
+      title.textContent = article.title;
+    }
+    if (time) {
+      time.textContent = article.date;
+      time.setAttribute('datetime', article.datetime);
+    }
+  });
+};
 const escapeHtml = (value) =>
   String(value)
     .replace(/&/g, '&amp;')
@@ -696,12 +903,20 @@ const loadKnowledgeArticle = async (articleId) => {
     return null;
   }
 
-  if (knowledgeArticleCache.has(articleId)) {
-    return knowledgeArticleCache.get(articleId);
+  const cacheKey = `${currentSiteLanguage}:${articleId}`;
+
+  if (knowledgeArticleCache.has(cacheKey)) {
+    return knowledgeArticleCache.get(cacheKey);
+  }
+
+  if (knowledgeArticleTranslations[currentSiteLanguage]?.[articleId]) {
+    const localizedArticle = getLocalizedKnowledgeArticle(articleId, fallbackArticle);
+    knowledgeArticleCache.set(cacheKey, localizedArticle);
+    return localizedArticle;
   }
 
   if (!fallbackArticle.source) {
-    knowledgeArticleCache.set(articleId, fallbackArticle);
+    knowledgeArticleCache.set(cacheKey, fallbackArticle);
     return fallbackArticle;
   }
 
@@ -711,13 +926,14 @@ const loadKnowledgeArticle = async (articleId) => {
       throw new Error(`Unable to load ${fallbackArticle.source}`);
     }
     const markdown = await response.text();
-    const article = parseMarkdownArticle(markdown, fallbackArticle);
-    knowledgeArticleCache.set(articleId, article);
+    const article = getLocalizedKnowledgeArticle(articleId, parseMarkdownArticle(markdown, fallbackArticle));
+    knowledgeArticleCache.set(cacheKey, article);
     return article;
   } catch (error) {
     console.warn(error);
-    knowledgeArticleCache.set(articleId, fallbackArticle);
-    return fallbackArticle;
+    const article = getLocalizedKnowledgeArticle(articleId, fallbackArticle);
+    knowledgeArticleCache.set(cacheKey, article);
+    return article;
   }
 };
 const AI_CHAT_TYPE_SPEED_MS = 24;

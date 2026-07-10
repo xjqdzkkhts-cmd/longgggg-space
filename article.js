@@ -137,6 +137,186 @@ const ARTICLE_FALLBACKS = {
 `,
   },
 };
+const ARTICLE_TRANSLATIONS = {
+  en: {
+    '001': {
+      meta: {
+        title: 'Card Gradient Blur Based on Image Colors',
+        date: '2026.04',
+        datetime: '2026-04',
+        category: 'Frontend',
+      },
+      body: `
+## What Is an Image-Based Gradient Blur?
+
+An image-based gradient blur usually has four steps:
+- Extract the dominant color from an image.
+- Use the color to generate a soft background gradient.
+- Apply a large blur to the gradient layer.
+- Place the actual content card above it.
+
+The result is a softer and more atmospheric background while the card content remains readable.
+
+## Implementation Method
+
+Common tools include Color Thief, Vibrant.js, and fast-average-color. These libraries can automatically analyze an image and return representative colors.
+
+\`\`\`JS
+const color = colorThief.getColor(img)
+\`\`\`
+
+Then the interface can generate a dynamic gradient:
+
+\`\`\`CSS
+background: radial-gradient(...)
+\`\`\`
+
+## A Simple Structure
+
+\`\`\`HTML
+<div class="bg"></div>
+<div class="card"></div>
+\`\`\`
+
+\`\`\`CSS
+.bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle, #ff6b6b, transparent),
+    radial-gradient(circle, #4d96ff, transparent);
+  filter: blur(120px);
+  opacity: .6;
+}
+
+.card {
+  position: relative;
+  backdrop-filter: blur(20px);
+}
+\`\`\`
+`,
+    },
+    '002': {
+      meta: {
+        title: 'Using Matter.js to Create Falling and Stacking UI Elements',
+        date: '2026.03',
+        datetime: '2026-03',
+        category: 'Frontend',
+      },
+      body: `
+Sometimes UI elements should not simply sit in a static layout. A group of tags can fall from the top, collide with each other, and naturally stack at the bottom of a container.
+
+## Core Principle
+
+The core idea is to let Matter.js calculate position, rotation, gravity, and collision behind the scenes, then synchronize those physical values back to real DOM elements.
+
+The process can be split into four steps:
+- Create a physics world and set gravity.
+- Convert each UI tag into a rigid body.
+- Add invisible walls around the container.
+- Read the calculated position and angle on every frame, then update the matching DOM element with \`transform\`.
+
+This creates the feeling that real webpage elements are falling and stacking naturally, while the actual motion is driven by a 2D physics simulation.
+
+## Basic HTML Structure
+
+\`\`\`HTML
+<div class="tag-physics-card">
+  <div class="tag green">001</div>
+  <div class="tag purple">002</div>
+  <div class="tag dark">003</div>
+</div>
+\`\`\`
+
+## Styling the Container and Tags
+
+\`\`\`CSS
+.tag-physics-card {
+  position: relative;
+  width: 540px;
+  height: 460px;
+  border-radius: 36px;
+  background: #f4f4f5;
+  overflow: hidden;
+}
+
+.tag {
+  position: absolute;
+  padding: 10px 24px;
+  border-radius: 999px;
+  font-size: 28px;
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+  will-change: transform;
+}
+\`\`\`
+
+\`position: absolute\` is necessary because each element will be controlled precisely with transforms. \`overflow: hidden\` keeps the objects inside the rounded container, and \`will-change: transform\` helps the browser optimize animation performance.
+`,
+    },
+    '003': {
+      meta: {
+        title: 'Using Vibe Coding to Build Animations More Efficiently',
+        date: '2026.05',
+        datetime: '2026-05',
+        category: 'Vibe Coding',
+      },
+      body: `
+Vibe coding can greatly reduce the time needed to build web interactions. For designers who are not fully comfortable with frontend engineering, a more efficient method is to start from a close open-source example, then let AI explain, adapt, and refine it.
+
+## Clarify the Type of Animation First
+
+Before coding, define the animation category. Web motion usually falls into a few groups: entrance animations, hover micro-interactions, scroll-triggered animations, looping ambient animations, and direct interactive animations such as dragging, expanding, stacking, or physics-based falling.
+
+## Teach the AI Before Asking It to Build
+
+Many weak vibe coding results come from vague prompts, such as “make a premium animation.” A better approach is to provide a close reference and say: “I want a similar motion, but with lighter blue colors, slower speed, my own assets, and responsive behavior.”
+
+The clearer the reference and constraints are, the easier it is for AI to produce useful code.
+
+## Useful Inspiration Sources
+
+- CodePen is one of the best places to find complete animation examples with HTML, CSS, and JavaScript.
+- Animista is useful for adjustable CSS animations.
+- Hover.css is good for button, link, and card hover interactions.
+- FreeFrontend collects many categorized CSS animation and UI examples.
+- GSAP official CodePens and showcases are better for advanced motion.
+`,
+    },
+    '004': {
+      meta: {
+        title: 'How to Build a Parallax Card Effect',
+        date: '2026.05',
+        datetime: '2026-05',
+        category: 'Portfolio',
+      },
+      body: `
+A parallax card effect gives a flat interface a subtle sense of depth. The key is to calculate movement based on pointer position, then let different layers move at different speeds.
+
+## Beyond the Final Visual
+
+Projects show outcomes, while articles show process. Recording how an effect is built helps visitors understand the design judgment behind the final result, not just the final screen.
+
+## Implementation Idea
+
+The card can track the pointer position relative to its center, convert that value into small rotation and translation offsets, and apply different multipliers to foreground and background layers.
+
+The result should be subtle enough to feel responsive without distracting from the content.
+`,
+    },
+  },
+};
+
+const SITE_LANGUAGE_STORAGE_KEY = 'long-portfolio-language';
+const getArticleLanguage = () => {
+  try {
+    return window.localStorage?.getItem(SITE_LANGUAGE_STORAGE_KEY) === 'en' ? 'en' : 'zh';
+  } catch (_error) {
+    return 'zh';
+  }
+};
+const getLocalizedArticlePayload = (articleId, payload) => ARTICLE_TRANSLATIONS[getArticleLanguage()]?.[articleId] || payload;
 
 const articleTitle = document.querySelector('[data-article-title]');
 const articleDate = document.querySelector('[data-article-date]');
@@ -144,7 +324,42 @@ const articleCategory = document.querySelector('[data-article-category]');
 const articleContent = document.querySelector('[data-article-content]');
 const articlePageIndicator = document.querySelector('[data-page-indicator]');
 const articleFloatingDock = document.querySelector('.article-floating-dock');
-let articleCurrentTitle = '正在加载文章...';
+const articleLanguage = getArticleLanguage();
+const articleCopy = {
+  zh: {
+    loading: '正在加载文章...',
+    unavailable: '文章暂时不可用',
+    missing: '没有找到这篇文章。你可以返回个人知识库重新选择。',
+    untitled: '未命名文章',
+    knowledge: '个人知识库',
+    back: '返回',
+    titleSuffix: '龙湘玉 Portfolio',
+  },
+  en: {
+    loading: 'Loading article...',
+    unavailable: 'Article unavailable',
+    missing: 'This article was not found. You can return to Knowledge and choose again.',
+    untitled: 'Untitled article',
+    knowledge: 'Knowledge',
+    back: 'Back',
+    titleSuffix: 'Long Xiangyu Portfolio',
+  },
+};
+const getArticleCopy = (key) => articleCopy[articleLanguage]?.[key] || articleCopy.zh[key] || '';
+let articleCurrentTitle = getArticleCopy('loading');
+
+document.documentElement.lang = articleLanguage === 'en' ? 'en' : 'zh-CN';
+document.querySelector('.article-back-link')?.replaceChildren(document.createTextNode(getArticleCopy('back')));
+document.querySelector('.knowledge-article-eyebrow')?.replaceChildren(document.createTextNode(getArticleCopy('knowledge')));
+if (articleTitle && articleTitle.textContent.trim() === '正在加载文章...') {
+  articleTitle.textContent = getArticleCopy('loading');
+}
+if (articleContent && articleContent.textContent.includes('正在加载文章')) {
+  articleContent.innerHTML = `<p>${getArticleCopy('loading')}</p>`;
+}
+if (articlePageIndicator && articlePageIndicator.textContent.trim() === '正在加载文章...') {
+  articlePageIndicator.textContent = getArticleCopy('loading');
+}
 
 const escapeArticleHtml = (value) =>
   String(value)
@@ -299,18 +514,18 @@ const markdownToArticleHtml = (markdown) => {
 };
 
 const setArticleError = () => {
-  articleCurrentTitle = '文章暂时不可用';
-  articleTitle.textContent = '文章暂时不可用';
+  articleCurrentTitle = getArticleCopy('unavailable');
+  articleTitle.textContent = getArticleCopy('unavailable');
   articleDate.textContent = '';
   articleCategory.textContent = 'Not Found';
-  articleContent.innerHTML = '<p>没有找到这篇文章。你可以返回个人知识库重新选择。</p>';
+  articleContent.innerHTML = `<p>${getArticleCopy('missing')}</p>`;
   if (articlePageIndicator) {
-    articlePageIndicator.textContent = '文章暂时不可用';
+    articlePageIndicator.textContent = getArticleCopy('unavailable');
   }
 };
 
 const renderArticle = ({ meta, body }) => {
-  const title = meta.title || '未命名文章';
+  const title = meta.title || getArticleCopy('untitled');
   articleCurrentTitle = title;
   articleTitle.textContent = title;
   articleDate.textContent = meta.date || '';
@@ -321,7 +536,7 @@ const renderArticle = ({ meta, body }) => {
     articlePageIndicator.textContent = title;
   }
   updateArticleDockIndicator();
-  document.title = `${title}｜龙湘玉 Portfolio`;
+  document.title = `${title}｜${getArticleCopy('titleSuffix')}`;
 };
 
 const updateArticleDockIndicator = () => {
@@ -374,11 +589,11 @@ const loadArticlePage = async () => {
 
     const markdown = await response.text();
     const { meta, body } = parseArticleFrontmatter(markdown);
-    renderArticle({ meta, body });
+    renderArticle(getLocalizedArticlePayload(articleId, { meta, body }));
   } catch (error) {
     console.warn(error);
     if (fallback) {
-      renderArticle(fallback);
+      renderArticle(getLocalizedArticlePayload(articleId, fallback));
       return;
     }
     setArticleError();
