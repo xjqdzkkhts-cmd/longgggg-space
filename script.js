@@ -81,11 +81,11 @@ const aiChatForm = document.querySelector('[data-ai-chat-form]');
 const aiChatInput = document.querySelector('[data-ai-chat-input]');
 const aiChatSend = document.querySelector('[data-ai-chat-send]');
 const heroRoleMap = {
-  zh: ['UX设计师', 'Vibe Coder', 'HCI 爱好者', 'UI 设计师'],
+  zh: ['UX 设计师', 'Vibe Coder', 'HCI 爱好者', 'UI 设计师'],
   en: ['UX Designer', 'Vibe Coder', 'HCI Enthusiast', 'UI Designer'],
 };
 const heroCardSources = {
-  UX设计师: './assets/user-card.png',
+  'UX 设计师': './assets/user-card.png',
   'UX Designer': './assets/user-card.png',
   'Vibe Coder': './assets/hero-card-vibe-coder.png',
   'HCI 爱好者': './assets/hero-card-hci-lover.png',
@@ -128,6 +128,90 @@ const cleanLandingUrl = () => {
 };
 
 cleanLandingUrl();
+
+const SITE_RETURN_POSITION_STORAGE_KEY = 'long-portfolio-return-position';
+
+const isHomeDocument = () => {
+  const path = window.location.pathname;
+  return path === '/' || path.endsWith('/') || path.endsWith('/index.html');
+};
+
+const saveCurrentReturnPosition = () => {
+  try {
+    window.sessionStorage?.setItem(
+      SITE_RETURN_POSITION_STORAGE_KEY,
+      JSON.stringify({
+        x: window.scrollX,
+        y: window.scrollY,
+        createdAt: Date.now(),
+      })
+    );
+  } catch (_error) {
+    // Private browsing or strict browser settings can disable sessionStorage.
+  }
+};
+
+const restoreSavedReturnPosition = () => {
+  if (!isHomeDocument()) {
+    return;
+  }
+
+  let savedPosition = null;
+  try {
+    const rawPosition = window.sessionStorage?.getItem(SITE_RETURN_POSITION_STORAGE_KEY);
+    if (!rawPosition) {
+      return;
+    }
+    window.sessionStorage?.removeItem(SITE_RETURN_POSITION_STORAGE_KEY);
+    savedPosition = JSON.parse(rawPosition);
+  } catch (_error) {
+    return;
+  }
+
+  const isRecent = Date.now() - Number(savedPosition.createdAt || 0) < 30 * 60 * 1000;
+  if (!isRecent || !Number.isFinite(savedPosition.y)) {
+    return;
+  }
+
+  const restore = () => {
+    window.scrollTo({
+      left: Number.isFinite(savedPosition.x) ? savedPosition.x : 0,
+      top: savedPosition.y,
+      behavior: 'auto',
+    });
+  };
+
+  requestAnimationFrame(() => {
+    restore();
+    setTimeout(restore, 120);
+    setTimeout(restore, 320);
+  });
+};
+
+if ('scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual';
+}
+
+restoreSavedReturnPosition();
+
+document.addEventListener('click', (event) => {
+  const link = event.target.closest?.('a[href]');
+  if (!link || link.target) {
+    return;
+  }
+
+  try {
+    const url = new URL(link.getAttribute('href'), window.location.href);
+    const shouldRememberPosition =
+      url.origin === window.location.origin &&
+      (url.pathname.endsWith('/article.html') || url.pathname.endsWith('/knowledge.html'));
+    if (shouldRememberPosition) {
+      saveCurrentReturnPosition();
+    }
+  } catch (_error) {
+    // Ignore malformed href values.
+  }
+});
 
 const SITE_DESIGN_WIDTH = 1440;
 const SITE_SCALE_MIN_WIDTH = 1101;
@@ -1246,7 +1330,7 @@ workCardMedia.forEach((mediaElement) => {
 });
 
 function setHeroCardForRole(roleName) {
-  const nextSource = heroCardSources[roleName] || heroCardSources.UX设计师;
+  const nextSource = heroCardSources[roleName] || heroCardSources['UX 设计师'];
 
   states.forEach((state) => {
     if (!state.image || state.image.getAttribute('src') === nextSource) {
@@ -3325,6 +3409,7 @@ if (
 
   let activeProjectImages = [];
   let activeSlideIndex = 0;
+  let projectViewerReturnPosition = null;
 
   const updateProjectSlide = () => {
     if (!activeProjectImages.length) {
@@ -3372,6 +3457,10 @@ if (
     if (!images.length) {
       return;
     }
+    projectViewerReturnPosition = {
+      x: window.scrollX,
+      y: window.scrollY,
+    };
     activeProjectImages = images;
     activeSlideIndex = 0;
     projectViewerPages.innerHTML = images
@@ -3396,6 +3485,17 @@ if (
     activeProjectImages = [];
     activeSlideIndex = 0;
     document.body.style.overflow = '';
+    if (projectViewerReturnPosition) {
+      const returnPosition = projectViewerReturnPosition;
+      projectViewerReturnPosition = null;
+      requestAnimationFrame(() => {
+        window.scrollTo({
+          left: returnPosition.x,
+          top: returnPosition.y,
+          behavior: 'auto',
+        });
+      });
+    }
   };
 
   projectCards.forEach((card) => {

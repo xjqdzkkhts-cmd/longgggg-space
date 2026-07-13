@@ -42,12 +42,24 @@ const normalizeLocalKnowledgeHistory = () => {
 normalizeLocalKnowledgeHistory();
 
 document.querySelector('.article-back-link')?.addEventListener('click', (event) => {
-  if (!isLocalKnowledgePreview()) {
+  const hasSameSiteReferrer = (() => {
+    try {
+      return document.referrer && new URL(document.referrer).origin === window.location.origin;
+    } catch (_error) {
+      return false;
+    }
+  })();
+
+  if (!isLocalKnowledgePreview() && hasSameSiteReferrer && window.history.length > 1) {
+    event.preventDefault();
+    window.history.back();
     return;
   }
 
-  event.preventDefault();
-  window.location.href = './index.html';
+  if (isLocalKnowledgePreview()) {
+    event.preventDefault();
+    window.location.href = './index.html';
+  }
 });
 
 const knowledgeList = document.querySelector('[data-knowledge-list]');

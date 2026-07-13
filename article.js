@@ -43,12 +43,24 @@ const normalizeLocalArticleHistory = () => {
 normalizeLocalArticleHistory();
 
 document.querySelector('.article-back-link')?.addEventListener('click', (event) => {
-  if (!isLocalArticlePreview()) {
+  const hasSameSiteReferrer = (() => {
+    try {
+      return document.referrer && new URL(document.referrer).origin === window.location.origin;
+    } catch (_error) {
+      return false;
+    }
+  })();
+
+  if (!isLocalArticlePreview() && hasSameSiteReferrer && window.history.length > 1) {
+    event.preventDefault();
+    window.history.back();
     return;
   }
 
-  event.preventDefault();
-  window.location.href = './index.html';
+  if (isLocalArticlePreview()) {
+    event.preventDefault();
+    window.location.href = './index.html';
+  }
 });
 
 const ARTICLE_FALLBACKS = {
