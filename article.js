@@ -308,10 +308,10 @@ The result should be subtle enough to feel responsive without distracting from t
   },
 };
 
-const SITE_LANGUAGE_STORAGE_KEY = 'long-portfolio-language';
+const ARTICLE_LANGUAGE_STORAGE_KEY = 'long-portfolio-language';
 const getArticleLanguage = () => {
   try {
-    return window.localStorage?.getItem(SITE_LANGUAGE_STORAGE_KEY) === 'en' ? 'en' : 'zh';
+    return window.localStorage?.getItem(ARTICLE_LANGUAGE_STORAGE_KEY) === 'en' ? 'en' : 'zh';
   } catch (_error) {
     return 'zh';
   }
