@@ -514,6 +514,10 @@ const markdownToArticleHtml = (markdown) => {
 };
 
 const setArticleError = () => {
+  if (!articleTitle || !articleDate || !articleCategory || !articleContent) {
+    return;
+  }
+
   articleCurrentTitle = getArticleCopy('unavailable');
   articleTitle.textContent = getArticleCopy('unavailable');
   articleDate.textContent = '';
@@ -525,6 +529,10 @@ const setArticleError = () => {
 };
 
 const renderArticle = ({ meta, body }) => {
+  if (!articleTitle || !articleDate || !articleCategory || !articleContent) {
+    return;
+  }
+
   const title = meta.title || getArticleCopy('untitled');
   articleCurrentTitle = title;
   articleTitle.textContent = title;
@@ -545,9 +553,8 @@ const updateArticleDockIndicator = () => {
   }
 
   const headings = [...articleContent.querySelectorAll('h2')];
-  const activeHeading = headings
-    .filter((heading) => heading.getBoundingClientRect().top <= window.innerHeight * 0.38)
-    .at(-1);
+  const activeHeadings = headings.filter((heading) => heading.getBoundingClientRect().top <= window.innerHeight * 0.38);
+  const activeHeading = activeHeadings[activeHeadings.length - 1];
 
   articlePageIndicator.textContent = activeHeading?.textContent?.trim() || articleCurrentTitle;
 };
@@ -608,4 +615,8 @@ const loadArticlePage = async () => {
   }
 };
 
-loadArticlePage();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadArticlePage, { once: true });
+} else {
+  loadArticlePage();
+}
