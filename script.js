@@ -3403,7 +3403,11 @@ if (
       './assets/project-search-focus-pages/02.jpg',
     ],
     'mark-code': [
-      './assets/project-mark-code-pages/01.jpg',
+      './assets/project-mark-code-pages/01.png',
+      './assets/project-mark-code-pages/02.png',
+      './assets/project-mark-code-pages/03.png',
+      './assets/project-mark-code-pages/04.png',
+      './assets/project-mark-code-pages/05.png',
     ],
   };
 
