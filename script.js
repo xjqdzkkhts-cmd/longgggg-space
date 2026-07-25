@@ -663,6 +663,10 @@ const projectLanguageMap = {
     zh: { title: 'MarkCode', tags: ['插件'] },
     en: { title: 'MarkCode', tags: ['Plugin'] },
   },
+  relight: {
+    zh: { title: 'Relight', tags: ['产品设计'] },
+    en: { title: 'Relight', tags: ['Product Design'] },
+  },
   iknow: {
     zh: { title: 'iKnow', tags: ['UX', '产品', '平面'] },
     en: { title: 'iKnow', tags: ['UX', 'Product', 'Visual'] },
@@ -3408,6 +3412,12 @@ if (
       './assets/project-mark-code-pages/03.png',
       './assets/project-mark-code-pages/04.png',
       './assets/project-mark-code-pages/05.png',
+    ],
+    relight: [
+      './assets/project-relight-pages/01.png',
+      './assets/project-relight-pages/02.png',
+      './assets/project-relight-pages/03.png',
+      './assets/project-relight-pages/04.png',
     ],
   };
 
