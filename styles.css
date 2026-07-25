@@ -4032,6 +4032,25 @@ button.ai-chat-project-item:focus-visible {
   display: none;
 }
 
+.ai-chat-context.is-just-added {
+  animation: ai-context-added 0.58s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes ai-context-added {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .ai-chat-project-attachment {
   display: inline-flex;
   align-items: center;

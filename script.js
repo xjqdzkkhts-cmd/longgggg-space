@@ -270,6 +270,8 @@ const aiChatState = {
   activeProjectContext: null,
   messages: [],
 };
+let draggedProjectContext = null;
+let aiProjectContextPulseTimer = null;
 const AI_CHAT_COPY = {
   zh: {
     welcome: '你好呀！我是龙湘玉的 AI分身，你可以询问我的过往经历、作品、生活风格等等。',
@@ -941,6 +943,15 @@ const renderAiProjectContext = () => {
 const setAiProjectContext = (context) => {
   aiChatState.activeProjectContext = context;
   renderAiProjectContext();
+  if (context && aiChatContext) {
+    window.clearTimeout(aiProjectContextPulseTimer);
+    aiChatContext.classList.remove('is-just-added');
+    void aiChatContext.offsetWidth;
+    aiChatContext.classList.add('is-just-added');
+    aiProjectContextPulseTimer = window.setTimeout(() => {
+      aiChatContext.classList.remove('is-just-added');
+    }, 700);
+  }
 };
 const clearAiProjectContext = () => {
   aiChatState.activeProjectContext = null;
@@ -2462,6 +2473,10 @@ function setAiChatSending(nextSending) {
 }
 
 function getDraggedProjectContext(event) {
+  if (draggedProjectContext) {
+    return draggedProjectContext;
+  }
+
   const gallery = event.dataTransfer?.getData('application/x-long-project') || event.dataTransfer?.getData('text/plain');
   if (!gallery) {
     return null;
@@ -2472,7 +2487,7 @@ function getDraggedProjectContext(event) {
 }
 
 function isProjectDragEvent(event) {
-  return Array.from(event.dataTransfer?.types || []).includes('application/x-long-project');
+  return Boolean(draggedProjectContext) || Array.from(event.dataTransfer?.types || []).includes('application/x-long-project');
 }
 
 function setProjectDropTargetActive(nextActive) {
@@ -2482,14 +2497,16 @@ function setProjectDropTargetActive(nextActive) {
 }
 
 function handleProjectDrop(event) {
+  event.preventDefault();
   const context = getDraggedProjectContext(event);
   if (!context) {
+    setProjectDropTargetActive(false);
     return;
   }
 
-  event.preventDefault();
   setProjectDropTargetActive(false);
   setAiProjectContext(context);
+  draggedProjectContext = null;
   setAiChatOpen(true);
   ensureAiChatBooted();
   requestAnimationFrame(() => {
@@ -3916,6 +3933,7 @@ projectCards.forEach((card) => {
       return;
     }
 
+    draggedProjectContext = context;
     event.dataTransfer.effectAllowed = 'copy';
     event.dataTransfer.setData('application/x-long-project', context.id);
     event.dataTransfer.setData('text/plain', context.id);
@@ -3926,6 +3944,9 @@ projectCards.forEach((card) => {
   card.addEventListener('dragend', () => {
     card.classList.remove('is-dragging-to-chat');
     setProjectDropTargetActive(false);
+    window.setTimeout(() => {
+      draggedProjectContext = null;
+    }, 0);
   });
 });
 
