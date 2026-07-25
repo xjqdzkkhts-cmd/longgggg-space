@@ -664,8 +664,8 @@ const projectLanguageMap = {
     en: { title: 'MarkCode', tags: ['Plugin'] },
   },
   relight: {
-    zh: { title: 'Relight', tags: ['产品设计'] },
-    en: { title: 'Relight', tags: ['Product Design'] },
+    zh: { title: 'Relight', tags: ['产品'] },
+    en: { title: 'Relight', tags: ['Product'] },
   },
   iknow: {
     zh: { title: 'iKnow', tags: ['UX', '产品', '平面'] },
