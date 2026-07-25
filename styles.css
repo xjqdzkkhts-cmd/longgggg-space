@@ -3971,6 +3971,27 @@ button.ai-chat-project-item:focus-visible {
   display: none;
 }
 
+.ai-chat-starters.is-switching-out {
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.13s ease, transform 0.13s ease;
+}
+
+.ai-chat-starters.is-switching-in {
+  animation: ai-starters-slide-in 0.34s cubic-bezier(0.18, 0.86, 0.26, 1);
+}
+
+@keyframes ai-starters-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(34px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .ai-chat-starters button {
   min-height: 30px;
   max-width: 100%;
@@ -4098,24 +4119,6 @@ button.ai-chat-project-item:focus-visible {
   cursor: pointer;
 }
 
-.ai-chat-context-question {
-  min-width: 0;
-  height: 38px;
-  padding: 0 12px;
-  border: 1px solid rgba(15, 15, 15, 0.08);
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.72);
-  color: rgba(15, 15, 15, 0.62);
-  font: inherit;
-  font-size: 0.74rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.ai-chat-context-question:hover,
-.ai-chat-context-question:focus-visible,
 .ai-chat-project-clear:hover,
 .ai-chat-project-clear:focus-visible {
   background: rgba(15, 15, 15, 0.08);

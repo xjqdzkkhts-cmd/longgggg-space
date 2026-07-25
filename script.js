@@ -86,7 +86,6 @@ const aiChatContext = document.querySelector('[data-ai-chat-context]');
 const aiChatProjectThumb = document.querySelector('[data-ai-chat-project-thumb]');
 const aiChatProjectTitle = document.querySelector('[data-ai-chat-project-title]');
 const aiChatProjectClear = document.querySelector('[data-ai-chat-project-clear]');
-const aiChatContextQuestion = document.querySelector('[data-ai-chat-context-question]');
 const heroRoleMap = {
   zh: ['UX 设计师', 'Vibe Coder', 'HCI 爱好者', 'UI 设计师'],
   en: ['UX Designer', 'Vibe Coder', 'HCI Enthusiast', 'UI Designer'],
@@ -566,19 +565,23 @@ const applySiteLanguage = (language, options = {}) => {
   renderAiProjectContext();
   updateKnowledgeEntriesLanguage();
 
-  aiChatStarters?.querySelectorAll('[data-ai-chat-starter]').forEach((button) => {
-    const starterKey = getAiStarterKey(
-      button.dataset.aiChatStarterKey || button.dataset.aiChatStarter || button.textContent || ''
-    );
-    if (!starterKey) {
-      return;
-    }
+  if (aiChatState.activeProjectContext) {
+    setAiChatStarterOptions([getProjectContextQuestion()]);
+  } else {
+    aiChatStarters?.querySelectorAll('[data-ai-chat-starter]').forEach((button) => {
+      const starterKey = getAiStarterKey(
+        button.dataset.aiChatStarterKey || button.dataset.aiChatStarter || button.textContent || ''
+      );
+      if (!starterKey) {
+        return;
+      }
 
-    const localizedStarter = getSiteText(starterKey);
-    button.dataset.aiChatStarterKey = starterKey;
-    button.dataset.aiChatStarter = localizedStarter;
-    button.textContent = localizedStarter;
-  });
+      const localizedStarter = getSiteText(starterKey);
+      button.dataset.aiChatStarterKey = starterKey;
+      button.dataset.aiChatStarter = localizedStarter;
+      button.textContent = localizedStarter;
+    });
+  }
 
   const welcomeMessage = aiChatState.messages.find((message) => message.isWelcome);
   if (welcomeMessage) {
@@ -915,9 +918,6 @@ const renderAiProjectContext = () => {
     if (aiChatProjectTitle) {
       aiChatProjectTitle.textContent = '';
     }
-    if (aiChatContextQuestion) {
-      aiChatContextQuestion.textContent = '';
-    }
     return;
   }
 
@@ -936,13 +936,13 @@ const renderAiProjectContext = () => {
       currentSiteLanguage === 'en' ? 'Remove project context' : '移除项目上下文'
     );
   }
-  if (aiChatContextQuestion) {
-    aiChatContextQuestion.textContent = getProjectContextQuestion(context);
-  }
 };
 const setAiProjectContext = (context) => {
   aiChatState.activeProjectContext = context;
   renderAiProjectContext();
+  if (context) {
+    setAiChatStarterOptions([getProjectContextQuestion(context)], { animate: true });
+  }
   if (context && aiChatContext) {
     window.clearTimeout(aiProjectContextPulseTimer);
     aiChatContext.classList.remove('is-just-added');
@@ -956,6 +956,7 @@ const setAiProjectContext = (context) => {
 const clearAiProjectContext = () => {
   aiChatState.activeProjectContext = null;
   renderAiProjectContext();
+  setAiChatStarterOptions(undefined, { animate: true });
 };
 const updateKnowledgeEntriesLanguage = () => {
   knowledgeEntries.forEach(async (entry) => {
@@ -2333,15 +2334,19 @@ function renderAiSuggestions(suggestions) {
   return wrap;
 }
 
-function setAiChatStarterOptions(suggestions = DEFAULT_AI_CHAT_STARTERS) {
+function setAiChatStarterOptions(suggestions, options = {}) {
   if (!aiChatStarters) {
     return;
   }
 
-  const options = (Array.isArray(suggestions) ? suggestions : [])
+  const fallbackOptions = aiChatState.activeProjectContext
+    ? [getProjectContextQuestion()]
+    : DEFAULT_AI_CHAT_STARTERS;
+  const sourceOptions = suggestions === undefined ? fallbackOptions : suggestions;
+  const normalizedOptions = (Array.isArray(sourceOptions) ? sourceOptions : [])
     .filter((item) => typeof item === 'string' && item.trim())
     .slice(0, 6);
-  const nextOptions = options.length ? options : DEFAULT_AI_CHAT_STARTERS;
+  const nextOptions = normalizedOptions.length ? normalizedOptions : fallbackOptions;
   const isSamePool =
     nextOptions.length === aiChatState.starterOptions.length &&
     nextOptions.every((item, index) => item === aiChatState.starterOptions[index]);
@@ -2355,19 +2360,37 @@ function setAiChatStarterOptions(suggestions = DEFAULT_AI_CHAT_STARTERS) {
     return nextOptions[optionIndex];
   });
 
-  aiChatStarters.innerHTML = '';
-  visibleOptions.forEach((suggestion) => {
-    const starterKey = getAiStarterKey(suggestion);
-    const starterText = starterKey ? getSiteText(starterKey) : suggestion;
-    const button = document.createElement('button');
-    button.type = 'button';
-    if (starterKey) {
-      button.dataset.aiChatStarterKey = starterKey;
-    }
-    button.dataset.aiChatStarter = starterText;
-    button.textContent = starterText;
-    aiChatStarters.appendChild(button);
-  });
+  const renderStarterButtons = () => {
+    aiChatStarters.innerHTML = '';
+    visibleOptions.forEach((suggestion) => {
+      const starterKey = getAiStarterKey(suggestion);
+      const starterText = starterKey ? getSiteText(starterKey) : suggestion;
+      const button = document.createElement('button');
+      button.type = 'button';
+      if (starterKey) {
+        button.dataset.aiChatStarterKey = starterKey;
+      }
+      button.dataset.aiChatStarter = starterText;
+      button.textContent = starterText;
+      aiChatStarters.appendChild(button);
+    });
+  };
+
+  if (!options.animate) {
+    renderStarterButtons();
+    return;
+  }
+
+  aiChatStarters.classList.remove('is-switching-in', 'is-switching-out');
+  aiChatStarters.classList.add('is-switching-out');
+  window.setTimeout(() => {
+    renderStarterButtons();
+    aiChatStarters.classList.remove('is-switching-out');
+    aiChatStarters.classList.add('is-switching-in');
+    window.setTimeout(() => {
+      aiChatStarters.classList.remove('is-switching-in');
+    }, 360);
+  }, 130);
 }
 
 function renderAiChatMessages() {
@@ -2505,10 +2528,10 @@ function handleProjectDrop(event) {
   }
 
   setProjectDropTargetActive(false);
-  setAiProjectContext(context);
   draggedProjectContext = null;
   setAiChatOpen(true);
   ensureAiChatBooted();
+  setAiProjectContext(context);
   requestAnimationFrame(() => {
     aiChatInput?.focus();
   });
@@ -4017,13 +4040,6 @@ if (aiChatToggle && aiChatSidebar && aiChatForm && aiChatInput) {
   });
 
   aiChatProjectClear?.addEventListener('click', clearAiProjectContext);
-
-  aiChatContextQuestion?.addEventListener('click', () => {
-    const question = getProjectContextQuestion();
-    if (question) {
-      sendAiChatMessage(question);
-    }
-  });
 
   window.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && aiChatState.isOpen && !projectViewer?.classList.contains('is-open')) {
