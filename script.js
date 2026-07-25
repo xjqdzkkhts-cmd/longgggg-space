@@ -9,6 +9,7 @@ const roleStack = document.querySelector('[data-role-stack]');
 const currentRoleLayer = document.querySelector('[data-role-current]');
 const nextRoleLayer = document.querySelector('[data-role-next]');
 const aboutSection = document.querySelector('#about');
+const aboutBentoCards = [...document.querySelectorAll('.about-bento-card')];
 const learningDrop = document.querySelector('.about-bento-learning-drop');
 const timePixelGroups = [...document.querySelectorAll('.about-time-pixel-group')];
 const timeToggle = document.querySelector('[data-time-toggle]');
@@ -3967,6 +3968,143 @@ if (revealItems.length) {
 
     revealItems.forEach((item) => revealObserver.observe(item));
   }
+}
+
+if (
+  aboutBentoCards.length &&
+  window.matchMedia('(pointer: fine)').matches &&
+  !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+) {
+  const interactiveDragBlockers = [
+    'button',
+    'a',
+    'input',
+    'textarea',
+    'select',
+    '[contenteditable="true"]',
+    '[data-time-toggle]',
+    '[data-guestbook-input]',
+    '[data-guestbook-submit-trigger]',
+    '[data-interest-stage]',
+    '[data-about-app-open]',
+  ].join(',');
+
+  aboutBentoCards.forEach((card) => {
+    let dragState = null;
+    let frameId = null;
+    let blockNextClick = false;
+
+    const resetFrame = () => {
+      if (frameId) {
+        window.cancelAnimationFrame(frameId);
+        frameId = null;
+      }
+    };
+
+    const applyDragTransform = () => {
+      if (!dragState) {
+        return;
+      }
+
+      const rotation = Math.max(-4, Math.min(4, dragState.x / 44));
+      card.style.transform = `translate3d(${dragState.x}px, ${dragState.y}px, 0) rotate(${rotation}deg)`;
+      frameId = null;
+    };
+
+    const requestDragFrame = () => {
+      if (!frameId) {
+        frameId = window.requestAnimationFrame(applyDragTransform);
+      }
+    };
+
+    const finishDrag = () => {
+      if (!dragState) {
+        return;
+      }
+
+      resetFrame();
+      try {
+        card.releasePointerCapture?.(dragState.pointerId);
+      } catch (error) {
+        // Pointer capture may already be released by the browser.
+      }
+      card.classList.remove('is-bento-dragging');
+      card.classList.add('is-bento-returning');
+      card.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
+
+      const cleanupReturn = (event) => {
+        if (event && event.propertyName !== 'transform') {
+          return;
+        }
+
+        card.classList.remove('is-bento-returning');
+        card.style.transform = '';
+        card.removeEventListener('transitionend', cleanupReturn);
+      };
+
+      card.addEventListener('transitionend', cleanupReturn);
+      window.setTimeout(cleanupReturn, 620);
+      blockNextClick = dragState.hasMoved;
+      dragState = null;
+    };
+
+    card.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) {
+        return;
+      }
+
+      const blocker = event.target.closest(interactiveDragBlockers);
+      if (blocker && blocker !== card) {
+        return;
+      }
+
+      dragState = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        x: 0,
+        y: 0,
+        hasMoved: false,
+      };
+
+      card.setPointerCapture?.(event.pointerId);
+      card.classList.remove('is-bento-returning');
+      card.classList.add('is-bento-dragging');
+    });
+
+    card.addEventListener('pointermove', (event) => {
+      if (!dragState || event.pointerId !== dragState.pointerId) {
+        return;
+      }
+
+      dragState.x = event.clientX - dragState.startX;
+      dragState.y = event.clientY - dragState.startY;
+
+      if (Math.hypot(dragState.x, dragState.y) > 3) {
+        dragState.hasMoved = true;
+        event.preventDefault();
+      }
+
+      requestDragFrame();
+    });
+
+    card.addEventListener('pointerup', finishDrag);
+    card.addEventListener('pointercancel', finishDrag);
+
+    card.addEventListener(
+      'click',
+      (event) => {
+        if (!blockNextClick) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        blockNextClick = false;
+      },
+      true
+    );
+  });
 }
 
 if (scene && states.length) {
