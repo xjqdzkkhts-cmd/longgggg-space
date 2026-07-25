@@ -3989,6 +3989,34 @@ if (
     '[data-about-app-open]',
   ].join(',');
 
+  const clampBentoValue = (value, min, max) => Math.max(min, Math.min(max, value));
+  let bentoDragRects = new Map();
+
+  const captureBentoRects = () => {
+    bentoDragRects = new Map(
+      aboutBentoCards.map((card) => [card, card.getBoundingClientRect()])
+    );
+  };
+
+  const setBentoReturn = (card) => {
+    card.classList.remove('is-bento-dragging', 'is-bento-colliding');
+    card.classList.add('is-bento-returning');
+    card.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
+
+    const cleanupReturn = (event) => {
+      if (event && event.propertyName !== 'transform') {
+        return;
+      }
+
+      card.classList.remove('is-bento-returning');
+      card.style.transform = '';
+      card.removeEventListener('transitionend', cleanupReturn);
+    };
+
+    card.addEventListener('transitionend', cleanupReturn);
+    window.setTimeout(cleanupReturn, 620);
+  };
+
   aboutBentoCards.forEach((card) => {
     let dragState = null;
     let frameId = null;
@@ -4008,6 +4036,74 @@ if (
 
       const rotation = Math.max(-4, Math.min(4, dragState.x / 44));
       card.style.transform = `translate3d(${dragState.x}px, ${dragState.y}px, 0) rotate(${rotation}deg)`;
+      const baseRect = bentoDragRects.get(card);
+
+      if (baseRect) {
+        const draggedRect = {
+          left: baseRect.left + dragState.x,
+          right: baseRect.right + dragState.x,
+          top: baseRect.top + dragState.y,
+          bottom: baseRect.bottom + dragState.y,
+          width: baseRect.width,
+          height: baseRect.height,
+        };
+        draggedRect.centerX = draggedRect.left + draggedRect.width / 2;
+        draggedRect.centerY = draggedRect.top + draggedRect.height / 2;
+
+        aboutBentoCards.forEach((otherCard) => {
+          if (otherCard === card) {
+            return;
+          }
+
+          const otherRect = bentoDragRects.get(otherCard);
+          if (!otherRect) {
+            return;
+          }
+
+          const otherCenterX = otherRect.left + otherRect.width / 2;
+          const otherCenterY = otherRect.top + otherRect.height / 2;
+          const dx = otherCenterX - draggedRect.centerX;
+          const dy = otherCenterY - draggedRect.centerY;
+          const overlapX = Math.min(draggedRect.right, otherRect.right) - Math.max(draggedRect.left, otherRect.left);
+          const overlapY = Math.min(draggedRect.bottom, otherRect.bottom) - Math.max(draggedRect.top, otherRect.top);
+          let pushX = 0;
+          let pushY = 0;
+
+          if (overlapX > 0 && overlapY > 0) {
+            const directionX = dx === 0 ? 1 : Math.sign(dx);
+            const directionY = dy === 0 ? 1 : Math.sign(dy);
+
+            if (overlapX < overlapY) {
+              pushX = directionX * clampBentoValue(overlapX * 0.34 + 10, 12, 48);
+              pushY = directionY * clampBentoValue(overlapY * 0.08, 0, 12);
+            } else {
+              pushX = directionX * clampBentoValue(overlapX * 0.08, 0, 12);
+              pushY = directionY * clampBentoValue(overlapY * 0.34 + 10, 12, 48);
+            }
+          } else {
+            const gapX = overlapX <= 0 ? Math.abs(overlapX) : 0;
+            const gapY = overlapY <= 0 ? Math.abs(overlapY) : 0;
+            const nearDistance = Math.hypot(gapX, gapY);
+
+            if (nearDistance < 34) {
+              const force = (34 - nearDistance) / 34;
+              const distance = Math.max(1, Math.hypot(dx, dy));
+              pushX = (dx / distance) * force * 14;
+              pushY = (dy / distance) * force * 14;
+            }
+          }
+
+          if (pushX || pushY) {
+            const pushedRotation = clampBentoValue(pushX / 18, -3, 3);
+            otherCard.classList.add('is-bento-colliding');
+            otherCard.style.transform = `translate3d(${pushX}px, ${pushY}px, 0) rotate(${pushedRotation}deg)`;
+          } else {
+            otherCard.classList.remove('is-bento-colliding');
+            otherCard.style.transform = '';
+          }
+        });
+      }
+
       frameId = null;
     };
 
@@ -4028,22 +4124,8 @@ if (
       } catch (error) {
         // Pointer capture may already be released by the browser.
       }
-      card.classList.remove('is-bento-dragging');
-      card.classList.add('is-bento-returning');
-      card.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
 
-      const cleanupReturn = (event) => {
-        if (event && event.propertyName !== 'transform') {
-          return;
-        }
-
-        card.classList.remove('is-bento-returning');
-        card.style.transform = '';
-        card.removeEventListener('transitionend', cleanupReturn);
-      };
-
-      card.addEventListener('transitionend', cleanupReturn);
-      window.setTimeout(cleanupReturn, 620);
+      aboutBentoCards.forEach(setBentoReturn);
       blockNextClick = dragState.hasMoved;
       dragState = null;
     };
@@ -4067,6 +4149,11 @@ if (
         hasMoved: false,
       };
 
+      aboutBentoCards.forEach((bentoCard) => {
+        bentoCard.classList.remove('is-bento-colliding', 'is-bento-returning');
+        bentoCard.style.transform = '';
+      });
+      captureBentoRects();
       card.setPointerCapture?.(event.pointerId);
       card.classList.remove('is-bento-returning');
       card.classList.add('is-bento-dragging');

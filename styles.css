@@ -930,6 +930,14 @@ html[data-language="en"] .hero-about {
     box-shadow 0.24s ease;
 }
 
+.about-bento-card.is-bento-colliding {
+  z-index: 18;
+  transition:
+    background-color 0.24s ease,
+    box-shadow 0.24s ease,
+    transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .about-bento-card.is-bento-returning {
   z-index: 19;
 }
