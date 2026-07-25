@@ -34,7 +34,52 @@ function normalizeLanguage(language) {
   return language === 'en' ? 'en' : 'zh';
 }
 
-function buildInstructions(personaMarkdown, language = 'zh') {
+function sanitizeProjectContext(projectContext) {
+  if (!projectContext || typeof projectContext !== 'object') {
+    return null;
+  }
+
+  const id = typeof projectContext.id === 'string' ? projectContext.id.trim().slice(0, 60) : '';
+  const title = typeof projectContext.title === 'string' ? projectContext.title.trim().slice(0, 80) : '';
+  const tags = Array.isArray(projectContext.tags)
+    ? projectContext.tags.filter((tag) => typeof tag === 'string' && tag.trim()).slice(0, 4).map((tag) => tag.trim().slice(0, 24))
+    : [];
+
+  if (!id || !title) {
+    return null;
+  }
+
+  return { id, title, tags };
+}
+
+function buildProjectContextInstruction(projectContext, language = 'zh') {
+  if (!projectContext) {
+    return '';
+  }
+
+  const tagsText = projectContext.tags.length ? projectContext.tags.join(' / ') : '';
+  if (normalizeLanguage(language) === 'en') {
+    return [
+      '',
+      'Current project context:',
+      `The visitor has attached the project “${projectContext.title}”${tagsText ? ` (${tagsText})` : ''}.`,
+      `Project gallery id: ${projectContext.id}.`,
+      'Unless the visitor clearly changes topic, treat their next question as being about this attached project.',
+      'If you include a projects card, prioritize this project and use its exact gallery id.',
+    ].join('\n');
+  }
+
+  return [
+    '',
+    '当前项目上下文：',
+    `访客已经附加了项目“${projectContext.title}”${tagsText ? `（${tagsText}）` : ''}。`,
+    `项目 gallery id：${projectContext.id}。`,
+    '除非访客明确切换话题，否则接下来的问题默认围绕这个附加项目回答。',
+    '如果你返回 projects card，请优先展示这个项目，并使用它准确的 gallery id。',
+  ].join('\n');
+}
+
+function buildInstructions(personaMarkdown, language = 'zh', projectContext = null) {
   if (normalizeLanguage(language) === 'en') {
     return [
       "You are Long Xiangyu's AI persona for her personal portfolio website.",
@@ -58,8 +103,8 @@ function buildInstructions(personaMarkdown, language = 'zh') {
       'suggestions: maximum 3. Each one should be a natural follow-up question a visitor may ask.',
       'When the user asks about contact, email, WeChat, phone, LinkedIn, or ways to reach me, you must include a contact card.',
       'When the user asks about projects, portfolio, or case studies, prioritize a projects card.',
-      'projects card should only show projects currently on the website: AI Thrombolysis Assistant, iKnow, AI for ADHD, E-TEA, Merry Christmas, Search Focus, and MarkCode. Do not include “Jinchanzi Plan” unless the user explicitly asks about other resume experiences.',
-      'projects card gallery must use one of these values: ai-thrombolysis, iknow, adhd-ai, etea, marry-christmas, search-focus, mark-code.',
+      'projects card should only show projects currently on the website: AI Thrombolysis Assistant, iKnow, AI for ADHD, E-TEA, Merry Christmas, Search Focus, MarkCode, and Relight. Do not include “Jinchanzi Plan” unless the user explicitly asks about other resume experiences.',
+      'projects card gallery must use one of these values: ai-thrombolysis, iknow, adhd-ai, etea, marry-christmas, search-focus, mark-code, relight.',
       'When the user asks about skills, tools, or what I am good at, do not only list UX or software tools. You must reflect my particular strengths: using AI to build products, independently completing lightweight frontend and backend implementation, being self-driven, and turning design ideas into working prototypes.',
       'When the user asks about skills or tools, prioritize a profile card or tags card.',
       'When the user asks about my life, personality, or what I am like outside work, answer with life state, interests, and personal temperament, and prioritize a life card.',
@@ -69,6 +114,7 @@ function buildInstructions(personaMarkdown, language = 'zh') {
       '',
       'The following is Long Xiangyu’s persona and knowledge source. It may contain Chinese; understand it and answer in English:',
       personaMarkdown || 'There is not yet a fuller persona document. Please answer conservatively based on the available information only.',
+      buildProjectContextInstruction(projectContext, language),
     ].join('\n');
   }
 
@@ -93,8 +139,8 @@ function buildInstructions(personaMarkdown, language = 'zh') {
     'suggestions 最多 3 条，每条是访客可能继续追问的问题。',
     '当用户问联系方式、联系、邮箱、微信、电话时，必须包含 contact card。',
     '当用户问项目、作品、案例时，优先包含 projects card。',
-    'projects card 只展示当前网站已有项目：AI 溶栓助手、iKnow、AI 如何帮助 ADHD、E-TEA、Merry Christmas、Search Focus、MarkCode。不要把“金蝉子计划”放进 projects card，除非用户明确问简历里的其他经历。',
-    'projects card 的 gallery 必须从这些值选择：ai-thrombolysis、iknow、adhd-ai、etea、marry-christmas、search-focus、mark-code。',
+    'projects card 只展示当前网站已有项目：AI 溶栓助手、iKnow、AI 如何帮助 ADHD、E-TEA、Merry Christmas、Search Focus、MarkCode、Relight。不要把“金蝉子计划”放进 projects card，除非用户明确问简历里的其他经历。',
+    'projects card 的 gallery 必须从这些值选择：ai-thrombolysis、iknow、adhd-ai、etea、marry-christmas、search-focus、mark-code、relight。',
     '当用户问技能、工具、擅长什么时，回答不要只列 UX 或软件工具；必须体现我的特殊性：能运用 AI 构建产品、能独立完成前端和后端的轻量搭建、自我驱动性强、能把设计想法推进成可运行原型。',
     '当用户问技能、工具、擅长什么时，优先包含 profile card 或 tags card。',
     '当用户问生活中的样子、性格时，回答应偏生活状态、兴趣和个人气质，并优先包含 life card。',
@@ -104,6 +150,7 @@ function buildInstructions(personaMarkdown, language = 'zh') {
     '',
     '以下是龙湘玉的人设与知识资料：',
     personaMarkdown || '目前还没有更完整的人设文档，请仅根据已有资料进行保守回答。',
+    buildProjectContextInstruction(projectContext, language),
   ].join('\n');
 }
 
@@ -559,6 +606,7 @@ module.exports = async function handler(req, res) {
   }
 
   const language = normalizeLanguage(body.language);
+  const projectContext = sanitizeProjectContext(body.projectContext);
   const personaMarkdown = await readPersonaMarkdown();
   const history = sanitizeHistory(body.history);
 
@@ -578,7 +626,7 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: DEFAULT_MODEL,
-        instructions: buildInstructions(personaMarkdown, language),
+        instructions: buildInstructions(personaMarkdown, language, projectContext),
         input: [
           ...history,
           {

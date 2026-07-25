@@ -82,6 +82,11 @@ const aiChatStarters = document.querySelector('[data-ai-chat-starters]');
 const aiChatForm = document.querySelector('[data-ai-chat-form]');
 const aiChatInput = document.querySelector('[data-ai-chat-input]');
 const aiChatSend = document.querySelector('[data-ai-chat-send]');
+const aiChatContext = document.querySelector('[data-ai-chat-context]');
+const aiChatProjectThumb = document.querySelector('[data-ai-chat-project-thumb]');
+const aiChatProjectTitle = document.querySelector('[data-ai-chat-project-title]');
+const aiChatProjectClear = document.querySelector('[data-ai-chat-project-clear]');
+const aiChatContextQuestion = document.querySelector('[data-ai-chat-context-question]');
 const heroRoleMap = {
   zh: ['UX 设计师', 'Vibe Coder', 'HCI 爱好者', 'UI 设计师'],
   en: ['UX Designer', 'Vibe Coder', 'HCI Enthusiast', 'UI Designer'],
@@ -262,6 +267,7 @@ const aiChatState = {
   spotifyTracks: null,
   spotifyTrackPool: null,
   spotifyTracksPromise: null,
+  activeProjectContext: null,
   messages: [],
 };
 const AI_CHAT_COPY = {
@@ -554,6 +560,8 @@ const applySiteLanguage = (language, options = {}) => {
   }
 
   updateProjectCardsLanguage();
+  refreshAiProjectContextLanguage();
+  renderAiProjectContext();
   updateKnowledgeEntriesLanguage();
 
   aiChatStarters?.querySelectorAll('[data-ai-chat-starter]').forEach((button) => {
@@ -844,6 +852,99 @@ const updateProjectCardsLanguage = () => {
     }
     card.setAttribute('aria-label', currentSiteLanguage === 'en' ? `Open project ${copy.title}` : `打开项目 ${copy.title}`);
   });
+};
+const getProjectCopy = (gallery) => projectLanguageMap[gallery]?.[currentSiteLanguage] || projectLanguageMap[gallery]?.zh;
+const getProjectContextFromCard = (card) => {
+  const gallery = card?.dataset?.projectGallery;
+  if (!gallery) {
+    return null;
+  }
+
+  const copy = getProjectCopy(gallery);
+  const image = card.querySelector('.work-card-image')?.getAttribute('src') || '';
+  const fallbackTitle = card.querySelector('h3')?.textContent?.trim() || gallery;
+
+  return {
+    id: gallery,
+    title: copy?.title || fallbackTitle,
+    tags: copy?.tags || [],
+    image,
+  };
+};
+const getProjectContextQuestion = (context = aiChatState.activeProjectContext) => {
+  if (!context?.title) {
+    return '';
+  }
+
+  return currentSiteLanguage === 'en'
+    ? `Tell me more about ${context.title}.`
+    : `可以介绍一下 ${context.title} 这个项目吗？`;
+};
+const refreshAiProjectContextLanguage = () => {
+  const context = aiChatState.activeProjectContext;
+  if (!context?.id) {
+    return;
+  }
+
+  const copy = getProjectCopy(context.id);
+  if (!copy) {
+    return;
+  }
+
+  aiChatState.activeProjectContext = {
+    ...context,
+    title: copy.title,
+    tags: copy.tags || context.tags || [],
+  };
+};
+const renderAiProjectContext = () => {
+  if (!aiChatContext) {
+    return;
+  }
+
+  const context = aiChatState.activeProjectContext;
+  if (!context) {
+    aiChatContext.hidden = true;
+    aiChatContext.classList.remove('is-visible');
+    if (aiChatProjectThumb) {
+      aiChatProjectThumb.removeAttribute('src');
+      aiChatProjectThumb.alt = '';
+    }
+    if (aiChatProjectTitle) {
+      aiChatProjectTitle.textContent = '';
+    }
+    if (aiChatContextQuestion) {
+      aiChatContextQuestion.textContent = '';
+    }
+    return;
+  }
+
+  aiChatContext.hidden = false;
+  aiChatContext.classList.add('is-visible');
+  if (aiChatProjectThumb) {
+    aiChatProjectThumb.src = context.image;
+    aiChatProjectThumb.alt = '';
+  }
+  if (aiChatProjectTitle) {
+    aiChatProjectTitle.textContent = context.title;
+  }
+  if (aiChatProjectClear) {
+    aiChatProjectClear.setAttribute(
+      'aria-label',
+      currentSiteLanguage === 'en' ? 'Remove project context' : '移除项目上下文'
+    );
+  }
+  if (aiChatContextQuestion) {
+    aiChatContextQuestion.textContent = getProjectContextQuestion(context);
+  }
+};
+const setAiProjectContext = (context) => {
+  aiChatState.activeProjectContext = context;
+  renderAiProjectContext();
+};
+const clearAiProjectContext = () => {
+  aiChatState.activeProjectContext = null;
+  renderAiProjectContext();
 };
 const updateKnowledgeEntriesLanguage = () => {
   knowledgeEntries.forEach(async (entry) => {
@@ -2360,6 +2461,42 @@ function setAiChatSending(nextSending) {
   }
 }
 
+function getDraggedProjectContext(event) {
+  const gallery = event.dataTransfer?.getData('application/x-long-project') || event.dataTransfer?.getData('text/plain');
+  if (!gallery) {
+    return null;
+  }
+
+  const card = projectCards.find((item) => item.dataset.projectGallery === gallery);
+  return getProjectContextFromCard(card);
+}
+
+function isProjectDragEvent(event) {
+  return Array.from(event.dataTransfer?.types || []).includes('application/x-long-project');
+}
+
+function setProjectDropTargetActive(nextActive) {
+  aiChatSidebar?.classList.toggle('is-project-drop-target', nextActive);
+  aiChatToggle?.classList.toggle('is-project-drop-target', nextActive);
+  aiDock?.classList.toggle('is-project-drop-target', nextActive);
+}
+
+function handleProjectDrop(event) {
+  const context = getDraggedProjectContext(event);
+  if (!context) {
+    return;
+  }
+
+  event.preventDefault();
+  setProjectDropTargetActive(false);
+  setAiProjectContext(context);
+  setAiChatOpen(true);
+  ensureAiChatBooted();
+  requestAnimationFrame(() => {
+    aiChatInput?.focus();
+  });
+}
+
 function buildAiChatHistoryPayload() {
   return aiChatState.messages
     .filter((message) => (message.role === 'user' || message.role === 'assistant') && message.includeInHistory !== false)
@@ -2459,6 +2596,13 @@ async function sendAiChatMessage(rawText) {
         message: messageText,
         history: buildAiChatHistoryPayload(),
         language: currentSiteLanguage === 'en' ? 'en' : 'zh',
+        projectContext: aiChatState.activeProjectContext
+          ? {
+              id: aiChatState.activeProjectContext.id,
+              title: aiChatState.activeProjectContext.title,
+              tags: aiChatState.activeProjectContext.tags,
+            }
+          : null,
       }),
     });
 
@@ -3760,6 +3904,59 @@ function initVersionUpdateCheck() {
 
 initVersionUpdateCheck();
 
+projectCards.forEach((card) => {
+  card.draggable = true;
+  card.querySelectorAll('img').forEach((image) => {
+    image.draggable = false;
+  });
+
+  card.addEventListener('dragstart', (event) => {
+    const context = getProjectContextFromCard(card);
+    if (!context?.id) {
+      return;
+    }
+
+    event.dataTransfer.effectAllowed = 'copy';
+    event.dataTransfer.setData('application/x-long-project', context.id);
+    event.dataTransfer.setData('text/plain', context.id);
+    card.classList.add('is-dragging-to-chat');
+    setProjectDropTargetActive(true);
+  });
+
+  card.addEventListener('dragend', () => {
+    card.classList.remove('is-dragging-to-chat');
+    setProjectDropTargetActive(false);
+  });
+});
+
+[aiChatSidebar, aiChatToggle, aiDock].filter(Boolean).forEach((target) => {
+  target.addEventListener('dragenter', (event) => {
+    if (isProjectDragEvent(event)) {
+      event.preventDefault();
+      target.classList.add('is-project-drop-hover');
+      setProjectDropTargetActive(true);
+    }
+  });
+
+  target.addEventListener('dragover', (event) => {
+    if (isProjectDragEvent(event)) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'copy';
+    }
+  });
+
+  target.addEventListener('dragleave', (event) => {
+    if (!target.contains(event.relatedTarget)) {
+      target.classList.remove('is-project-drop-hover');
+    }
+  });
+
+  target.addEventListener('drop', (event) => {
+    target.classList.remove('is-project-drop-hover');
+    handleProjectDrop(event);
+  });
+});
+
 if (aiChatToggle && aiChatSidebar && aiChatForm && aiChatInput) {
   autoResizeAiChatInput();
 
@@ -3796,6 +3993,15 @@ if (aiChatToggle && aiChatSidebar && aiChatForm && aiChatInput) {
   aiChatForm.addEventListener('submit', (event) => {
     event.preventDefault();
     sendAiChatMessage(aiChatInput.value);
+  });
+
+  aiChatProjectClear?.addEventListener('click', clearAiProjectContext);
+
+  aiChatContextQuestion?.addEventListener('click', () => {
+    const question = getProjectContextQuestion();
+    if (question) {
+      sendAiChatMessage(question);
+    }
   });
 
   window.addEventListener('keydown', (event) => {

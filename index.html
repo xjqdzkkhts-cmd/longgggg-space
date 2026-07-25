@@ -727,6 +727,14 @@
 
         <form class="ai-chat-form" data-ai-chat-form>
           <label class="sr-only" for="ai-chat-input" data-i18n="aiInputLabel">输入你想问龙湘玉 AI 分身的问题</label>
+          <div class="ai-chat-context" data-ai-chat-context hidden>
+            <div class="ai-chat-project-attachment" data-ai-chat-project-attachment>
+              <img class="ai-chat-project-thumb" src="" alt="" data-ai-chat-project-thumb />
+              <span class="ai-chat-project-title" data-ai-chat-project-title></span>
+              <button class="ai-chat-project-clear" type="button" aria-label="移除项目上下文" data-ai-chat-project-clear>×</button>
+            </div>
+            <button class="ai-chat-context-question" type="button" data-ai-chat-context-question></button>
+          </div>
           <textarea
             class="ai-chat-input"
             id="ai-chat-input"
@@ -813,6 +821,6 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-    <script src="./script.js?v=2026-07-25-relight-project"></script>
+    <script src="./script.js?v=2026-07-25-project-context"></script>
   </body>
 </html>
