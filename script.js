@@ -2464,7 +2464,7 @@ function ensureAiChatBooted() {
   renderAiChatMessages();
 }
 
-function setAiChatOpen(nextOpen) {
+function setAiChatOpen(nextOpen, options = {}) {
   if (!aiChatSidebar || !aiChatToggle) {
     return;
   }
@@ -2476,9 +2476,11 @@ function setAiChatOpen(nextOpen) {
 
   if (nextOpen) {
     ensureAiChatBooted();
-    requestAnimationFrame(() => {
-      aiChatInput?.focus();
-    });
+    if (options.focusInput !== false) {
+      requestAnimationFrame(() => {
+        aiChatInput?.focus();
+      });
+    }
   }
 }
 
@@ -3961,6 +3963,7 @@ projectCards.forEach((card) => {
     event.dataTransfer.setData('application/x-long-project', context.id);
     event.dataTransfer.setData('text/plain', context.id);
     card.classList.add('is-dragging-to-chat');
+    setAiChatOpen(true, { focusInput: false });
     setProjectDropTargetActive(true);
   });
 

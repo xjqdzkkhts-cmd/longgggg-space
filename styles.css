@@ -3253,6 +3253,7 @@ body.is-chat-open .ai-chat-sidebar {
   transition: opacity 0.22s ease;
 }
 
+.ai-chat-sidebar.is-project-drop-target .ai-chat-shell,
 .ai-chat-sidebar.is-project-drop-hover .ai-chat-shell {
   border-color: rgba(210, 253, 95, 0.72);
   box-shadow:
@@ -3261,6 +3262,7 @@ body.is-chat-open .ai-chat-sidebar {
     0 0 34px rgba(210, 253, 95, 0.22);
 }
 
+.ai-chat-sidebar.is-project-drop-target .ai-chat-shell::after,
 .ai-chat-sidebar.is-project-drop-hover .ai-chat-shell::after {
   opacity: 1;
 }
