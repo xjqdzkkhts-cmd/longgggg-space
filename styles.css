@@ -5104,32 +5104,11 @@ body.is-site-scaled .knowledge-viewer-close {
   background: #0045DD;
 }
 
-.project-viewer.is-presenting .project-viewer-close,
-.project-viewer.is-presenting .project-viewer-present {
-  top: 18px;
-  width: 22px;
-  height: 22px;
-  border-radius: 5px;
-}
-
-.project-viewer.is-presenting .project-viewer-close {
-  left: 24px;
-}
-
-.project-viewer.is-presenting .project-viewer-present {
-  left: 52px;
-}
 
 .project-viewer-close svg,
 .project-viewer-present svg {
   width: 20px;
   height: 20px;
-}
-
-.project-viewer.is-presenting .project-viewer-close svg,
-.project-viewer.is-presenting .project-viewer-present svg {
-  width: 10px;
-  height: 10px;
 }
 
 .project-slideshow {
@@ -5268,14 +5247,8 @@ body.is-site-scaled .knowledge-viewer-close {
 }
 
 .project-viewer.is-presenting .project-slide-count {
-  top: 18px;
-  left: 80px;
-  min-height: 22px;
-  padding: 0 8px;
-  border-radius: 5px;
   background: rgba(51, 51, 51, 0.62);
   color: rgba(255, 255, 255, 0.78);
-  font-size: 0.62rem;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
