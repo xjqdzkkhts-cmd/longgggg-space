@@ -5230,22 +5230,24 @@ body.is-site-scaled .knowledge-viewer-close {
 
 .project-slide-count {
   position: absolute;
-  left: clamp(38px, var(--project-slide-progress, 0%), calc(100% - 38px));
+  left: clamp(30px, var(--project-slide-progress, 0%), calc(100% - 30px));
   top: 50%;
-  min-height: 32px;
-  padding: 0 14px;
+  min-height: 24px;
+  padding: 0 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-pill);
   background: #0045DD;
   color: #ffffff;
-  font-size: 0.9rem;
+  font-size: 0.74rem;
   font-weight: 400;
   line-height: 1;
   white-space: nowrap;
   transform: translate(-50%, -50%);
-  box-shadow: 0 8px 24px rgba(0, 69, 221, 0.24);
+  box-shadow: 0 6px 16px rgba(0, 69, 221, 0.2);
+  transition: left 0.24s ease;
+  will-change: left;
   z-index: 3;
   pointer-events: none;
 }
