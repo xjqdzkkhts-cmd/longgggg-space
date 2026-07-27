@@ -5195,6 +5195,7 @@ body.is-site-scaled .knowledge-viewer-close {
 }
 
 .project-slide-progress {
+  --project-slide-progress: 0%;
   position: absolute;
   left: 50%;
   bottom: 28px;
@@ -5229,28 +5230,24 @@ body.is-site-scaled .knowledge-viewer-close {
 
 .project-slide-count {
   position: absolute;
-  top: 24px;
-  left: 160px;
-  min-height: 44px;
+  left: clamp(38px, var(--project-slide-progress, 0%), calc(100% - 38px));
+  top: 50%;
+  min-height: 32px;
   padding: 0 14px;
   display: inline-flex;
   align-items: center;
-  border-radius: var(--radius-icon);
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.68);
-  font-size: 0.78rem;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background: #0045DD;
+  color: #ffffff;
+  font-size: 0.9rem;
   font-weight: 400;
   line-height: 1;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  z-index: 4;
-}
-
-.project-viewer.is-presenting .project-slide-count {
-  background: rgba(51, 51, 51, 0.62);
-  color: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 8px 24px rgba(0, 69, 221, 0.24);
+  z-index: 3;
+  pointer-events: none;
 }
 
 .folder-page[data-folder-page="about"] .folder-page-image {
@@ -5645,13 +5642,6 @@ body.is-site-scaled .knowledge-viewer-close {
 
   .project-viewer.is-presenting .project-viewer-present {
     left: 40px;
-  }
-
-  .project-viewer.is-presenting .project-slide-count {
-    top: 12px;
-    left: 68px;
-    min-height: 22px;
-    padding: 0 8px;
   }
 
   .project-slideshow {

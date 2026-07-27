@@ -55,6 +55,7 @@ const projectSlideFrame = document.querySelector('.project-slide-frame');
 const projectSlideImage = document.querySelector('[data-project-slide-image]');
 const projectSlideCount = document.querySelector('[data-project-slide-count]');
 const projectSlideProgress = document.querySelector('[data-project-slide-progress]');
+const projectSlideProgressTrack = document.querySelector('.project-slide-progress');
 const projectSlidePrev = document.querySelector('[data-project-slide-prev]');
 const projectSlideNext = document.querySelector('[data-project-slide-next]');
 const knowledgeEntries = [...document.querySelectorAll('[data-knowledge-entry]')];
@@ -3622,8 +3623,8 @@ if (
     projectSlideImage.src = activeProjectImages[activeSlideIndex];
     projectSlideImage.alt = `项目放映页面 ${activeSlideIndex + 1}`;
     const progress = ((activeSlideIndex + 1) / activeProjectImages.length) * 100;
-    projectSlideCount.textContent = `${activeSlideIndex + 1} / ${activeProjectImages.length}`;
-    projectSlideProgress.style.setProperty('--project-slide-progress', `${progress}%`);
+    projectSlideCount.textContent = (activeSlideIndex + 1) + "/" + activeProjectImages.length;
+    projectSlideProgressTrack?.style.setProperty('--project-slide-progress', progress + '%');
     if (projectSlideFrame) {
       projectSlideFrame.scrollTo({ top: 0, left: 0 });
     }
