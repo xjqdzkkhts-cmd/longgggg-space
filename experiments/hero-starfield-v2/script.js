@@ -5,7 +5,7 @@ const cursor = document.querySelector('.custom-cursor');
 const scrollTrigger = document.querySelector('[data-scroll-target]');
 const hero = document.querySelector('.hero');
 const heroTitle = document.querySelector('.hero-title');
-const heroAsciiRipple = document.querySelector('[data-hero-ascii-ripple]');
+const heroStarfield = document.querySelector('[data-hero-starfield]');
 const roleStack = document.querySelector('[data-role-stack]');
 const currentRoleLayer = document.querySelector('[data-role-current]');
 const nextRoleLayer = document.querySelector('[data-role-next]');
@@ -4396,25 +4396,84 @@ if (siteHeader) {
   updateHeaderVisibility();
 }
 
-const initHeroAsciiRipple = () => {
-  if (!hero || !heroAsciiRipple) return;
+const initHeroStarfield = () => {
+  if (!hero || !heroStarfield) return;
 
-  const context = heroAsciiRipple.getContext('2d', { alpha: true });
+  const context = heroStarfield.getContext('2d', { alpha: true });
   if (!context) return;
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const glyphs = ['.', ':', '~', '=', '+', '*', '#'];
-  const ripples = [];
+  const glyphs = ['.', '.', ',', "'", '+', '°'];
+  const trailGlyphs = [',', "'", 'ⁿ', '°', '_'];
+  let stars = [];
   let width = 0;
   let height = 0;
   let pixelRatio = 1;
-  let cellSize = 16;
   let animationFrame = 0;
   let lastFrameTime = 0;
   let isVisible = true;
-  let lastPointerX = -1000;
-  let lastPointerY = -1000;
-  let lastPointerTime = 0;
+  const pointer = { x: -1000, y: -1000, active: false };
+
+  const randomFromSeed = (seed) => {
+    let value = seed % 2147483647;
+    if (value <= 0) value += 2147483646;
+    return () => {
+      value = (value * 16807) % 2147483647;
+      return (value - 1) / 2147483646;
+    };
+  };
+
+  const createStars = () => {
+    const random = randomFromSeed(Math.round(width * 17 + height * 31));
+    const density = width < 720 ? 16000 : 13000;
+    const count = Math.max(width < 720 ? 34 : 52, Math.round((width * height) / density));
+
+    stars = Array.from({ length: count }, (_, index) => {
+      const clustered = random() < 0.46;
+      let x = random() * width;
+      let y = random() * height;
+
+      if (clustered) {
+        const progress = random();
+        x = progress * width + (random() - 0.5) * width * 0.16;
+        y = height * (0.72 - progress * 0.38) + (random() - 0.5) * height * 0.22;
+      }
+
+      const kindRoll = random();
+      const kind = kindRoll < 0.24 ? 'cross' : kindRoll < 0.48 ? 'trail' : 'point';
+      const trailLength = kind === 'trail' ? 4 + Math.floor(random() * 6) : 0;
+      const direction = (random() < 0.7 ? -0.7 : 0.7) + (random() - 0.5) * 0.55;
+      const step = 7 + random() * 6;
+
+      const star = {
+        x: Math.max(8, Math.min(width - 8, x)),
+        y: Math.max(8, Math.min(height - 8, y)),
+        kind,
+        glyph: glyphs[Math.floor(random() * glyphs.length)],
+        size: 9 + random() * 5,
+        arm: 7 + random() * 4,
+        alpha: 0.16 + random() * 0.22,
+        phase: random() * Math.PI * 2,
+        speed: 0.0007 + random() * 0.0012,
+        spark: 0,
+        accent: index % 8 === 0,
+        trail: [],
+      };
+
+      if (kind === 'trail') {
+        star.trail = Array.from({ length: trailLength }, (_, trailIndex) => {
+          const curve = trailIndex * trailIndex * 0.55 * (random() < 0.5 ? -1 : 1);
+          return {
+            x: Math.cos(direction) * step * trailIndex,
+            y: Math.sin(direction) * step * trailIndex + curve,
+            glyph: trailGlyphs[Math.floor(random() * trailGlyphs.length)],
+          };
+        });
+      }
+
+      return star;
+    });
+  };
 
   const draw = (time = 0, force = false) => {
     if (!width || !height) return;
@@ -4422,46 +4481,48 @@ const initHeroAsciiRipple = () => {
     lastFrameTime = time;
 
     context.clearRect(0, 0, width, height);
-    context.font = `${Math.max(12, cellSize * 0.72)}px "SFMono-Regular", Consolas, monospace`;
     context.textAlign = 'center';
     context.textBaseline = 'middle';
 
-    const activeRipples = ripples.filter((ripple) => time - ripple.startedAt < 3200);
-    ripples.length = 0;
-    ripples.push(...activeRipples);
-    heroAsciiRipple.dataset.ripples = String(ripples.length);
+    stars.forEach((star) => {
+      const distance = pointer.active ? Math.hypot(star.x - pointer.x, star.y - pointer.y) : Infinity;
+      const influence = Math.max(0, 1 - distance / 142);
+      const twinkle = 0.5 + 0.5 * Math.sin(time * star.speed + star.phase);
+      const targetSpark = influence * (0.55 + twinkle * 0.45);
+      star.spark += (targetSpark - star.spark) * (targetSpark > star.spark ? 0.26 : 0.08);
 
-    for (let y = cellSize * 0.5; y < height; y += cellSize) {
-      for (let x = cellSize * 0.5; x < width; x += cellSize) {
-        const ambient =
-          Math.sin(x * 0.018 + time * 0.00115) * 0.48 +
-          Math.cos(y * 0.024 - time * 0.0009) * 0.38 +
-          Math.sin((x + y) * 0.009 - time * 0.00065) * 0.2;
+      const spark = reducedMotion ? 0 : star.spark;
+      const alpha = Math.min(0.96, star.alpha + twinkle * 0.07 + spark * 0.72);
+      const size = star.size + spark * 4;
+      const useAccent = star.accent && spark > 0.38;
 
-        let interactive = 0;
-        ripples.forEach((ripple) => {
-          const age = Math.max(0, (time - ripple.startedAt) / 1000);
-          const distance = Math.hypot(x - ripple.x, y - ripple.y);
-          const envelope = Math.exp(-distance * 0.0065) * Math.exp(-age * 0.78);
-          interactive += Math.sin(distance * 0.095 - age * 8.4) * envelope * ripple.strength;
+      context.font = `${size}px "SFMono-Regular", Consolas, monospace`;
+      context.fillStyle = useAccent
+        ? `rgba(225, 193, 20, ${alpha})`
+        : `rgba(42, 42, 42, ${alpha})`;
+      context.shadowColor = useAccent ? 'rgba(255, 240, 131, 0.72)' : 'rgba(42, 42, 42, 0.28)';
+      context.shadowBlur = spark * 7;
+
+      if (star.kind === 'cross') {
+        const arm = star.arm + spark * 2;
+        context.fillText('|', star.x, star.y - arm);
+        context.fillText('-', star.x - arm, star.y);
+        context.fillText(spark > 0.44 ? '*' : 'o', star.x, star.y);
+        context.fillText('-', star.x + arm, star.y);
+        context.fillText('|', star.x, star.y + arm);
+      } else if (star.kind === 'trail') {
+        star.trail.forEach((point, pointIndex) => {
+          context.globalAlpha = Math.max(0.24, 1 - pointIndex / (star.trail.length + 1));
+          context.fillText(point.glyph, star.x + point.x, star.y + point.y);
         });
-
-        const wave = ambient + interactive * 1.25;
-        const normalized = Math.min(0.999, Math.max(0, (wave + 1.55) / 3.1));
-        const glyph = glyphs[Math.floor(normalized * glyphs.length)];
-        const interactionPeak = Math.min(1, Math.abs(interactive));
-        const horizontalFade = 0.52 + (x / width) * 0.48;
-
-        if (interactionPeak > 0.32) {
-          context.fillStyle = `rgba(34, 34, 34, ${0.72 + interactionPeak * 0.2})`;
-        } else {
-          const alpha = (0.11 + Math.abs(wave) * 0.06) * horizontalFade;
-          context.fillStyle = `rgba(34, 34, 34, ${Math.min(0.3, alpha)})`;
-        }
-
-        context.fillText(glyph, x, y);
+        context.globalAlpha = 1;
+      } else {
+        context.fillText(spark > 0.44 ? '+' : star.glyph, star.x, star.y);
       }
-    }
+    });
+
+    context.globalAlpha = 1;
+    context.shadowBlur = 0;
   };
 
   const loop = (time) => {
@@ -4482,42 +4543,25 @@ const initHeroAsciiRipple = () => {
     width = Math.max(1, Math.round(bounds.width));
     height = Math.max(1, Math.round(bounds.height));
     pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
-    cellSize = width < 720 ? 19 : 16;
-    heroAsciiRipple.width = Math.round(width * pixelRatio);
-    heroAsciiRipple.height = Math.round(height * pixelRatio);
+    heroStarfield.width = Math.round(width * pixelRatio);
+    heroStarfield.height = Math.round(height * pixelRatio);
     context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    heroAsciiRipple.dataset.ready = 'true';
+    createStars();
+    heroStarfield.dataset.ready = 'true';
     draw(performance.now(), true);
-  };
-
-  const addRipple = (event, strength) => {
-    const bounds = hero.getBoundingClientRect();
-    const x = event.clientX - bounds.left;
-    const y = event.clientY - bounds.top;
-    if (x < 0 || y < 0 || x > bounds.width || y > bounds.height) return;
-
-    ripples.push({ x, y, strength, startedAt: performance.now() });
-    if (ripples.length > 7) ripples.splice(0, ripples.length - 7);
-    heroAsciiRipple.dataset.ripples = String(ripples.length);
-    if (reducedMotion) draw(performance.now(), true);
   };
 
   hero.addEventListener('pointermove', (event) => {
     if (reducedMotion) return;
     const bounds = hero.getBoundingClientRect();
-    const x = event.clientX - bounds.left;
-    const y = event.clientY - bounds.top;
-    const pointerDistance = Math.hypot(x - lastPointerX, y - lastPointerY);
-    const pointerDelay = event.timeStamp - lastPointerTime;
-    if (pointerDistance < 38 && pointerDelay < 65) return;
-
-    lastPointerX = x;
-    lastPointerY = y;
-    lastPointerTime = event.timeStamp;
-    addRipple(event, 0.9);
+    pointer.x = event.clientX - bounds.left;
+    pointer.y = event.clientY - bounds.top;
+    pointer.active = pointer.x >= 0 && pointer.y >= 0 && pointer.x <= bounds.width && pointer.y <= bounds.height;
   });
 
-  hero.addEventListener('pointerdown', (event) => addRipple(event, 1.65));
+  hero.addEventListener('pointerleave', () => {
+    pointer.active = false;
+  });
 
   const resizeObserver = new ResizeObserver(resize);
   resizeObserver.observe(hero);
@@ -4537,7 +4581,7 @@ const initHeroAsciiRipple = () => {
   start();
 };
 
-initHeroAsciiRipple();
+initHeroStarfield();
 
 if (hero && heroTitle) {
   const heroObserver = new IntersectionObserver(

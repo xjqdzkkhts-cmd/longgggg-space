@@ -70,6 +70,7 @@
   --radius-strap: var(--radius-none);
   --ai-chat-width: min(560px, 42vw);
   --layout-shift-x: 0px;
+  --bento-chat-compensation: 0px;
   --site-design-width: 1440px;
   --site-scale: 1;
   --site-canvas-height: auto;
@@ -731,6 +732,13 @@ html[data-language="en"] .hero-about {
   --about-bento-gap: 8px;
   padding: 0 var(--page-gutter) 92px;
   background: #ffffff;
+  translate: 0 0;
+  transition: translate 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: translate;
+}
+
+body.is-chat-open .about-bento-section {
+  translate: var(--bento-chat-compensation) 0;
 }
 
 .section-eyebrow {
@@ -936,6 +944,49 @@ html[data-language="en"] .hero-about {
 
 .about-bento-card:hover {
   background: #ffffff;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .about-bento-inner.is-pocket-clipped {
+    overflow: clip;
+  }
+
+  .about-bento-card.is-scroll-reveal-ready {
+    opacity: 0;
+    translate: 0 var(--bento-pocket-distance, 100%);
+    scale: 0.92;
+  }
+
+  .about-bento-card.is-scroll-reveal-ready.is-scroll-reveal-visible {
+    animation: about-bento-card-reveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--bento-reveal-delay, 0ms);
+  }
+}
+
+@keyframes about-bento-card-reveal {
+  0% {
+    opacity: 0;
+    translate: 0 var(--bento-pocket-distance, 100%);
+    scale: 0.92;
+  }
+
+  64% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+
+  82% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1.025;
+  }
+
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
 }
 
 .about-bento-card-tall {
