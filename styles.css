@@ -2364,7 +2364,8 @@ body.is-chat-open .about-bento-section {
   height: 100px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
+  overflow: hidden;
+  border-radius: 22px;
   background: #ffffff;
 }
 
