@@ -2370,10 +2370,13 @@ body.is-chat-open .about-bento-section {
 }
 
 .about-grounded-icon {
+  display: block;
   width: 64px;
   height: 64px;
   object-fit: contain;
+  overflow: hidden;
   border-radius: 22%;
+  clip-path: inset(0 round 22%);
 }
 
 .about-grounded-copy {
