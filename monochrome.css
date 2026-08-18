@@ -608,6 +608,12 @@ body,
   mix-blend-mode: multiply;
 }
 
+/* Keep the overview monochrome, but show the original app artwork in its detail view. */
+.about-app-modal .about-app-card-icon {
+  filter: none !important;
+  mix-blend-mode: normal;
+}
+
 .about-bento-card-hci:hover .about-app-preview-icon {
   filter: grayscale(1) contrast(1.35) brightness(0.82) !important;
 }
