@@ -2373,6 +2373,7 @@ body.is-chat-open .about-bento-section {
   width: 64px;
   height: 64px;
   object-fit: contain;
+  border-radius: 22%;
 }
 
 .about-grounded-copy {
