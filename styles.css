@@ -296,7 +296,7 @@ a,
   height: 60px;
   padding: 0 var(--content-inline-pad);
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   align-items: center;
   column-gap: 32px;
   background: #d2d2d238;

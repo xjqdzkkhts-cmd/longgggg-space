@@ -65,9 +65,6 @@ const contactWrapper = document.querySelector('#contact');
 const contactSection = document.querySelector('#contact .contact-footer');
 const siteHeader = document.querySelector('.site-header');
 const navLinks = [...document.querySelectorAll('[data-nav-section]')];
-const languageMenu = document.querySelector('[data-language-menu]');
-const languageToggle = document.querySelector('[data-language-toggle]');
-const languageOptions = [...document.querySelectorAll('[data-language-option]')];
 const pageIndicator = document.querySelector('[data-page-indicator]');
 const worksCategoryTitle = document.querySelector('[data-works-category-title]');
 const workCards = [...document.querySelectorAll('[data-project-category]')];
@@ -467,20 +464,16 @@ const siteTranslations = {
     aiMusicRefresh: 'Refresh recent music',
   },
 };
-const supportedSiteLanguages = Object.keys(siteTranslations);
-const getSavedSiteLanguage = () => {
-  try {
-    const savedLanguage = window.localStorage?.getItem(SITE_LANGUAGE_STORAGE_KEY);
-    return supportedSiteLanguages.includes(savedLanguage) ? savedLanguage : 'zh';
-  } catch (_error) {
-    return 'zh';
-  }
-};
-let currentSiteLanguage = getSavedSiteLanguage();
+let currentSiteLanguage = 'en';
+try {
+  window.localStorage?.removeItem(SITE_LANGUAGE_STORAGE_KEY);
+} catch (_error) {
+  // The site remains English-only when storage is unavailable.
+}
 const getSiteText = (key, language = currentSiteLanguage) =>
-  siteTranslations[language]?.[key] ?? siteTranslations.zh[key] ?? '';
-const getAiChatCopy = (key) => AI_CHAT_COPY[currentSiteLanguage]?.[key] ?? AI_CHAT_COPY.zh[key] ?? '';
-const getHeroRoles = () => heroRoleMap[currentSiteLanguage] || heroRoleMap.zh;
+  siteTranslations[language]?.[key] ?? siteTranslations.en[key] ?? '';
+const getAiChatCopy = (key) => AI_CHAT_COPY.en?.[key] ?? '';
+const getHeroRoles = () => heroRoleMap.en;
 const getAiStarterKey = (suggestion) => {
   const normalizedSuggestion = String(suggestion || '').trim();
   if (!normalizedSuggestion) {
@@ -513,10 +506,10 @@ const setTextContentForKey = (element, key) => {
     element.textContent = value;
   }
 };
-const applySiteLanguage = (language, options = {}) => {
-  const nextLanguage = supportedSiteLanguages.includes(language) ? language : 'zh';
+const applySiteLanguage = () => {
+  const nextLanguage = 'en';
   currentSiteLanguage = nextLanguage;
-  document.documentElement.lang = nextLanguage === 'en' ? 'en' : 'zh-CN';
+  document.documentElement.lang = 'en';
   document.documentElement.dataset.language = nextLanguage;
 
   document.querySelectorAll('[data-i18n]').forEach((element) => {
@@ -552,25 +545,6 @@ const applySiteLanguage = (language, options = {}) => {
       element.dataset.cursorLabel = value;
     }
   });
-
-  languageOptions.forEach((option) => {
-    const isActive = option.dataset.languageOption === nextLanguage;
-    option.classList.toggle('is-active', isActive);
-    option.setAttribute('aria-checked', String(isActive));
-  });
-
-  if (languageToggle) {
-    languageToggle.setAttribute('aria-expanded', 'false');
-  }
-  languageMenu?.classList.remove('is-open');
-
-  if (!options.skipStorage) {
-    try {
-      window.localStorage?.setItem(SITE_LANGUAGE_STORAGE_KEY, nextLanguage);
-    } catch (_error) {
-      // Local storage may be unavailable; language still changes for this session.
-    }
-  }
 
   if (currentRoleLayer && nextRoleLayer) {
     const firstRole = getHeroRoles()[0];
@@ -1599,37 +1573,7 @@ function activateHeroIntro() {
   heroIntroHasPlayed = true;
 }
 
-if (languageToggle && languageMenu) {
-  languageToggle.addEventListener('click', (event) => {
-    event.stopPropagation();
-    const nextOpen = !languageMenu.classList.contains('is-open');
-    languageMenu.classList.toggle('is-open', nextOpen);
-    languageToggle.setAttribute('aria-expanded', String(nextOpen));
-  });
-
-  languageOptions.forEach((option) => {
-    option.addEventListener('click', (event) => {
-      event.stopPropagation();
-      applySiteLanguage(option.dataset.languageOption);
-    });
-  });
-
-  document.addEventListener('click', (event) => {
-    if (!languageMenu.contains(event.target)) {
-      languageMenu.classList.remove('is-open');
-      languageToggle.setAttribute('aria-expanded', 'false');
-    }
-  });
-
-  window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      languageMenu.classList.remove('is-open');
-      languageToggle.setAttribute('aria-expanded', 'false');
-    }
-  });
-}
-
-applySiteLanguage(currentSiteLanguage, { skipStorage: true });
+applySiteLanguage();
 
 function autoResizeAiChatInput() {
   if (!aiChatInput) {
@@ -2651,7 +2595,7 @@ async function sendAiChatMessage(rawText) {
 
   pushAiChatMessage({
     role: 'status',
-    text: currentSiteLanguage === 'en' ? 'Long AI is thinking...' : 'Long AI 正在思考...',
+    text: 'Long AI is thinking...',
     includeInHistory: false,
   });
 
@@ -2666,7 +2610,7 @@ async function sendAiChatMessage(rawText) {
       body: JSON.stringify({
         message: messageText,
         history: buildAiChatHistoryPayload(),
-        language: currentSiteLanguage === 'en' ? 'en' : 'zh',
+        language: 'en',
         projectContext: aiChatState.activeProjectContext
           ? {
               id: aiChatState.activeProjectContext.id,
