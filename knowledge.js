@@ -5,69 +5,12 @@ const KNOWLEDGE_ARTICLE_SOURCES = [
   { id: '004', source: './articles/004-parallax-card.md' },
 ];
 
-const isLocalKnowledgePreview = () =>
-  window.location.protocol === 'file:' ||
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1' ||
-  window.location.hostname === '0.0.0.0' ||
-  window.location.hostname === '::1' ||
-  window.location.hostname === '[::1]' ||
-  window.location.pathname.includes('/Users/');
-
-const redirectLocalKnowledgeBackHome = (event) => {
-  if (isLocalKnowledgePreview() && event.state?.knowledgeHomeFallback) {
-    window.location.replace('./index.html');
-  }
-};
-
-const normalizeLocalKnowledgeHistory = () => {
-  if (!isLocalKnowledgePreview() || !window.history?.replaceState || !window.history?.pushState) {
-    return;
-  }
-
-  window.addEventListener('popstate', redirectLocalKnowledgeBackHome);
-
-  if (window.history.state?.knowledgeHistoryNormalized) {
-    return;
-  }
-
-  try {
-    window.history.replaceState({ knowledgeHomeFallback: true }, '', './index.html');
-    window.history.pushState({ knowledgeHistoryNormalized: true }, '', './knowledge.html');
-  } catch (_error) {
-    // Some local preview environments restrict history rewrites.
-  }
-};
-
-normalizeLocalKnowledgeHistory();
-
-document.querySelector('.article-back-link')?.addEventListener('click', (event) => {
-  const hasSameSiteReferrer = (() => {
-    try {
-      return document.referrer && new URL(document.referrer).origin === window.location.origin;
-    } catch (_error) {
-      return false;
-    }
-  })();
-
-  if (!isLocalKnowledgePreview() && hasSameSiteReferrer && window.history.length > 1) {
-    event.preventDefault();
-    window.history.back();
-    return;
-  }
-
-  if (isLocalKnowledgePreview()) {
-    event.preventDefault();
-    window.location.href = './index.html';
-  }
-});
-
 const knowledgeList = document.querySelector('[data-knowledge-list]');
 const knowledgeFilters = document.querySelector('[data-knowledge-filters]');
 const knowledgeSort = document.querySelector('[data-knowledge-sort]');
 const knowledgeCount = document.querySelector('[data-knowledge-count]');
 
-let knowledgeArticles = [];
+let knowledgePageArticles = [];
 let activeCategory = '全部';
 
 const escapeKnowledgeHtml = (value) =>
@@ -136,13 +79,13 @@ const loadKnowledgeArticles = async () => {
     })
   );
 
-  knowledgeArticles = loaded;
+  knowledgePageArticles = loaded;
 };
 
 const renderKnowledgeFilters = () => {
   if (!knowledgeFilters) return;
 
-  const categories = ['全部', ...new Set(knowledgeArticles.map((article) => article.category))];
+  const categories = ['全部', ...new Set(knowledgePageArticles.map((article) => article.category))];
   knowledgeFilters.innerHTML = categories
     .map(
       (category) =>
@@ -165,8 +108,8 @@ const getVisibleKnowledgeArticles = () => {
   const sortMode = knowledgeSort?.value || 'newest';
   const filtered =
     activeCategory === '全部'
-      ? [...knowledgeArticles]
-      : knowledgeArticles.filter((article) => article.category === activeCategory);
+      ? [...knowledgePageArticles]
+      : knowledgePageArticles.filter((article) => article.category === activeCategory);
 
   return filtered.sort((a, b) => {
     if (sortMode === 'oldest') {

@@ -159,12 +159,12 @@ const cleanLandingUrl = () => {
   }
 
   const cleanPath = window.location.pathname.replace(/\/index\.html$/, '/');
-  if (cleanPath === window.location.pathname && !window.location.hash) {
+  if (cleanPath === window.location.pathname) {
     return;
   }
 
   try {
-    window.history.replaceState(null, '', `${cleanPath}${window.location.search || ''}`);
+    window.history.replaceState(window.history.state, '', `${cleanPath}${window.location.search || ''}${window.location.hash || ''}`);
   } catch (_error) {
     // Some local file previews do not allow history rewrites.
   }
@@ -172,87 +172,29 @@ const cleanLandingUrl = () => {
 
 cleanLandingUrl();
 
-const SITE_RETURN_POSITION_STORAGE_KEY = 'long-portfolio-return-position';
-
-const isHomeDocument = () => {
-  const path = window.location.pathname;
-  return path === '/' || path.endsWith('/') || path.endsWith('/index.html');
-};
-
-const saveCurrentReturnPosition = () => {
-  try {
-    window.sessionStorage?.setItem(
-      SITE_RETURN_POSITION_STORAGE_KEY,
-      JSON.stringify({
-        x: window.scrollX,
-        y: window.scrollY,
-        createdAt: Date.now(),
-      })
-    );
-  } catch (_error) {
-    // Private browsing or strict browser settings can disable sessionStorage.
-  }
-};
-
-const restoreSavedReturnPosition = () => {
-  if (!isHomeDocument()) {
-    return;
-  }
-
-  let savedPosition = null;
-  try {
-    const rawPosition = window.sessionStorage?.getItem(SITE_RETURN_POSITION_STORAGE_KEY);
-    if (!rawPosition) {
-      return;
-    }
-    window.sessionStorage?.removeItem(SITE_RETURN_POSITION_STORAGE_KEY);
-    savedPosition = JSON.parse(rawPosition);
-  } catch (_error) {
-    return;
-  }
-
-  const isRecent = Date.now() - Number(savedPosition.createdAt || 0) < 30 * 60 * 1000;
-  if (!isRecent || !Number.isFinite(savedPosition.y)) {
-    return;
-  }
-
-  const restore = () => {
-    window.scrollTo({
-      left: Number.isFinite(savedPosition.x) ? savedPosition.x : 0,
-      top: savedPosition.y,
-      behavior: 'auto',
-    });
-  };
-
-  requestAnimationFrame(() => {
-    restore();
-    setTimeout(restore, 120);
-    setTimeout(restore, 320);
-  });
-};
-
+// History navigation owns its scroll position. Do not replay a timed scroll on return.
 if ('scrollRestoration' in window.history) {
-  window.history.scrollRestoration = 'manual';
+  window.history.scrollRestoration = 'auto';
 }
 
-restoreSavedReturnPosition();
-
-document.addEventListener('click', (event) => {
-  const link = event.target.closest?.('a[href]');
-  if (!link || link.target) {
-    return;
-  }
-
+document.querySelector('.article-back-link')?.addEventListener('click', (event) => {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  let cameFromThisSite = false;
   try {
-    const url = new URL(link.getAttribute('href'), window.location.href);
-    const shouldRememberPosition =
-      url.origin === window.location.origin &&
-      (url.pathname.endsWith('/article.html') || url.pathname.endsWith('/knowledge.html'));
-    if (shouldRememberPosition) {
-      saveCurrentReturnPosition();
+    if (document.referrer) {
+      const previous = new URL(document.referrer);
+      cameFromThisSite = previous.origin === window.location.origin;
+      if (window.location.protocol === 'file:') {
+        cameFromThisSite = new URL('.', previous).href === new URL('.', window.location.href).href;
+      }
     }
   } catch (_error) {
-    // Ignore malformed href values.
+    // A direct visit still has the ordinary article-list link as a fallback.
+  }
+
+  if (cameFromThisSite && window.history.length > 1) {
+    event.preventDefault();
+    window.history.back();
   }
 });
 
