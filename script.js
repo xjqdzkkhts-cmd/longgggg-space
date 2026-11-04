@@ -1,3 +1,24 @@
+const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+// A scene owns its work only while it can be seen. Preference changes are live.
+const observeMotion = (element, onChange = () => {}) => {
+  if (!element) return;
+  let inView = false;
+  const update = () => {
+    const active = inView && !document.hidden && !motionPreference.matches;
+    element.classList.toggle('is-motion-paused', !active);
+    onChange(active);
+  };
+  const observer = new IntersectionObserver(([entry]) => {
+    inView = entry.isIntersecting;
+    update();
+  });
+  observer.observe(element);
+  document.addEventListener('visibilitychange', update);
+  motionPreference.addEventListener('change', update);
+  update();
+};
+
 const cards = [...document.querySelectorAll('[data-card]')];
 const scene = document.querySelector('.hero-visual');
 const stackCard = document.querySelector('.stack-card');
@@ -289,6 +310,7 @@ const aiChatState = {
   activeProjectContext: null,
   messages: [],
 };
+const aiMessageViews = new Map();
 let draggedProjectContext = null;
 let aiProjectContextPulseTimer = null;
 const AI_CHAT_COPY = {
@@ -1219,6 +1241,8 @@ if (aiToolCard && aiToolRows.length) {
   }));
   let marqueeFrame = 0;
   let lastMarqueeTime = 0;
+  let marqueeActive = false;
+  let marqueeHovering = false;
 
   const wrapMarquee = (value, size) => ((value % size) + size) % size;
 
@@ -1267,19 +1291,29 @@ if (aiToolCard && aiToolRows.length) {
   };
 
   const startMarquee = () => {
-    if (!marqueeFrame) {
+    if (!marqueeFrame && marqueeActive) {
       lastMarqueeTime = 0;
       marqueeFrame = window.requestAnimationFrame(tickMarquee);
     }
   };
 
   const setMarqueeActive = (isActive) => {
+    marqueeHovering = isActive;
     marqueeStates.forEach((state) => {
-      state.targetVelocity = isActive ? 54 : 0;
+      state.targetVelocity = isActive && marqueeActive ? 44 : 0;
     });
     startMarquee();
   };
 
+  observeMotion(aiToolCard, (active) => {
+    marqueeActive = active;
+    if (!active) {
+      cancelAnimationFrame(marqueeFrame);
+      marqueeFrame = 0;
+      lastMarqueeTime = 0;
+      marqueeStates.forEach((state) => { state.velocity = 0; state.targetVelocity = 0; });
+    } else if (marqueeHovering) setMarqueeActive(true);
+  });
   marqueeStates.forEach(renderMarquee);
   aiToolCard.addEventListener('mouseenter', () => setMarqueeActive(true));
   aiToolCard.addEventListener('mouseleave', () => setMarqueeActive(false));
@@ -2366,48 +2400,64 @@ function setAiChatStarterOptions(suggestions, options = {}) {
   }, 130);
 }
 
-function renderAiChatMessages() {
+function renderAiChatMessages({ followTail = false } = {}) {
   if (!aiChatMessages) {
     return;
   }
 
-  aiChatMessages.innerHTML = '';
-
-  aiChatState.messages.forEach((message) => {
-    const item = document.createElement('div');
-    item.className = 'ai-chat-message';
-    item.dataset.role = message.role;
-
-    if (message.role === 'status') {
-      item.classList.add('is-status');
-    } else {
-      if (message.isTyping) {
-        item.classList.add('is-typing');
-      }
-      const meta = document.createElement('div');
-      meta.className = 'ai-chat-message-meta';
-      meta.textContent = message.role === 'user' ? 'You' : 'Long AI';
-      item.appendChild(meta);
+  const wasAtBottom = aiChatMessages.scrollHeight - aiChatMessages.clientHeight - aiChatMessages.scrollTop < 48;
+  const currentMessages = new Set(aiChatState.messages);
+  aiMessageViews.forEach((view, message) => {
+    if (!currentMessages.has(message)) {
+      view.item.remove();
+      aiMessageViews.delete(message);
     }
-
-    const bubble = document.createElement('div');
-    bubble.className = 'ai-chat-bubble';
-    bubble.textContent = message.text;
-    item.appendChild(bubble);
-
-    if (!message.isTyping && Array.isArray(message.cards) && message.cards.length) {
-      const cardsWrap = document.createElement('div');
-      cardsWrap.className = 'ai-chat-feedback';
-      message.cards.forEach((card) => {
-        cardsWrap.appendChild(renderAiFeedbackCard(card));
-      });
-      item.appendChild(cardsWrap);
-    }
-
-    aiChatMessages.appendChild(item);
   });
 
-  aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+  aiChatState.messages.forEach((message) => {
+    let view = aiMessageViews.get(message);
+    if (!view) {
+      const item = document.createElement('div');
+      item.className = 'ai-chat-message';
+      item.dataset.role = message.role;
+      item.classList.toggle('is-status', message.role === 'status');
+      if (message.role !== 'status') {
+        const meta = document.createElement('div');
+        meta.className = 'ai-chat-message-meta';
+        meta.textContent = message.role === 'user' ? 'You' : 'Long AI';
+        item.appendChild(meta);
+      }
+      const bubble = document.createElement('div');
+      bubble.className = 'ai-chat-bubble';
+      item.appendChild(bubble);
+      view = { item, bubble, cards: null, cardsWrap: null };
+      aiMessageViews.set(message, view);
+      aiChatMessages.appendChild(item);
+    }
+
+    view.item.classList.toggle('is-typing', Boolean(message.isTyping));
+    if (view.bubble.textContent !== message.text) {
+      view.bubble.textContent = message.text;
+    }
+
+    const visibleCards = !message.isTyping && Array.isArray(message.cards) && message.cards.length
+      ? message.cards : null;
+    if (visibleCards !== view.cards) {
+      view.cardsWrap?.remove();
+      view.cardsWrap = null;
+      view.cards = visibleCards;
+      if (visibleCards) {
+        const cardsWrap = document.createElement('div');
+        cardsWrap.className = 'ai-chat-feedback';
+        visibleCards.forEach((card) => cardsWrap.appendChild(renderAiFeedbackCard(card)));
+        view.item.appendChild(cardsWrap);
+        view.cardsWrap = cardsWrap;
+      }
+    }
+  });
+
+  // Reading earlier messages is intentional; only an explicit send resumes following.
+  if (wasAtBottom || followTail) aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
 }
 
 if (aiChatStarters) {
@@ -2524,7 +2574,7 @@ function buildAiChatHistoryPayload() {
 
 function pushAiChatMessage(message) {
   aiChatState.messages.push(message);
-  renderAiChatMessages();
+  renderAiChatMessages({ followTail: message.role === 'user' });
 }
 
 function removeAiChatStatusMessages() {
@@ -2553,6 +2603,7 @@ function typeAiChatAssistantMessage({ text, cards }) {
     aiChatState.messages.push(message);
 
     const typeNext = () => {
+      if (motionPreference.matches || document.hidden || !aiChatState.isOpen) index = chars.length;
       if (index >= chars.length) {
         message.text = fullText;
         message.isTyping = false;
@@ -2859,17 +2910,27 @@ if (cursor) {
     cursor.classList.add('has-icon');
   };
 
+  let cursorFrame = 0;
+  let cursorX = -100;
+  let cursorY = -100;
   window.addEventListener('mousemove', (event) => {
-    cursor.classList.add('is-visible');
-    cursor.style.left = `${event.clientX}px`;
-    cursor.style.top = `${event.clientY}px`;
-  });
-
-  window.addEventListener('mouseleave', () => {
-    cursor.classList.remove('is-visible');
-    cursor.classList.remove('has-icon');
-    cursor.classList.remove('has-label');
-  });
+    cursorX = event.clientX;
+    cursorY = event.clientY;
+    if (cursorFrame) return;
+    cursorFrame = requestAnimationFrame(() => {
+      cursorFrame = 0;
+      cursor.style.setProperty('--cursor-x', `${cursorX}px`);
+      cursor.style.setProperty('--cursor-y', `${cursorY}px`);
+      cursor.classList.add('is-visible');
+    });
+  }, { passive: true });
+  const hideCursor = () => {
+    cancelAnimationFrame(cursorFrame);
+    cursorFrame = 0;
+    cursor.classList.remove('is-visible', 'has-icon', 'has-label', 'is-hovering');
+  };
+  document.documentElement.addEventListener('mouseleave', hideCursor);
+  window.addEventListener('blur', hideCursor);
 
   attachCursorBehavior = (target) => {
     if (!target || target.dataset.cursorReady === 'true') {
@@ -2903,7 +2964,7 @@ if (scrollTrigger) {
     const targetTop = window.scrollY + target.getBoundingClientRect().top - window.innerHeight * 0.12;
     window.scrollTo({
       top: Math.max(0, targetTop),
-      behavior: 'smooth',
+      behavior: motionPreference.matches ? 'auto' : 'smooth',
     });
   });
 }
@@ -2921,6 +2982,8 @@ if (worksRunway && worksStage && worksViewport && worksTrack && worksCategoryTit
   let geometry = null;
   let activeCategory = '';
   let categoryTitleTimer = 0;
+  let cardMetrics = [];
+  let focusedCard = null;
 
   const setActiveCategory = (category) => {
     if (!category || category === activeCategory) {
@@ -2951,29 +3014,26 @@ if (worksRunway && worksStage && worksViewport && worksTrack && worksCategoryTit
   };
 
   const findClosestCard = (trackX = 0) => {
-    const focusX = worksViewport.clientWidth / 2;
-    let closestCard = null;
-    let closestDistance = Number.POSITIVE_INFINITY;
-
-    workCards.forEach((card) => {
-      const cardCenter = card.offsetLeft + card.offsetWidth / 2 + trackX;
-      const distance = Math.abs(cardCenter - focusX);
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestCard = card;
-      }
+    const focusX = (geometry?.viewportWidth || worksViewport.clientWidth) / 2;
+    let closest = null;
+    let closestDistance = Infinity;
+    let previousDistance = Infinity;
+    cardMetrics.forEach(({ card, center }) => {
+      const distance = Math.abs(center + trackX - focusX);
+      if (card === focusedCard) previousDistance = distance;
+      if (distance < closestDistance) { closest = card; closestDistance = distance; }
     });
-
-    return closestCard;
+    if (!focusedCard || previousDistance - closestDistance > 24) focusedCard = closest;
+    return focusedCard;
   };
 
   const renderCardDepth = (trackX) => {
-    const focusX = worksViewport.clientWidth / 2;
-    const distanceRange = Math.max(worksViewport.clientWidth * 0.54, 1);
+    const focusX = geometry.viewportWidth / 2;
+    const distanceRange = Math.max(geometry.viewportWidth * 0.54, 1);
     const reduceMotion = reducedMotionMedia.matches;
 
-    workCards.forEach((card) => {
-      const cardCenter = card.offsetLeft + card.offsetWidth / 2 + trackX;
+    cardMetrics.forEach(({ card, center }) => {
+      const cardCenter = center + trackX;
       const signedDistance = (cardCenter - focusX) / distanceRange;
       const distance = Math.min(1, Math.abs(signedDistance));
       const easedDistance = distance * distance * (3 - 2 * distance);
@@ -2994,6 +3054,8 @@ if (worksRunway && worksStage && worksViewport && worksTrack && worksCategoryTit
   const measureWorksTrack = () => {
     window.cancelAnimationFrame(worksFrame);
     window.cancelAnimationFrame(mobileFrame);
+    worksFrame = mobileFrame = 0;
+    cardMetrics = workCards.map((card) => ({ card, center: card.offsetLeft + card.offsetWidth / 2 }));
 
     if (!desktopMedia.matches) {
       geometry = null;
@@ -3018,13 +3080,14 @@ if (worksRunway && worksStage && worksViewport && worksTrack && worksCategoryTit
     const runwayHeight = window.innerHeight + travel * 1.08;
 
     worksRunway.style.setProperty('--works-runway-height', `${runwayHeight}px`);
-    geometry = { startX, endX, travel, runwayHeight };
+    geometry = { startX, endX, travel, runwayHeight, viewportWidth };
     updateDesktopTrack();
   };
 
   const updateDesktopTrack = () => {
-    window.cancelAnimationFrame(worksFrame);
+    if (worksFrame) return;
     worksFrame = window.requestAnimationFrame(() => {
+      worksFrame = 0;
       if (!desktopMedia.matches || !geometry) {
         return;
       }
@@ -3047,20 +3110,7 @@ if (worksRunway && worksStage && worksViewport && worksTrack && worksCategoryTit
         return;
       }
 
-      const viewportCenter = worksViewport.scrollLeft + worksViewport.clientWidth / 2;
-      let closestCard = workCards[0];
-      let closestDistance = Number.POSITIVE_INFINITY;
-
-      workCards.forEach((card) => {
-        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-        const distance = Math.abs(cardCenter - viewportCenter);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestCard = card;
-        }
-      });
-
-      setActiveCategory(closestCard?.dataset.projectCategory);
+      setActiveCategory(findClosestCard(-worksViewport.scrollLeft)?.dataset.projectCategory);
     });
   };
 
@@ -3069,6 +3119,9 @@ if (worksRunway && worksStage && worksViewport && worksTrack && worksCategoryTit
   window.addEventListener('resize', measureWorksTrack, { passive: true });
   desktopMedia.addEventListener('change', measureWorksTrack);
   reducedMotionMedia.addEventListener('change', () => {
+    window.clearTimeout(categoryTitleTimer);
+    worksCategoryTitle.classList.remove('is-leaving', 'is-entering');
+    worksCategoryTitle.textContent = categoryTitles[activeCategory] || activeCategory;
     if (desktopMedia.matches && geometry) {
       updateDesktopTrack();
     }
@@ -3076,6 +3129,8 @@ if (worksRunway && worksStage && worksViewport && worksTrack && worksCategoryTit
 
   setActiveCategory('ai-product');
   window.requestAnimationFrame(measureWorksTrack);
+  document.fonts?.ready.then(measureWorksTrack);
+  window.addEventListener('load', measureWorksTrack, { once: true });
 }
 
 if (learningDrop && window.Matter) {
@@ -3092,6 +3147,7 @@ if (learningDrop && window.Matter) {
   let resizeTimer = 0;
   let isLearningHovering = false;
   let isLearningCycleRunning = false;
+  let learningSceneActive = false;
 
   engine.gravity.y = 0.72;
 
@@ -3226,11 +3282,12 @@ if (learningDrop && window.Matter) {
       cycleTimer = window.setTimeout(() => {
         learningDrop.classList.add('is-fading');
         cycleTimer = window.setTimeout(runLearningCycle, 360);
-      }, 520);
+      }, 1800);
     }
   };
 
   function runLearningCycle() {
+    if (!learningSceneActive || motionPreference.matches) return;
     clearLearningPhysics();
     isLearningCycleRunning = true;
     learningDrop.classList.add('is-physics-positioned', 'is-animating');
@@ -3257,6 +3314,7 @@ if (learningDrop && window.Matter) {
   };
 
   const startLearningCycle = () => {
+    if (!learningSceneActive || motionPreference.matches) return;
     if (isLearningHovering) return;
     isLearningHovering = true;
     if (isLearningCycleRunning) return;
@@ -3272,6 +3330,14 @@ if (learningDrop && window.Matter) {
   };
 
   settleLearningStack();
+  observeMotion(learningCard, (active) => {
+    learningSceneActive = active;
+    if (!active && (isLearningCycleRunning || isLearningHovering)) {
+      isLearningCycleRunning = false;
+      isLearningHovering = false;
+      settleLearningStack();
+    }
+  });
   learningCard?.addEventListener('mouseenter', startLearningCycle);
   learningCard?.addEventListener('mouseleave', stopLearningCycle);
   learningCard?.addEventListener('focusin', startLearningCycle);
@@ -3434,7 +3500,7 @@ if (guestbookForm && guestbookInput && guestbookCount && guestbookList) {
       guestbookIsSubmitting = false;
     };
 
-    if (!guestbookPaper) {
+    if (!guestbookPaper || motionPreference.matches) {
       completeSubmit();
       return;
     }
@@ -3511,7 +3577,7 @@ if (aboutAppOpen && aboutAppModal && aboutAppCardContainer && aboutAppCard) {
   });
 
   aboutAppModal.addEventListener('mousemove', (event) => {
-    if (!aboutAppModal.classList.contains('is-open')) {
+    if (motionPreference.matches || !aboutAppModal.classList.contains('is-open')) {
       return;
     }
 
@@ -3917,7 +3983,7 @@ if (
         projectSlideFrame?.scrollBy({
           top: event.key === 'ArrowUp' ? -180 : 180,
           left: 0,
-          behavior: 'smooth',
+          behavior: motionPreference.matches ? 'auto' : 'smooth',
         });
       } else if (event.key === 'Escape') {
         event.preventDefault();
@@ -4251,7 +4317,7 @@ if (navLinks.length && hero && aboutSection && worksSection && portfolioSection 
 
     window.scrollTo({
       top: Math.max(0, targetTop),
-      behavior: 'smooth',
+      behavior: motionPreference.matches ? 'auto' : 'smooth',
     });
   };
 
@@ -4346,7 +4412,6 @@ const initHeroAsciiRipple = () => {
   const context = heroAsciiRipple.getContext('2d', { alpha: true });
   if (!context) return;
 
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const glyphs = ['.', ':', '~', '=', '+', '*', '#'];
   const ripples = [];
   let width = 0;
@@ -4355,7 +4420,9 @@ const initHeroAsciiRipple = () => {
   let cellSize = 16;
   let animationFrame = 0;
   let lastFrameTime = 0;
-  let isVisible = true;
+  let isVisible = false;
+  let sceneTime = 0;
+  let previousTick = 0;
   let lastPointerX = -1000;
   let lastPointerY = -1000;
   let lastPointerTime = 0;
@@ -4410,13 +4477,15 @@ const initHeroAsciiRipple = () => {
 
   const loop = (time) => {
     animationFrame = 0;
-    if (!isVisible || reducedMotion) return;
-    draw(time);
+    if (!isVisible || motionPreference.matches) return;
+    sceneTime += previousTick ? Math.min(time - previousTick, 50) : 0;
+    previousTick = time;
+    draw(sceneTime);
     animationFrame = requestAnimationFrame(loop);
   };
 
   const start = () => {
-    if (!animationFrame && isVisible && !reducedMotion) {
+    if (!animationFrame && isVisible && !motionPreference.matches) {
       animationFrame = requestAnimationFrame(loop);
     }
   };
@@ -4431,23 +4500,23 @@ const initHeroAsciiRipple = () => {
     heroAsciiRipple.height = Math.round(height * pixelRatio);
     context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     heroAsciiRipple.dataset.ready = 'true';
-    draw(performance.now(), true);
+    draw(motionPreference.matches ? 0 : sceneTime, true);
   };
 
   const addRipple = (event, strength) => {
+    if (motionPreference.matches || !isVisible) return;
     const bounds = hero.getBoundingClientRect();
     const x = event.clientX - bounds.left;
     const y = event.clientY - bounds.top;
     if (x < 0 || y < 0 || x > bounds.width || y > bounds.height) return;
 
-    ripples.push({ x, y, strength, startedAt: performance.now() });
+    ripples.push({ x, y, strength, startedAt: sceneTime });
     if (ripples.length > 7) ripples.splice(0, ripples.length - 7);
     heroAsciiRipple.dataset.ripples = String(ripples.length);
-    if (reducedMotion) draw(performance.now(), true);
   };
 
   hero.addEventListener('pointermove', (event) => {
-    if (reducedMotion) return;
+    if (motionPreference.matches) return;
     const bounds = hero.getBoundingClientRect();
     const x = event.clientX - bounds.left;
     const y = event.clientY - bounds.top;
@@ -4466,16 +4535,19 @@ const initHeroAsciiRipple = () => {
   const resizeObserver = new ResizeObserver(resize);
   resizeObserver.observe(hero);
 
-  const visibilityObserver = new IntersectionObserver(([entry]) => {
-    isVisible = entry.isIntersecting;
-    if (isVisible) {
-      start();
-    } else if (animationFrame) {
+  observeMotion(hero, (active) => {
+    isVisible = active;
+    previousTick = 0;
+    if (active) start();
+    else {
       cancelAnimationFrame(animationFrame);
       animationFrame = 0;
+      if (motionPreference.matches) {
+        ripples.length = 0;
+        draw(0, true);
+      }
     }
   });
-  visibilityObserver.observe(hero);
 
   resize();
   start();
@@ -4500,299 +4572,55 @@ if (hero && heroTitle) {
   heroObserver.observe(hero);
 }
 
+// Entrance motion is a first visit, not a reset every time a section is crossed.
 if (revealItems.length) {
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(({ target, isIntersecting }) => {
+      if (!isIntersecting) return;
+      target.classList.add('show');
+      observer.unobserve(target);
+    });
+  }, { rootMargin: '0px 0px -24px 0px', threshold: 0.04 });
 
-  if (prefersReducedMotion) {
+  revealItems.forEach((item) => {
+    if (motionPreference.matches || item === aboutSection) item.classList.add('show');
+    else {
+      item.classList.add('is-reveal-ready');
+      observer.observe(item);
+    }
+  });
+  motionPreference.addEventListener('change', () => {
+    if (!motionPreference.matches) return;
     revealItems.forEach((item) => item.classList.add('show'));
-  } else {
-    const revealObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          entry.target.classList.toggle('show', entry.isIntersecting);
-        });
-      },
-      {
-        rootMargin: '0px 0px 12% 0px',
-        threshold: 0.04,
-      }
-    );
-
-    revealItems.forEach((item) => revealObserver.observe(item));
-  }
+    observer.disconnect();
+  });
 }
 
 const initAboutBentoScrollReveal = () => {
-  if (!aboutSection || !aboutBentoInner || !aboutBentoCards.length) return;
-
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reducedMotion) return;
-
-  let lastScrollY = window.scrollY;
-  let scrollDirection = 'down';
-  let sectionIsActive = false;
-  let revealCompleteTimer = 0;
-
-  aboutBentoCards.forEach((card) => card.classList.add('is-scroll-reveal-ready'));
-  aboutBentoInner.classList.add('is-pocket-clipped');
-
-  const setPocketDistances = () => {
-    const pocketBottom = aboutBentoInner.offsetTop + aboutBentoInner.offsetHeight;
-    aboutBentoCards.forEach((card) => {
-      const distanceToPocket = Math.max(80, pocketBottom - card.offsetTop + 24);
-      card.style.setProperty('--bento-pocket-distance', `${distanceToPocket}px`);
-    });
-  };
-
-  const getCardRows = () => {
-    const orderedCards = [...aboutBentoCards].sort(
-      (first, second) => first.offsetTop - second.offsetTop || first.offsetLeft - second.offsetLeft
-    );
-    const rows = [];
-
-    orderedCards.forEach((card) => {
-      const existingRow = rows.find((row) => Math.abs(row.top - card.offsetTop) < 24);
-      if (existingRow) {
-        existingRow.cards.push(card);
-      } else {
-        rows.push({ top: card.offsetTop, cards: [card] });
-      }
-    });
-
-    return rows.sort((first, second) => first.top - second.top);
-  };
-
-  const playReveal = (direction) => {
-    const rows = getCardRows();
-    if (direction === 'up') rows.reverse();
-
-    window.clearTimeout(revealCompleteTimer);
-    aboutBentoInner.classList.add('is-pocket-clipped');
-    setPocketDistances();
-    aboutSection.dataset.bentoRevealDirection = direction;
-    aboutBentoCards.forEach((card) => {
-      card.classList.remove('is-scroll-reveal-visible');
-    });
-
-    rows.forEach((row, rowIndex) => {
-      row.cards.forEach((card) => {
-        card.style.setProperty('--bento-reveal-delay', `${rowIndex * 120}ms`);
+  if (!aboutBentoCards.length) return;
+  const observer = new IntersectionObserver((entries) => {
+    entries.filter((entry) => entry.isIntersecting)
+      .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top || a.boundingClientRect.left - b.boundingClientRect.left)
+      .forEach(({ target }, index) => {
+        target.style.setProperty('--bento-reveal-delay', `${Math.min(index, 3) * 60}ms`);
+        target.classList.add('is-scroll-reveal-visible');
+        observer.unobserve(target);
       });
-    });
-
-    void aboutSection.offsetWidth;
-    requestAnimationFrame(() => {
-      aboutBentoCards.forEach((card) => card.classList.add('is-scroll-reveal-visible'));
-      revealCompleteTimer = window.setTimeout(() => {
-        aboutBentoInner.classList.remove('is-pocket-clipped');
-      }, rows.length * 120 + 980);
-    });
-  };
-
-  window.addEventListener(
-    'scroll',
-    () => {
-      const currentScrollY = window.scrollY;
-      if (Math.abs(currentScrollY - lastScrollY) > 2) {
-        scrollDirection = currentScrollY > lastScrollY ? 'down' : 'up';
-        lastScrollY = currentScrollY;
-      }
-    },
-    { passive: true }
-  );
-
-  const bentoObserver = new IntersectionObserver(
-    ([entry]) => {
-      if (entry.isIntersecting && !sectionIsActive) {
-        sectionIsActive = true;
-        playReveal(scrollDirection);
-        return;
-      }
-
-      if (!entry.isIntersecting && sectionIsActive) {
-        sectionIsActive = false;
-        window.clearTimeout(revealCompleteTimer);
-        aboutBentoInner.classList.add('is-pocket-clipped');
-        aboutBentoCards.forEach((card) => card.classList.remove('is-scroll-reveal-visible'));
-      }
-    },
-    {
-      rootMargin: '-10% 0px -16% 0px',
-      threshold: 0.02,
-    }
-  );
-
-  setPocketDistances();
-  const bentoResizeObserver = new ResizeObserver(setPocketDistances);
-  bentoResizeObserver.observe(aboutBentoInner);
-  bentoObserver.observe(aboutSection);
+  }, { rootMargin: '0px 0px -20px 0px', threshold: 0.08 });
+  aboutBentoCards.forEach((card) => {
+    card.classList.add('is-scroll-reveal-ready');
+    if (motionPreference.matches) card.classList.add('is-scroll-reveal-visible');
+    else observer.observe(card);
+    observeMotion(card);
+  });
+  motionPreference.addEventListener('change', () => {
+    if (!motionPreference.matches) return;
+    aboutBentoCards.forEach((card) => card.classList.add('is-scroll-reveal-visible'));
+    observer.disconnect();
+  });
 };
 
 initAboutBentoScrollReveal();
-
-if (
-  aboutBentoCards.length &&
-  window.matchMedia('(pointer: fine)').matches &&
-  !window.matchMedia('(prefers-reduced-motion: reduce)').matches
-) {
-  const interactiveDragBlockers = [
-    'button',
-    'a',
-    'input',
-    'textarea',
-    'select',
-    '[contenteditable="true"]',
-    '[data-time-toggle]',
-    '[data-guestbook-input]',
-    '[data-guestbook-submit-trigger]',
-    '[data-interest-stage]',
-    '[data-about-app-open]',
-  ].join(',');
-
-  const setBentoReturn = (card) => {
-    card.classList.remove('is-bento-dragging');
-    card.classList.add('is-bento-returning');
-    card.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
-
-    const cleanupReturn = (event) => {
-      if (event && event.propertyName !== 'transform') {
-        return;
-      }
-
-      card.classList.remove('is-bento-returning');
-      card.style.transform = '';
-      card.removeEventListener('transitionend', cleanupReturn);
-    };
-
-    card.addEventListener('transitionend', cleanupReturn);
-    window.setTimeout(cleanupReturn, 620);
-  };
-
-  let interestDragCycleTimer = null;
-
-  const startInterestDragCycle = (card) => {
-    if (card !== interestCard || !advanceInterestMode || interestDragCycleTimer) {
-      return;
-    }
-
-    interestDragCycleTimer = window.setInterval(advanceInterestMode, 2500);
-  };
-
-  const stopInterestDragCycle = () => {
-    if (!interestDragCycleTimer) {
-      return;
-    }
-
-    window.clearInterval(interestDragCycleTimer);
-    interestDragCycleTimer = null;
-  };
-
-  aboutBentoCards.forEach((card) => {
-    let dragState = null;
-    let frameId = null;
-    let blockNextClick = false;
-
-    const resetFrame = () => {
-      if (frameId) {
-        window.cancelAnimationFrame(frameId);
-        frameId = null;
-      }
-    };
-
-    const applyDragTransform = () => {
-      if (!dragState) {
-        return;
-      }
-
-      const rotation = Math.max(-4, Math.min(4, dragState.x / 44));
-      card.style.transform = `translate3d(${dragState.x}px, ${dragState.y}px, 0) rotate(${rotation}deg)`;
-
-      frameId = null;
-    };
-
-    const requestDragFrame = () => {
-      if (!frameId) {
-        frameId = window.requestAnimationFrame(applyDragTransform);
-      }
-    };
-
-    const finishDrag = () => {
-      if (!dragState) {
-        return;
-      }
-
-      resetFrame();
-      try {
-        card.releasePointerCapture?.(dragState.pointerId);
-      } catch (error) {
-        // Pointer capture may already be released by the browser.
-      }
-
-      stopInterestDragCycle();
-      setBentoReturn(card);
-      blockNextClick = dragState.hasMoved;
-      dragState = null;
-    };
-
-    card.addEventListener('pointerdown', (event) => {
-      if (event.button !== 0) {
-        return;
-      }
-
-      const blocker = event.target.closest(interactiveDragBlockers);
-      if (blocker && blocker !== card) {
-        return;
-      }
-
-      dragState = {
-        pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-        x: 0,
-        y: 0,
-        hasMoved: false,
-      };
-
-      card.setPointerCapture?.(event.pointerId);
-      card.classList.remove('is-bento-returning');
-      card.classList.add('is-bento-dragging');
-      startInterestDragCycle(card);
-    });
-
-    card.addEventListener('pointermove', (event) => {
-      if (!dragState || event.pointerId !== dragState.pointerId) {
-        return;
-      }
-
-      dragState.x = event.clientX - dragState.startX;
-      dragState.y = event.clientY - dragState.startY;
-
-      if (Math.hypot(dragState.x, dragState.y) > 3) {
-        dragState.hasMoved = true;
-        event.preventDefault();
-      }
-
-      requestDragFrame();
-    });
-
-    card.addEventListener('pointerup', finishDrag);
-    card.addEventListener('pointercancel', finishDrag);
-
-    card.addEventListener(
-      'click',
-      (event) => {
-        if (!blockNextClick) {
-          return;
-        }
-
-        event.preventDefault();
-        event.stopPropagation();
-        blockNextClick = false;
-      },
-      true
-    );
-  });
-}
 
 const initAboutASCIIHover = () => {
   const targets = [
@@ -4800,10 +4628,9 @@ const initAboutASCIIHover = () => {
       '.about-profile-copy > p, .about-profile-question > span, .about-profile-question > strong'
     ),
   ];
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const hasFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-  if (!targets.length || reduceMotion || !hasFinePointer) {
+  if (!targets.length || !hasFinePointer) {
     return;
   }
 
@@ -4840,6 +4667,7 @@ const initAboutASCIIHover = () => {
     let previousPosition = -1;
     let animationFrame = null;
     let lastWaveAt = 0;
+    let textMotionActive = false;
 
     const positionFromPointer = (event) => {
       const caret = document.caretPositionFromPoint?.(event.clientX, event.clientY);
@@ -4884,6 +4712,8 @@ const initAboutASCIIHover = () => {
         .join('');
 
     const stop = () => {
+      window.cancelAnimationFrame(animationFrame);
+      waves = [];
       overlay.textContent = originalText;
       target.classList.remove('is-ascii-active');
       animationFrame = null;
@@ -4902,6 +4732,7 @@ const initAboutASCIIHover = () => {
     };
 
     const addWave = () => {
+      if (!textMotionActive) return;
       waves.push({
         origin: cursorPosition,
         startedAt: Date.now(),
@@ -4915,6 +4746,11 @@ const initAboutASCIIHover = () => {
         animationFrame = window.requestAnimationFrame(animate);
       }
     };
+
+    observeMotion(target, (active) => {
+      textMotionActive = active;
+      if (!active) stop();
+    });
 
     target.addEventListener('pointerenter', (event) => {
       cursorPosition = positionFromPointer(event);

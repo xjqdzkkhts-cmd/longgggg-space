@@ -2091,3 +2091,85 @@ body.is-chat-open .works-sticky-stage {
     animation: none !important;
   }
 }
+
+
+/* Stageshow motion: small entrances, immediate feedback, readable resting states. */
+:root {
+  --motion-arrive: cubic-bezier(0.25, 0.8, 0.25, 1);
+  --motion-travel: cubic-bezier(0.45, 0, 0.1, 1);
+}
+
+.hero.is-active .hero-title {
+  animation: hero-copy-enter 0.62s var(--motion-arrive) 0.06s both;
+}
+.hero.is-active .hero-credit {
+  animation: hero-copy-enter 0.56s var(--motion-arrive) 0.14s both;
+}
+.hero.is-active .hero-contact-button {
+  animation: hero-copy-enter 0.56s var(--motion-arrive) 0.22s both;
+}
+
+.ai-chat-sidebar,
+main {
+  transition-timing-function: var(--motion-travel);
+  transition-duration: 0.4s;
+}
+
+.ai-chat-message,
+.ai-chat-feedback {
+  animation: message-arrive 0.28s var(--motion-arrive) both;
+}
+.ai-chat-send {
+  min-width: 86px;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .ai-chat-sidebar { height: 100dvh; }
+  .ai-chat-shell { height: 100%; }
+}
+@keyframes message-arrive {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* The cards keep their current pose while their decorative children are offscreen. */
+.is-motion-paused,
+.is-motion-paused * {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    animation-play-state: running !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal,
+  .reveal.is-reveal-ready,
+  .hero-title,
+  .hero-credit,
+  .hero-contact-button,
+  .about-bento-card.is-scroll-reveal-ready {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .reveal.is-reveal-ready { transform: none; }
+  .about-bento-card.is-scroll-reveal-ready { animation: none !important; }
+}
+
+.custom-cursor {
+  left: 0;
+  top: 0;
+  transform: translate3d(var(--cursor-x, -100px), var(--cursor-y, -100px), 0) translate(-50%, -50%);
+  transition: width 0.18s var(--motion-arrive), height 0.18s var(--motion-arrive), opacity 0.14s ease;
+}
+
+.about-bento-card img {
+  -webkit-user-drag: none;
+}

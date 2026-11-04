@@ -164,9 +164,12 @@ body.is-site-scaled main {
 }
 
 .reveal {
+  transition: opacity 0.56s var(--motion-arrive), transform 0.56s var(--motion-arrive);
+}
+
+.reveal.is-reveal-ready {
   opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transform: translateY(12px);
 }
 
 .reveal.show {
@@ -921,25 +924,7 @@ body.is-chat-open .about-bento-section {
   transform-origin: center;
   transition:
     background-color 0.24s ease,
-    box-shadow 0.24s ease,
-    transform 0.52s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform;
-  cursor: grab;
-}
-
-.about-bento-card.is-bento-dragging {
-  z-index: 20;
-  cursor: grabbing;
-  box-shadow:
-    0 18px 34px rgba(12, 12, 12, 0.075),
-    0 2px 10px rgba(12, 12, 12, 0.05);
-  transition:
-    background-color 0.24s ease,
     box-shadow 0.24s ease;
-}
-
-.about-bento-card.is-bento-returning {
-  z-index: 19;
 }
 
 .about-bento-card:hover {
@@ -947,46 +932,20 @@ body.is-chat-open .about-bento-section {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .about-bento-inner.is-pocket-clipped {
-    overflow: clip;
-  }
-
   .about-bento-card.is-scroll-reveal-ready {
     opacity: 0;
-    translate: 0 var(--bento-pocket-distance, 100%);
-    scale: 0.92;
+    translate: 0 22px;
   }
 
-  .about-bento-card.is-scroll-reveal-ready.is-scroll-reveal-visible {
-    animation: about-bento-card-reveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  .about-bento-card.is-scroll-reveal-visible {
+    animation: about-bento-card-reveal 0.62s var(--motion-arrive) both;
     animation-delay: var(--bento-reveal-delay, 0ms);
   }
 }
 
 @keyframes about-bento-card-reveal {
-  0% {
-    opacity: 0;
-    translate: 0 var(--bento-pocket-distance, 100%);
-    scale: 0.92;
-  }
-
-  64% {
-    opacity: 1;
-    translate: 0 0;
-    scale: 1;
-  }
-
-  82% {
-    opacity: 1;
-    translate: 0 0;
-    scale: 1.025;
-  }
-
-  100% {
-    opacity: 1;
-    translate: 0 0;
-    scale: 1;
-  }
+  from { opacity: 0; translate: 0 22px; }
+  to { opacity: 1; translate: 0 0; }
 }
 
 .about-bento-card-tall {
@@ -5490,7 +5449,7 @@ body.is-site-scaled .knowledge-viewer-close {
   }
 
   .ai-chat-sidebar {
-    width: 100vw;
+    width: 100%;
     padding: 0;
   }
 
