@@ -1,12 +1,12 @@
 ---
-title: 视差卡片效果如何实现
+title: How to Build a Parallax Card Effect
 date: 2026.05
 datetime: 2026-05
 category: Portfolio
 ---
 
-这是一篇关于视差卡片效果的占位文章。之后可以记录如何根据鼠标位置计算层级位移，让卡片在 hover 时产生轻微的空间感。
+This is a placeholder article about parallax card effects. A future version can explain how to calculate layer offsets from the pointer position, giving a card a subtle sense of depth on hover.
 
-## 作品之外
+## Beyond the Final Work
 
-项目展示结果，文章展示过程。把实现过程记录下来，可以让访问者理解一个效果背后的判断，而不只是看到最终画面。
+Projects show the results; articles show the process. Documenting how an effect is built helps visitors understand the decisions behind it, as well as the final visual.

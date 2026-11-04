@@ -571,66 +571,363 @@ const applySiteLanguage = () => {
   }
 };
 const knowledgeArticles = {
-  '001': {
-    source: './articles/001-card-blur.md',
-    title: '如何实现卡片 UI 的渐变模糊效果',
-    date: '2026.05',
-    datetime: '2026-05',
-    category: 'Design Notes',
-    content: [
-      { type: 'p', text: '卡片 UI 里的渐变模糊，本质上不是为了“做一个很炫的效果”，而是为了让信息层级更清楚。图片、文字、标签同时出现在一张卡片里时，如果只是直接叠放，文字很容易被背景干扰。渐变模糊可以把复杂背景慢慢压低，让内容自然浮出来。' },
-      { type: 'h2', text: '先确定模糊服务于什么' },
-      { type: 'p', text: '我通常会先判断这张卡片最重要的信息是什么。比如作品卡片里，图片负责建立第一印象，标题和标签负责帮助用户快速判断项目类型。渐变模糊应该服务于后者，而不是盖住前者。所以模糊区域一般只放在文字附近，从底部或边缘逐渐出现。' },
-      { type: 'h2', text: '用多层叠加，而不是一层大模糊' },
-      { type: 'p', text: '比较稳定的做法是把卡片拆成三层：底层是图片，中间是渐变遮罩，上层是文字内容。遮罩层可以由几段不同强度的 blur 组成，从轻到重逐层过渡。这样视觉会更柔和，不会出现一块突然变糊的生硬边界。' },
-      { type: 'h2', text: '颜色要从图片里来' },
-      { type: 'p', text: '如果遮罩只是固定黑色或白色，很多卡片会显得很模板化。更好的方式是根据图片主色动态生成一层轻微的 tint，让模糊区域和图片本身有关系。比如蓝色项目图可以带一点冷色遮罩，绿色项目图可以带一点低饱和绿色。这样每张卡片都有自己的气质，但整体仍然统一。' },
-      { type: 'h2', text: '控制文字可读性' },
-      { type: 'p', text: '渐变模糊最终还是要回到可读性。标题区域需要足够的对比度，标签不能被图片细节淹没。如果图片本身很亮，就需要更强的暗色遮罩；如果图片偏暗，可以减少遮罩强度，避免卡片变脏。实现时可以给卡片设置一个 contrast boost，根据图片亮度微调遮罩透明度。' },
-      { type: 'h2', text: '实现思路' },
-      { type: 'p', text: '在前端里，可以用绝对定位把 overlay 放在图片上方，再用多个 span 或伪元素分别设置不同的 backdrop-filter: blur()。每一层用 mask 或 linear-gradient 控制作用范围，让模糊从下往上逐渐减弱。文字内容放在最上层，并保持独立的 padding 和 z-index。' },
-      { type: 'h2', text: '需要注意的细节' },
-      { type: 'p', text: '第一，模糊不要铺满整张图，否则图片会失去展示价值。第二，模糊层不要太重，否则卡片会显得灰。第三，圆角、裁切和 hover 状态要一起处理，尤其是图片容器需要 overflow hidden 或 clip-path，否则模糊层可能溢出圆角。' },
-      { type: 'h2', text: '总结' },
-      { type: 'p', text: '好的渐变模糊不是单纯的视觉装饰，而是一种信息组织方式。它让图片保持情绪，让文字保持清晰，也让卡片在统一的系统里保留差异。实现时重点不是把 blur 调大，而是控制它出现的位置、范围、颜色和层级。' },
-    ],
+  "001": {
+    "source": "./articles/001-card-blur.md",
+    "title": "Card Gradient Blur Based on Image Colors",
+    "date": "2026.04",
+    "datetime": "2026-04",
+    "category": "Frontend",
+    "content": [
+      {
+        "type": "h2",
+        "html": "What Is an Image-Based Gradient Blur?"
+      },
+      {
+        "type": "p",
+        "html": "The effect has four main steps:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Extract the dominant colors from an image.",
+          "Use those colors to generate a background gradient.",
+          "Apply a large blur to the background.",
+          "Layer the content card over it."
+        ]
+      },
+      {
+        "type": "p",
+        "html": "The result usually feels soft and atmospheric."
+      },
+      {
+        "type": "h2",
+        "html": "Implementation"
+      },
+      {
+        "type": "p",
+        "html": "Common tools include:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Color Thief",
+          "Vibrant.js",
+          "fast-average-color"
+        ]
+      },
+      {
+        "type": "p",
+        "html": "These libraries can automatically identify the dominant colors in an image."
+      },
+      {
+        "type": "code",
+        "language": "JS",
+        "code": "const color = colorThief.getColor(img)"
+      },
+      {
+        "type": "p",
+        "html": "Then generate the background dynamically:"
+      },
+      {
+        "type": "code",
+        "language": "CSS",
+        "code": "background: radial-gradient(...)"
+      },
+      {
+        "type": "h2",
+        "html": "A Simple Structure"
+      },
+      {
+        "type": "code",
+        "language": "HTML",
+        "code": "<div class=\"bg\"></div>\n<div class=\"card\"></div>"
+      },
+      {
+        "type": "code",
+        "language": "CSS",
+        "code": ".bg{\n  position:absolute;\n  inset:0;\n  background:\n    radial-gradient(circle,#ff6b6b,transparent),\n    radial-gradient(circle,#4d96ff,transparent);\n\n  filter:blur(120px);\n  opacity:.6;\n}\n\n.card{\n  position:relative;\n  backdrop-filter:blur(20px);\n}"
+      }
+    ]
   },
-  '002': {
-    source: './articles/002-threejs-drop.md',
-    title: '使用 Three.js 来实现 UI 元素掉落堆积效果',
-    date: '2026.05',
-    datetime: '2026-05',
-    category: 'Process',
-    content: [
-      { type: 'p', text: '这是一篇关于问题拆解的占位文章。真实内容可以记录从模糊需求到明确界面方案的过程。' },
-      { type: 'h2', text: '从问题开始' },
-      { type: 'p', text: '先确认用户是谁、要完成什么、现在被什么阻碍，再把信息结构和交互路径逐步展开。' },
-    ],
+  "002": {
+    "source": "./articles/002-threejs-drop.md",
+    "title": "Creating Falling and Stacking UI Elements with Matter.js",
+    "date": "2026.03",
+    "datetime": "2026-03",
+    "category": "Frontend",
+    "content": [
+      {
+        "type": "p",
+        "html": "In web design, we sometimes want UI elements to feel more natural and dynamic than a static arrangement. For example, a group of tags can fall from above like physical objects, collide at the bottom of a container, and settle into a pile."
+      },
+      {
+        "type": "h2",
+        "html": "1. How It Works"
+      },
+      {
+        "type": "p",
+        "html": "The core idea is to let Matter.js calculate each element&#39;s position, rotation, and collisions behind the scenes, then synchronize those values with real DOM elements."
+      },
+      {
+        "type": "p",
+        "html": "The process has four steps:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Create a physics world and set its gravity.",
+          "Represent each UI tag as a rigid body, such as a rectangle, circle, or capsule.",
+          "Add invisible walls around the container to keep the tags inside it.",
+          "On every frame, read each body&#39;s position and rotation from Matter.js and update the corresponding DOM element&#39;s <code>transform</code>."
+        ]
+      },
+      {
+        "type": "p",
+        "html": "The visitor sees real web elements falling and stacking naturally, while a <strong>2D physics simulation</strong> runs behind the scenes."
+      },
+      {
+        "type": "h2",
+        "html": "2. Basic Page Structure"
+      },
+      {
+        "type": "p",
+        "html": "To build a container of falling skill tags, start with ordinary HTML elements:"
+      },
+      {
+        "type": "code",
+        "language": "HTML",
+        "code": "<div class=\"tag-physics-card\">\n  <div class=\"tag green\">001</div>\n  <div class=\"tag purple\">002</div>\n  <div class=\"tag dark\">003</div>\n  <div class=\"tag purple\">004</div>\n  <div class=\"tag green\">005</div>\n  <div class=\"tag dark\">006</div>\n  <div class=\"tag dark\">007</div>\n  <div class=\"tag purple\">008</div>\n</div>"
+      },
+      {
+        "type": "p",
+        "html": "These tags are still ordinary DOM elements. Matter.js calculates where they should be, how much they should rotate, and how they collide with one another."
+      },
+      {
+        "type": "h2",
+        "html": "3. Styling the Container and Tags"
+      },
+      {
+        "type": "p",
+        "html": "CSS can handle the entire visual appearance."
+      },
+      {
+        "type": "code",
+        "language": "CSS",
+        "code": ".tag-physics-card {\n  position: relative;\n  width: 540px;\n  height: 460px;\n  border-radius: 36px;\n  background: #f4f4f5;\n  overflow: hidden;\n}\n\n.tag {\n  position: absolute;\n  padding: 10px 24px;\n  border-radius: 999px;\n  font-size: 28px;\n  line-height: 1;\n  white-space: nowrap;\n  user-select: none;\n  will-change: transform;\n}\n\n.tag.green {\n  background: #ccff44;\n  color: #333;\n}\n\n.tag.purple {\n  background: #cec3ff;\n  color: #333;\n}\n\n.tag.dark {\n  background: #3a3a3a;\n  color: #fff;\n}\n"
+      },
+      {
+        "type": "p",
+        "html": "There are a few key details here:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "<code>position: absolute</code> is necessary because we will use <code>transform</code> to control each tag&#39;s position precisely.",
+          "<code>overflow: hidden</code> keeps the tags inside the rounded container.",
+          "<code>will-change: transform</code> tells the browser to prepare for transform changes, helping reduce stutter."
+        ]
+      },
+      {
+        "type": "h2",
+        "html": "4. Creating the Matter.js Physics World"
+      },
+      {
+        "type": "p",
+        "html": "After installing Matter.js, create a basic physics engine:"
+      },
+      {
+        "type": "code",
+        "language": "JS",
+        "code": "import Matter from \"matter-js\";\nconst { Engine, World, Bodies, Body, Runner } = Matter;\nconst engine = Engine.create();\nconst world = engine.world;\nengine.gravity.y = 1;"
+      },
+      {
+        "type": "p",
+        "html": "<code>Engine.create()</code> creates the physics engine. The <code>world</code> contains all the physical bodies. Setting <code>engine.gravity.y = 1</code> enables downward gravity. For a slower fall, try a smaller value such as <code>0.6</code>; for a faster fall, use <code>1.2</code> or higher."
+      },
+      {
+        "type": "h2",
+        "html": "5. Adding Invisible Walls"
+      },
+      {
+        "type": "p",
+        "html": "To keep the tags stacked inside the container, add boundaries at the bottom, left, and right. These walls do not need to be visible; they only need to exist in the physics world."
+      },
+      {
+        "type": "code",
+        "language": "JS",
+        "code": "const container = document.querySelector(\".tag-physics-card\");\nconst width = container.clientWidth;\nconst height = container.clientHeight;\n\nconst walls = [\n  Bodies.rectangle(width / 2, height + 10, width, 20, {\n    isStatic: true,\n  }),\n  Bodies.rectangle(-10, height / 2, 20, height, {\n    isStatic: true,\n  }),\n  Bodies.rectangle(width + 10, height / 2, 20, height, {\n    isStatic: true,\n  }),\n];\n\nWorld.add(world, walls);"
+      },
+      {
+        "type": "p",
+        "html": "Here, <code>isStatic: true</code> means the walls stay in place when other bodies collide with them. The bottom wall sits slightly below the container&#39;s lower edge, while the side walls sit just outside its left and right edges. This keeps the falling tags inside so they can stack naturally."
+      },
+      {
+        "type": "h2",
+        "html": "6. Turning UI Tags into Rigid Bodies"
+      },
+      {
+        "type": "p",
+        "html": "Next, create a Matter.js rigid body for each DOM tag."
+      },
+      {
+        "type": "code",
+        "language": "JS",
+        "code": "const tags = document.querySelectorAll(\".tag\");\n\ntags.forEach((el) => {\n  const rect = el.getBoundingClientRect();\n\n  const body = Bodies.rectangle(\n    Math.random() * width,\n    Math.random() * 80,\n    rect.width,\n    rect.height,\n    {\n      restitution: 0.25,\n      friction: 0.8,\n      frictionAir: 0.02,\n    }\n  );\n\n  Body.rotate(body, (Math.random() - 0.5) * 1.2);\n\n  el.body = body;\n  World.add(world, body);\n});\n"
+      },
+      {
+        "type": "p",
+        "html": "<code>restitution</code> controls bounciness. Higher values make the tags bounce more. For UI tags, avoid setting it too high or the effect may feel too much like a toy. Values between <code>0.2</code> and <code>0.4</code> tend to feel more natural."
+      },
+      {
+        "type": "p",
+        "html": "<code>friction</code> controls friction between bodies. Higher values help the tags form a stable pile rather than sliding around continuously."
+      },
+      {
+        "type": "p",
+        "html": "<code>frictionAir</code> controls air resistance. Increasing it slightly can soften the motion and help the tags settle sooner."
+      },
+      {
+        "type": "p",
+        "html": "<code>Body.rotate()</code> gives each tag an initial angle so the pile looks more natural and less neatly aligned."
+      },
+      {
+        "type": "h2",
+        "html": "7. Synchronizing Physics with the DOM"
+      },
+      {
+        "type": "p",
+        "html": "Matter.js calculates the physics but does not automatically move DOM elements. We need to synchronize them on every frame:"
+      },
+      {
+        "type": "code",
+        "language": "JS",
+        "code": "function update() {\n  tags.forEach((el) => {\n    const body = el.body;\n\n    el.style.transform = `\n      translate(\n        ${body.position.x - el.offsetWidth / 2}px,\n        ${body.position.y - el.offsetHeight / 2}px\n      )\n      rotate(${body.angle}rad)\n    `;\n  });\n\n  requestAnimationFrame(update);\n}\n\nconst runner = Runner.create();\nRunner.run(runner, engine);\n\nupdate();"
+      },
+      {
+        "type": "p",
+        "html": "Matter.js uses the center of a body as its position, whereas a DOM element&#39;s <code>translate</code> offset starts from its top-left corner. Subtracting half the element&#39;s width and height keeps the visible tag aligned with its physical body."
+      },
+      {
+        "type": "h2",
+        "html": "8. Making the Effect Match the UI"
+      },
+      {
+        "type": "p",
+        "html": "Rectangular bodies are enough for a basic effect. However, rounded capsule tags may collide a little unnaturally because their visual shape is rounded while their physical body is rectangular."
+      },
+      {
+        "type": "p",
+        "html": "There are three practical approaches:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Keep rectangular bodies and use CSS for rounded corners. This is the simplest option and offers the best performance.",
+          "Build a capsule from several bodies: a rectangle in the middle and a circle at each end. This produces collisions closer to the visible pill shape.",
+          "Use Matter.js as an approximate physics layer while keeping the visual design polished. In most UI projects, visitors care more about natural motion than perfectly accurate collision edges."
+        ]
+      },
+      {
+        "type": "h2",
+        "html": "9. Performance Considerations"
+      },
+      {
+        "type": "p",
+        "html": "Matter.js is lightweight, but a continuously running simulation still consumes resources. On a personal website, visitors may only glance at this section, so it does not need to keep calculating indefinitely."
+      },
+      {
+        "type": "p",
+        "html": "You can use a timer to stop the simulation after a few seconds:"
+      },
+      {
+        "type": "code",
+        "language": "JS",
+        "code": "setTimeout(() => {\n  Runner.stop(runner);\n}, 3000);"
+      }
+    ]
   },
-  '003': {
-    source: './articles/003-vibe-coding-animation.md',
-    title: '更高效通过 Vibe Coding 来实现动画效果',
-    date: '2026.05',
-    datetime: '2026-05',
-    category: 'Fragments',
-    content: [
-      { type: 'p', text: '这是一篇关于日常观察的占位文章。生活中的细节经常会变成界面、动效或者产品概念的起点。' },
-      { type: 'h2', text: '观察的价值' },
-      { type: 'p', text: '好的体验通常不是凭空出现的，它往往来自对真实场景的耐心观察，以及对小问题的持续追问。' },
-    ],
+  "003": {
+    "source": "./articles/003-vibe-coding-animation.md",
+    "title": "Building Animations More Efficiently with Vibe Coding",
+    "date": "2026.05",
+    "datetime": "2026-05",
+    "category": "Vibe Coding",
+    "content": [
+      {
+        "type": "p",
+        "html": "Vibe coding can greatly reduce the time it takes to build animated web interactions. For beginners who are less confident with frontend programming, an efficient approach is to find an open-source example close to the intended result, then ask AI to help explain and adapt it."
+      },
+      {
+        "type": "h2",
+        "html": "1. Define the Type of Animation First"
+      },
+      {
+        "type": "p",
+        "html": "Before you start vibe coding, describe the animation you want. Web animations generally fall into a few categories:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Entrance animations: text fading in, cards sliding up, or images gradually appearing.",
+          "Hover animations: elements growing, glowing, changing color, or moving with a spring effect when hovered over.",
+          "Scroll-triggered animations: elements appearing one by one as a section enters the viewport, or backgrounds moving with parallax.",
+          "Looping ambient animations: gradient glows, floating particles, rotating globes, or fluid backgrounds.",
+          "Interactive animations: pointer tracking, dragging, click-to-expand interactions, card stacking, or objects falling under simulated gravity."
+        ]
+      },
+      {
+        "type": "h2",
+        "html": "2. Start by Teaching the AI"
+      },
+      {
+        "type": "p",
+        "html": "Many beginners get disappointing results because they give AI an abstract request such as, &quot;Help me create a sophisticated web animation.&quot;"
+      },
+      {
+        "type": "p",
+        "html": "That instruction is too vague. A better approach is to find a similar open-source example and say, &quot;I want an animation like this example, but in light blue, at a slower speed, using the assets I provide, and adapted for mobile.&quot;"
+      },
+      {
+        "type": "p",
+        "html": "This gives the AI a much clearer task."
+      },
+      {
+        "type": "h2",
+        "html": "3. Recommended Resources for CSS Animations"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "CodePen is one of the most useful places for beginners to find web animation inspiration. Many frontend developers share complete HTML, CSS, and JavaScript examples that you can give to AI for explanation and adaptation.",
+          "Animista is useful for finding ready-to-use CSS animations. It offers presets and lets you adjust speed, direction, delay, and other settings online, then copy just the CSS you need.",
+          "Hover.css works well for hover micro-interactions on buttons, links, and cards.",
+          "FreeFrontend collects CSS animations, components, and UI examples, with clearly organized categories.",
+          "The official GSAP CodePen examples and GSAP Showcase are better suited to advanced animation. In my experience, they offer more sophisticated motion effects."
+        ]
+      }
+    ]
   },
-  '004': {
-    source: './articles/004-parallax-card.md',
-    title: '视差卡片效果如何实现',
-    date: '2026.05',
-    datetime: '2026-05',
-    category: 'Portfolio',
-    content: [
-      { type: 'p', text: '这是一篇关于作品集和个人表达的占位文章。知识库可以作为项目之外的第二条线索，展示思考方式和长期积累。' },
-      { type: 'h2', text: '作品之外' },
-      { type: 'p', text: '项目展示结果，文章展示过程。两者放在一起，会让访问者更容易理解我如何学习、判断和创造。' },
-    ],
-  },
+  "004": {
+    "source": "./articles/004-parallax-card.md",
+    "title": "How to Build a Parallax Card Effect",
+    "date": "2026.05",
+    "datetime": "2026-05",
+    "category": "Portfolio",
+    "content": [
+      {
+        "type": "p",
+        "html": "This is a placeholder article about parallax card effects. A future version can explain how to calculate layer offsets from the pointer position, giving a card a subtle sense of depth on hover."
+      },
+      {
+        "type": "h2",
+        "html": "Beyond the Final Work"
+      },
+      {
+        "type": "p",
+        "html": "Projects show the results; articles show the process. Documenting how an effect is built helps visitors understand the decisions behind it, as well as the final visual."
+      }
+    ]
+  }
 };
 const projectLanguageMap = {
   'ai-thrombolysis': {
@@ -666,134 +963,7 @@ const projectLanguageMap = {
     en: { title: 'Merry Christmas', tags: ['Others'] },
   },
 };
-const knowledgeArticleTranslations = {
-  en: {
-    '001': {
-      title: 'Card Gradient Blur Based on Image Colors',
-      date: '2026.04',
-      datetime: '2026-04',
-      category: 'Frontend',
-      content: [
-        { type: 'h2', text: 'What Is an Image-Based Gradient Blur?' },
-        {
-          type: 'p',
-          text: 'An image-based gradient blur usually has four steps: extract the dominant color from an image, use that color to build a soft gradient, blur the gradient at a large scale, and place the actual content card above it.',
-        },
-        {
-          type: 'p',
-          text: 'The final effect creates a softer and more atmospheric background while keeping the card content readable.',
-        },
-        { type: 'h2', text: 'Implementation Method' },
-        {
-          type: 'p',
-          text: 'Common tools include Color Thief, Vibrant.js, and fast-average-color. These libraries can analyze an image and return representative colors automatically.',
-        },
-        { type: 'code', language: 'JS', code: 'const color = colorThief.getColor(img)' },
-        {
-          type: 'p',
-          text: 'After getting the color, the interface can generate a dynamic radial gradient.',
-        },
-        { type: 'code', language: 'CSS', code: 'background: radial-gradient(...)' },
-        { type: 'h2', text: 'A Simple Structure' },
-        { type: 'code', language: 'HTML', code: '<div class="bg"></div>\n<div class="card"></div>' },
-        {
-          type: 'code',
-          language: 'CSS',
-          code:
-            '.bg {\n  position: absolute;\n  inset: 0;\n  background:\n    radial-gradient(circle, #ff6b6b, transparent),\n    radial-gradient(circle, #4d96ff, transparent);\n  filter: blur(120px);\n  opacity: .6;\n}\n\n.card {\n  position: relative;\n  backdrop-filter: blur(20px);\n}',
-        },
-      ],
-    },
-    '002': {
-      title: 'Using Matter.js to Create Falling and Stacking UI Elements',
-      date: '2026.03',
-      datetime: '2026-03',
-      category: 'Frontend',
-      content: [
-        {
-          type: 'p',
-          text: 'Sometimes UI elements should not simply sit in a static layout. A group of tags can fall from the top, collide with each other, and naturally stack at the bottom of a container.',
-        },
-        { type: 'h2', text: 'Core Principle' },
-        {
-          type: 'p',
-          text: 'The core idea is to let Matter.js calculate position, rotation, gravity, and collision behind the scenes, then synchronize those physical values back to real DOM elements.',
-        },
-        {
-          type: 'p',
-          text: 'The process can be split into four steps: create a physics world, convert each UI tag into a rigid body, add invisible walls around the container, and update each DOM element with the calculated transform on every frame.',
-        },
-        { type: 'h2', text: 'Basic HTML Structure' },
-        {
-          type: 'code',
-          language: 'HTML',
-          code:
-            '<div class="tag-physics-card">\n  <div class="tag green">001</div>\n  <div class="tag purple">002</div>\n  <div class="tag dark">003</div>\n</div>',
-        },
-        { type: 'h2', text: 'Styling the Container and Tags' },
-        {
-          type: 'code',
-          language: 'CSS',
-          code:
-            '.tag-physics-card {\n  position: relative;\n  width: 540px;\n  height: 460px;\n  border-radius: 36px;\n  background: #f4f4f5;\n  overflow: hidden;\n}\n\n.tag {\n  position: absolute;\n  padding: 10px 24px;\n  border-radius: 999px;\n  font-size: 28px;\n  white-space: nowrap;\n  will-change: transform;\n}',
-        },
-        {
-          type: 'p',
-          text: 'The important details are absolute positioning, hidden overflow for the rounded container, and transform-based animation for smoother performance.',
-        },
-      ],
-    },
-    '003': {
-      title: 'Using Vibe Coding to Build Animations More Efficiently',
-      date: '2026.05',
-      datetime: '2026-05',
-      category: 'Vibe Coding',
-      content: [
-        {
-          type: 'p',
-          text: 'Vibe coding can significantly reduce the time needed to build web interactions. For designers who are not fully comfortable with frontend engineering, an efficient workflow is to start from a close reference, then ask AI to explain, adapt, and refine it.',
-        },
-        { type: 'h2', text: 'Clarify the Type of Animation First' },
-        {
-          type: 'p',
-          text: 'Before coding, define the animation category: entrance animation, hover micro-interaction, scroll-triggered motion, looping ambient animation, or direct interactive motion such as dragging, expanding, stacking, and physics-based falling.',
-        },
-        { type: 'h2', text: 'Teach the AI Before Asking It to Build' },
-        {
-          type: 'p',
-          text: 'A vague prompt like “make this animation feel premium” often performs poorly. A better approach is to provide a close open-source example and describe how it should change: colors, speed, content, assets, and responsive behavior.',
-        },
-        { type: 'h2', text: 'Useful Inspiration Sources' },
-        {
-          type: 'p',
-          text: 'CodePen is great for complete HTML, CSS, and JavaScript examples. Animista is useful for adjustable CSS animations. Hover.css works well for button and card micro-interactions. FreeFrontend is helpful for categorized UI references, while GSAP examples are better for advanced motion.',
-        },
-      ],
-    },
-    '004': {
-      title: 'How to Build a Parallax Card Effect',
-      date: '2026.05',
-      datetime: '2026-05',
-      category: 'Portfolio',
-      content: [
-        {
-          type: 'p',
-          text: 'A parallax card effect gives a flat interface a subtle sense of depth. The key is to calculate movement based on pointer position, then let different layers move at different speeds.',
-        },
-        { type: 'h2', text: 'Beyond the Final Visual' },
-        {
-          type: 'p',
-          text: 'Projects show outcomes, while articles show process. Recording how an effect is built helps visitors understand the design judgment behind the final result.',
-        },
-        { type: 'h2', text: 'Implementation Idea' },
-        {
-          type: 'p',
-          text: 'The card can track the pointer position relative to its center, convert that value into small rotation and translation offsets, and apply different multipliers to foreground and background layers. The result should be subtle enough to feel responsive without distracting from the content.',
-        },
-      ],
-    },
-  },
-};
+const knowledgeArticleTranslations = {};
 const knowledgeArticleCache = new Map();
 const getLocalizedKnowledgeArticle = (articleId, article, language = currentSiteLanguage) => {
   const localizedArticle = knowledgeArticleTranslations[language]?.[articleId];

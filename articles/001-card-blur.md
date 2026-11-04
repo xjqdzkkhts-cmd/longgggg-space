@@ -1,37 +1,42 @@
 ---
-title: 基于图片颜色的卡片渐变模糊效果
+title: Card Gradient Blur Based on Image Colors
 date: 2026.04
 datetime: 2026-04
-category: 前端
+category: Frontend
 ---
 
+## What Is an Image-Based Gradient Blur?
 
-## 什么是图片颜色渐变模糊效果
-主要分为四步骤
-1. 从图片中提取主色
-2. 使用这些颜色生成背景渐变
-3. 对背景进行大范围模糊
-4. 将内容卡片叠加在其下
+The effect has four main steps:
 
-最终效果通常会呈现出一种柔和且具有氛围感的背景。
+- Extract the dominant colors from an image.
+- Use those colors to generate a background gradient.
+- Apply a large blur to the background.
+- Layer the content card over it.
 
-## 实现方法
-常用工具：
+The result usually feels soft and atmospheric.
+
+## Implementation
+
+Common tools include:
+
 - Color Thief
 - Vibrant.js
 - fast-average-color
-这些库可以自动分析图片主色。
+
+These libraries can automatically identify the dominant colors in an image.
 
 ```JS
 const color = colorThief.getColor(img)
 ```
-然后动态生成：
+
+Then generate the background dynamically:
 
 ```CSS
 background: radial-gradient(...)
 ```
 
-## 简短的结构示例
+## A Simple Structure
 
 ```HTML
 <div class="bg"></div>

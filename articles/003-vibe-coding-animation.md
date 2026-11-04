@@ -1,29 +1,34 @@
 ---
-title: 如何更高效通过 Vibe Coding 来实现动画效果
+title: Building Animations More Efficiently with Vibe Coding
 date: 2026.05
 datetime: 2026-05
 category: Vibe Coding
 ---
-Vibe coding 的存在让制作网页动态交互的时间大大减小。对于对前端编程并没有那么拿手的小白来说，更高效的方法是：先找到接近目标的开源案例，再让 AI 帮你理解和改造。
 
-## 一、先明确你想要的动画类型
-在开始 Vibe Coding 之前，最好先把动画需求说清楚。网页动效通常可以分成几类：
-第一类是入场动画，例如文字淡入、卡片上滑、图片逐渐出现。
-第二类是悬停动画，例如按钮 hover 后放大、发光、变色、弹性移动。
-第三类是滚动动画，例如页面滚动到某个区域时，元素逐个出现，或者背景产生视差移动。
-第四类是循环氛围动画，例如渐变光晕、漂浮粒子、旋转地球、流体背景。
-第五类是交互动效，例如鼠标跟随、拖拽、点击展开、卡片堆叠、物理掉落效果。
+Vibe coding can greatly reduce the time it takes to build animated web interactions. For beginners who are less confident with frontend programming, an efficient approach is to find an open-source example close to the intended result, then ask AI to help explain and adapt it.
 
-## 二、先成为 AI 的老师
-很多小白使用 Vibe Coding 效果不如人意，是因为只给 AI 一个抽象描述。例如：“帮我做一个高级感的网页动画。”
-这个指令太模糊。更好的方式是先找一个接近的开源案例，然后告诉 AI：“我想要类似这个案例的动效，但颜色换成浅蓝，速度慢一点，元素改成我的提供给你的素材，并且适配手机端。” 这样 AI 的任务会更明确。
+## 1. Define the Type of Animation First
 
-## 三、推荐的开源 CSS 动效网站
-- CodePen 是最适合小白找网页动画灵感的网站之一。很多前端开发者会把完整的 HTML、CSS、JavaScript 代码放在上面，可以直接复制给 AI 进行分析和改造。
+Before you start vibe coding, describe the animation you want. Web animations generally fall into a few categories:
 
-- Animista 适合寻找可直接使用的 CSS 动画。它提供预设动画，并且可以在线调整速度、方向、延迟等参数，最后只复制需要的 CSS 代码。
+- Entrance animations: text fading in, cards sliding up, or images gradually appearing.
+- Hover animations: elements growing, glowing, changing color, or moving with a spring effect when hovered over.
+- Scroll-triggered animations: elements appearing one by one as a section enters the viewport, or backgrounds moving with parallax.
+- Looping ambient animations: gradient glows, floating particles, rotating globes, or fluid backgrounds.
+- Interactive animations: pointer tracking, dragging, click-to-expand interactions, card stacking, or objects falling under simulated gravity.
 
-- Hover.css 适合做按钮、链接、卡片的 hover 微交互。
+## 2. Start by Teaching the AI
 
-- FreeFrontend 收集了大量 CSS 动画、组件和 UI 案例。它的优势是分类明确。
-- GSAP 官方 CodePen 和 GSAP Showcase 更适合进阶动效（亲测动画更加高级）。
+Many beginners get disappointing results because they give AI an abstract request such as, "Help me create a sophisticated web animation."
+
+That instruction is too vague. A better approach is to find a similar open-source example and say, "I want an animation like this example, but in light blue, at a slower speed, using the assets I provide, and adapted for mobile."
+
+This gives the AI a much clearer task.
+
+## 3. Recommended Resources for CSS Animations
+
+- CodePen is one of the most useful places for beginners to find web animation inspiration. Many frontend developers share complete HTML, CSS, and JavaScript examples that you can give to AI for explanation and adaptation.
+- Animista is useful for finding ready-to-use CSS animations. It offers presets and lets you adjust speed, direction, delay, and other settings online, then copy just the CSS you need.
+- Hover.css works well for hover micro-interactions on buttons, links, and cards.
+- FreeFrontend collects CSS animations, components, and UI examples, with clearly organized categories.
+- The official GSAP CodePen examples and GSAP Showcase are better suited to advanced animation. In my experience, they offer more sophisticated motion effects.
