@@ -4010,8 +4010,28 @@ if (
       }
 
       const target = event.target instanceof Element ? event.target : null;
-      const card = target?.closest('[data-project-gallery]');
-      if (!card || !worksViewport?.contains(card)) {
+      if (!target || !worksViewport?.contains(target)) {
+        projectPointerIntent = null;
+        return;
+      }
+
+      let card = target.closest('[data-project-gallery]');
+      if (!card) {
+        // Accept the small gaps beside a visible card as part of its hit area.
+        let nearestDistance = 10;
+        projectCards.forEach((candidate) => {
+          if (!worksViewport.contains(candidate)) return;
+          const rect = candidate.getBoundingClientRect();
+          const dx = Math.max(rect.left - event.clientX, 0, event.clientX - rect.right);
+          const dy = Math.max(rect.top - event.clientY, 0, event.clientY - rect.bottom);
+          const distance = Math.hypot(dx, dy);
+          if (rect.width > 0 && rect.height > 0 && distance <= nearestDistance) {
+            nearestDistance = distance;
+            card = candidate;
+          }
+        });
+      }
+      if (!card) {
         projectPointerIntent = null;
         return;
       }
@@ -4021,6 +4041,9 @@ if (
         pointerId: event.pointerId,
         startX: event.clientX,
         startY: event.clientY,
+        scrollX: window.scrollX,
+        scrollY: window.scrollY,
+        trackScrollLeft: worksViewport.scrollLeft,
       };
     },
     true
@@ -4036,7 +4059,12 @@ if (
       }
 
       const distance = Math.hypot(event.clientX - intent.startX, event.clientY - intent.startY);
-      if (distance > 12) {
+      const scrolled = Math.max(
+        Math.abs(window.scrollX - intent.scrollX),
+        Math.abs(window.scrollY - intent.scrollY),
+        Math.abs(worksViewport.scrollLeft - intent.trackScrollLeft)
+      );
+      if (distance > 24 || scrolled > 8) {
         return;
       }
 
