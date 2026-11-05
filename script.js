@@ -3820,7 +3820,7 @@ if (
       './assets/project-cubemind-pages/02.jpg',
       './assets/project-cubemind-pages/03.jpg',
       './assets/project-cubemind-pages/04.jpg',
-      './assets/project-cubemind-pages/05.jpg',
+      './assets/project-cubemind-pages/05.jpg?v=295d039e69',
     ],
     'warehouse-layout': [
       './assets/project-warehouse-layout-pages/01.jpg',
