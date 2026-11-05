@@ -62,10 +62,12 @@ const worksStage = document.querySelector('[data-works-stage]');
 const worksViewport = document.querySelector('[data-works-viewport]');
 const worksTrack = document.querySelector('[data-works-track]');
 const worksProjectOrder = [
+  'cubemind',
   'ai-thrombolysis',
   'adhd-ai',
-  'search-focus',
   'mark-code',
+  'warehouse-layout',
+  'beadcraft',
   'relight',
   'iknow',
   'etea',
@@ -930,13 +932,21 @@ const knowledgeArticles = {
   }
 };
 const projectLanguageMap = {
+  'cubemind': {
+    zh: { title: '具身智能', tags: ['AI Product'] },
+    en: { title: 'Cubemind', tags: ['AI Product'] },
+  },
+  'warehouse-layout': {
+    zh: { title: '仓储建模 Skill', tags: ['AI Workflow'] },
+    en: { title: 'Warehouse Layout Agent', tags: ['AI Workflow'] },
+  },
+  'beadcraft': {
+    zh: { title: '拼豆图纸生成 Skill', tags: ['AI Workflow'] },
+    en: { title: 'BeadCraft Agent', tags: ['AI Workflow'] },
+  },
   'ai-thrombolysis': {
     zh: { title: 'AI 溶栓助手', tags: ['AI Product'] },
     en: { title: 'AI Thrombolysis Assistant', tags: ['AI Product'] },
-  },
-  'search-focus': {
-    zh: { title: 'Search Focus', tags: ['AI Workflow'] },
-    en: { title: 'Search Focus', tags: ['AI Workflow'] },
   },
   'mark-code': {
     zh: { title: 'MarkCode', tags: ['AI Workflow'] },
@@ -1770,12 +1780,17 @@ function getAiProjectGallery(item) {
   const rawGallery = typeof item?.gallery === 'string' ? item.gallery.trim() : '';
   const title = `${item?.title || ''} ${item?.label || ''}`.toLowerCase();
   const galleryMap = {
+    cubemind: 'cubemind',
+    '具身智能': 'cubemind',
+    'warehouse-layout': 'warehouse-layout',
+    'warehouse layout': 'warehouse-layout',
+    '仓储建模': 'warehouse-layout',
+    beadcraft: 'beadcraft',
+    'bead craft': 'beadcraft',
+    '拼豆': 'beadcraft',
     'ai-thrombolysis': 'ai-thrombolysis',
     'ai 溶栓': 'ai-thrombolysis',
     溶栓: 'ai-thrombolysis',
-    'search-focus': 'search-focus',
-    search: 'search-focus',
-    focus: 'search-focus',
     iknow: 'iknow',
     ikonw: 'iknow',
     'adhd-ai': 'adhd-ai',
@@ -3800,6 +3815,20 @@ if (
   projectCards.length
 ) {
   const projectGalleries = {
+    'cubemind': [
+      './assets/project-cubemind-pages/01.jpg',
+      './assets/project-cubemind-pages/02.jpg',
+      './assets/project-cubemind-pages/03.jpg',
+      './assets/project-cubemind-pages/04.jpg',
+      './assets/project-cubemind-pages/05.jpg',
+    ],
+    'warehouse-layout': [
+      './assets/project-warehouse-layout-pages/01.jpg',
+    ],
+    'beadcraft': [
+      './assets/project-beadcraft-pages/01.jpg',
+      './assets/project-beadcraft-pages/02.jpg',
+    ],
     'ai-thrombolysis': [
       './assets/project-ai-thrombolysis-pages/01.jpg',
       './assets/project-ai-thrombolysis-pages/02.jpg',
@@ -3863,10 +3892,6 @@ if (
     'marry-christmas': [
       './assets/project-marry-christmas-pages/01.jpg',
       './assets/project-marry-christmas-pages/02.jpg',
-    ],
-    'search-focus': [
-      './assets/project-search-focus-pages/01.jpg',
-      './assets/project-search-focus-pages/02.jpg',
     ],
     'mark-code': [
       './assets/project-mark-code-pages/01.png',

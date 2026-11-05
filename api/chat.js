@@ -103,8 +103,8 @@ function buildInstructions(personaMarkdown, language = 'zh', projectContext = nu
       'suggestions: maximum 3. Each one should be a natural follow-up question a visitor may ask.',
       'When the user asks about contact, email, WeChat, phone, LinkedIn, or ways to reach me, you must include a contact card.',
       'When the user asks about projects, portfolio, or case studies, prioritize a projects card.',
-      'projects card should only show projects currently on the website: AI Thrombolysis Assistant, iKnow, AI for ADHD, E-TEA, Merry Christmas, Search Focus, MarkCode, and Relight. Do not include “Jinchanzi Plan” unless the user explicitly asks about other resume experiences.',
-      'projects card gallery must use one of these values: ai-thrombolysis, iknow, adhd-ai, etea, marry-christmas, search-focus, mark-code, relight.',
+      'projects card should only show projects currently on the website: AI Thrombolysis Assistant, iKnow, AI for ADHD, E-TEA, Merry Christmas, Cubemind, Warehouse Layout Agent, BeadCraft Agent, MarkCode, and Relight. Do not include “Jinchanzi Plan” unless the user explicitly asks about other resume experiences.',
+      'projects card gallery must use one of these values: ai-thrombolysis, iknow, adhd-ai, etea, marry-christmas, cubemind, warehouse-layout, beadcraft, mark-code, relight.',
       'When the user asks about skills, tools, or what I am good at, do not only list UX or software tools. You must reflect my particular strengths: using AI to build products, independently completing lightweight frontend and backend implementation, being self-driven, and turning design ideas into working prototypes.',
       'When the user asks about skills or tools, prioritize a profile card or tags card.',
       'When the user asks about my life, personality, or what I am like outside work, answer with life state, interests, and personal temperament, and prioritize a life card.',
@@ -139,8 +139,8 @@ function buildInstructions(personaMarkdown, language = 'zh', projectContext = nu
     'suggestions 最多 3 条，每条是访客可能继续追问的问题。',
     '当用户问联系方式、联系、邮箱、微信、电话时，必须包含 contact card。',
     '当用户问项目、作品、案例时，优先包含 projects card。',
-    'projects card 只展示当前网站已有项目：AI 溶栓助手、iKnow、AI 如何帮助 ADHD、E-TEA、Merry Christmas、Search Focus、MarkCode、Relight。不要把“金蝉子计划”放进 projects card，除非用户明确问简历里的其他经历。',
-    'projects card 的 gallery 必须从这些值选择：ai-thrombolysis、iknow、adhd-ai、etea、marry-christmas、search-focus、mark-code、relight。',
+    'projects card 只展示当前网站已有项目：AI 溶栓助手、iKnow、AI 如何帮助 ADHD、E-TEA、Merry Christmas、Cubemind、Warehouse Layout Agent、BeadCraft Agent、MarkCode、Relight。不要把“金蝉子计划”放进 projects card，除非用户明确问简历里的其他经历。',
+    'projects card 的 gallery 必须从这些值选择：ai-thrombolysis、iknow、adhd-ai、etea、marry-christmas、cubemind、warehouse-layout、beadcraft、mark-code、relight。',
     '当用户问技能、工具、擅长什么时，回答不要只列 UX 或软件工具；必须体现我的特殊性：能运用 AI 构建产品、能独立完成前端和后端的轻量搭建、自我驱动性强、能把设计想法推进成可运行原型。',
     '当用户问技能、工具、擅长什么时，优先包含 profile card 或 tags card。',
     '当用户问生活中的样子、性格时，回答应偏生活状态、兴趣和个人气质，并优先包含 life card。',
@@ -309,10 +309,10 @@ function inferCards(message, language = 'zh') {
               gallery: 'iknow',
             },
             {
-              title: 'Search Focus',
-              description: 'A browser plugin that helps reduce distraction in Xiaohongshu search flows.',
-              tag: 'Plugin',
-              gallery: 'search-focus',
+              title: 'Cubemind',
+              description: 'An AI-native embodied intelligence training platform for multi-AGV warehouse coordination.',
+              tag: 'AI Product',
+              gallery: 'cubemind',
             },
           ]
         : [
@@ -329,10 +329,10 @@ function inferCards(message, language = 'zh') {
               gallery: 'iknow',
             },
             {
-              title: 'Search Focus',
-              description: '网页版小某书推荐流模糊插件，帮助搜索过程更专注。',
-              tag: '插件',
-              gallery: 'search-focus',
+              title: 'Cubemind',
+              description: '面向仓储多 AGV 协同调度的 AI 原生具身智能训练平台。',
+              tag: 'AI 产品',
+              gallery: 'cubemind',
             },
           ],
     });
@@ -441,9 +441,9 @@ function buildFallbackReply(message, language = 'zh') {
 
   if (/项目|作品|案例|portfolio|project|case/.test(text)) {
     if (isEnglish) {
-      return 'The projects currently shown on my website include BBHust, AI Thrombolysis Assistant, iKnow, AI for ADHD, E-TEA, Merry Christmas, Search Focus, and MarkCode. You can ask about my role, design process, or project goals.';
+      return 'The projects currently shown on my website include BBHust, AI Thrombolysis Assistant, iKnow, AI for ADHD, E-TEA, Merry Christmas, Cubemind, Warehouse Layout Agent, BeadCraft Agent, MarkCode, and Relight. You can ask about my role, design process, or project goals.';
     }
-    return '我目前在网站中展示了 BBHust、AI 溶栓助手、iKnow、AI 如何帮助 ADHD、E-TEA 和 Merry Christmas 等项目。你可以继续问我某个项目的目标、我的职责或设计过程。';
+    return '我目前在网站中展示了 BBHust、AI 溶栓助手、iKnow、AI 如何帮助 ADHD、E-TEA、Merry Christmas、Cubemind、Warehouse Layout Agent、BeadCraft Agent、MarkCode 和 Relight 等项目。你可以继续问我某个项目的目标、我的职责或设计过程。';
   }
 
   if (/技能|工具|会什么|擅长|skill|tool|能力/.test(text)) {
