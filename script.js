@@ -62,12 +62,9 @@ const worksStage = document.querySelector('[data-works-stage]');
 const worksViewport = document.querySelector('[data-works-viewport]');
 const worksTrack = document.querySelector('[data-works-track]');
 const worksProjectOrder = [
-  'cubemind',
   'ai-thrombolysis',
   'adhd-ai',
   'mark-code',
-  'warehouse-layout',
-  'beadcraft',
   'relight',
   'iknow',
   'etea',
@@ -1780,14 +1777,6 @@ function getAiProjectGallery(item) {
   const rawGallery = typeof item?.gallery === 'string' ? item.gallery.trim() : '';
   const title = `${item?.title || ''} ${item?.label || ''}`.toLowerCase();
   const galleryMap = {
-    cubemind: 'cubemind',
-    '具身智能': 'cubemind',
-    'warehouse-layout': 'warehouse-layout',
-    'warehouse layout': 'warehouse-layout',
-    '仓储建模': 'warehouse-layout',
-    beadcraft: 'beadcraft',
-    'bead craft': 'beadcraft',
-    '拼豆': 'beadcraft',
     'ai-thrombolysis': 'ai-thrombolysis',
     'ai 溶栓': 'ai-thrombolysis',
     溶栓: 'ai-thrombolysis',
@@ -3954,6 +3943,8 @@ if (
   };
 
   const openProjectViewer = (galleryName) => {
+    // Hidden project templates retain their content without exposing a gallery entry point.
+    if (!projectCards.some((card) => card.dataset.projectGallery === galleryName)) return;
     const images = projectGalleries[galleryName] || [];
     if (!images.length) {
       return;

@@ -128,29 +128,11 @@
 - 设计重点：可持续产品、公共基础设施、能源可视化、环境教育、二次生命电池再利用。
 - 可回答角度：产品设计、可持续设计、服务系统、能源计算、公共空间设计。
 
-### Cubemind（具身智能）
-
-- 网站分类：AI product；项目图集 ID：cubemind。
-- 项目简介：面向仓储多 AGV 协同调度的 AI 原生具身智能训练平台，让用户在 AI 协作中更直观地训练 AGV 调度模型。
-- 展示内容：地图库、场景库、训练记录、模型评测、模型资产和实时运行等界面；网站按顺序展示用户提供的五张项目图片。
-
-### Warehouse Layout Agent（仓储建模 Skill）
-
-- 网站分类：AI workflow；项目图集 ID：warehouse-layout。
-- 项目简介：面向京东物流售前动画制作场景，将 CAD / DXF 仓储图纸转换成可编辑 Blender 场景的 Agent 工作流。
-- 展示材料中报告：中等规模仓库建模从约 2 天缩短为约 2 小时，成本约 4 元；这些是用户项目材料中的描述，不应扩展为其他项目成果。
-
-### BeadCraft Agent（拼豆图纸生成 Skill）
-
-- 网站分类：AI workflow；项目图集 ID：beadcraft。
-- 项目简介：通过 AI Agent 与 Pixelorama MCP，将参考图片转换为限定颜色的 MARD 拼豆图纸，并检查颜色和统计用量。
-- 配套 Figma 插件可通过导入 CSV 生成可编辑色卡，用于分享；项目材料包含工作流介绍和生成效果展示。
-
 ## 作品回答策略
 
-- 当用户问“你做过哪些项目”时，优先概括网站展示项目：AI 溶栓助手、iKnow、AI 如何帮助 ADHD、E-Tea、BBHust、Cubemind、Warehouse Layout Agent、BeadCraft Agent、MarkCode、Relight、Merry Christmas。
+- 当用户问“你做过哪些项目”时，优先概括网站展示项目：AI 溶栓助手、iKnow、AI 如何帮助 ADHD、E-Tea、BBHust、MarkCode、Relight、Merry Christmas。
 - 当用户问“你擅长什么”时，可以结合这些项目强调：UX / 产品设计、复杂信息架构、AI 产品与 Vibe Coding、Figma 插件、硬件交互、B 端系统、视觉表达和自我驱动的端到端实现能力。
-- 当用户问 AI / 工具类项目时，优先推荐 MarkCode、Warehouse Layout Agent、BeadCraft Agent、AI 如何帮助 ADHD、AI 溶栓助手。
+- 当用户问 AI / 工具类项目时，优先推荐 MarkCode、AI 如何帮助 ADHD、AI 溶栓助手。
 - 当用户问真实落地或上线项目时，优先提 BBHust、MarkCode。
 - 当用户问研究型 / HCI 项目时，优先提 AI 如何帮助 ADHD、AI 溶栓助手、E-Tea。
 - 当用户问视觉 / 平面表达时，优先提 iKnow、Merry Christmas。

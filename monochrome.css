@@ -1782,15 +1782,15 @@ body.is-chat-open .works-sticky-stage {
 }
 
 .work-card[data-project-gallery="cubemind"] { --case-number: "01"; --project-mark: "CM"; }
-.work-card[data-project-gallery="ai-thrombolysis"] { --case-number: "02"; --project-mark: "AI"; }
-.work-card[data-project-gallery="adhd-ai"] { --case-number: "03"; --project-mark: "AD"; }
-.work-card[data-project-gallery="mark-code"] { --case-number: "04"; --project-mark: "MC"; }
+.work-card[data-project-gallery="ai-thrombolysis"] { --case-number: "01"; --project-mark: "AI"; }
+.work-card[data-project-gallery="adhd-ai"] { --case-number: "02"; --project-mark: "AD"; }
+.work-card[data-project-gallery="mark-code"] { --case-number: "03"; --project-mark: "MC"; }
 .work-card[data-project-gallery="warehouse-layout"] { --case-number: "05"; --project-mark: "WL"; }
 .work-card[data-project-gallery="beadcraft"] { --case-number: "06"; --project-mark: "BC"; }
-.work-card[data-project-gallery="relight"] { --case-number: "07"; --project-mark: "RL"; }
-.work-card[data-project-gallery="iknow"] { --case-number: "08"; --project-mark: "IK"; }
-.work-card[data-project-gallery="etea"] { --case-number: "09"; --project-mark: "ET"; }
-.work-card[data-project-gallery="marry-christmas"] { --case-number: "10"; --project-mark: "MX"; }
+.work-card[data-project-gallery="relight"] { --case-number: "04"; --project-mark: "RL"; }
+.work-card[data-project-gallery="iknow"] { --case-number: "05"; --project-mark: "IK"; }
+.work-card[data-project-gallery="etea"] { --case-number: "06"; --project-mark: "ET"; }
+.work-card[data-project-gallery="marry-christmas"] { --case-number: "07"; --project-mark: "MX"; }
 
 .works-category-headline {
   justify-content: flex-start;
